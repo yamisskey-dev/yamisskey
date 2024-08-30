@@ -118,7 +118,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<button v-else :class="$style.footerButton" class="_button" disabled>
 					<i class="ti ti-ban"></i>
 				</button>
-				<button ref="reactButton" :class="$style.footerButton" class="_button" @click="toggleReact()">
+				<button ref="reactButton" :class="$style.footerButton" class="_button" @click="toggleReact()" v-if="appearNote.reactionAcceptance !== 'noReaction'">
 					<i v-if="appearNote.reactionAcceptance === 'likeOnly' && appearNote.myReaction != null" class="ti ti-heart-filled" style="color: var(--eventReactionHeart);"></i>
 					<i v-else-if="appearNote.myReaction != null" class="ti ti-minus" style="color: var(--accent);"></i>
 					<i v-else-if="appearNote.reactionAcceptance === 'likeOnly'" class="ti ti-heart"></i>
@@ -385,28 +385,30 @@ if (!props.mock) {
 		});
 	});
 
-	if (appearNote.value.reactionAcceptance === 'likeOnly') {
-		useTooltip(reactButton, async (showing) => {
-			const reactions = await misskeyApiGet('notes/reactions', {
-				noteId: appearNote.value.id,
-				limit: 10,
-				_cacheKey_: appearNote.value.reactionCount,
+		if (appearNote.value.reactionAcceptance === 'noReaction') {
+			// noReactionの場合はリアクションを表示しない
+	} else if (appearNote.value.reactionAcceptance === 'likeOnly') {
+			useTooltip(reactButton, async (showing) => {
+					const reactions = await misskeyApiGet('notes/reactions', {
+							noteId: appearNote.value.id,
+							limit: 10,
+							_cacheKey_: appearNote.value.reactionCount,
+					});
+
+					const users = reactions.map(x => x.user);
+
+					if (users.length < 1) return;
+
+					const { dispose } = os.popup(MkReactionsViewerDetails, {
+							showing,
+							reaction: '❤️',
+							users,
+							count: appearNote.value.reactionCount,
+							targetElement: reactButton.value!,
+					}, {
+							closed: () => dispose(),
+					});
 			});
-
-			const users = reactions.map(x => x.user);
-
-			if (users.length < 1) return;
-
-			const { dispose } = os.popup(MkReactionsViewerDetails, {
-				showing,
-				reaction: '❤️',
-				users,
-				count: appearNote.value.reactionCount,
-				targetElement: reactButton.value!,
-			}, {
-				closed: () => dispose(),
-			});
-		});
 	}
 }
 

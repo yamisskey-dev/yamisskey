@@ -126,7 +126,7 @@ export const defaultStore = markRaw(new Storage('base', {
 	},
 	reactionAcceptance: {
 		where: 'account',
-		default: 'nonSensitiveOnly' as 'likeOnly' | 'likeOnlyForRemote' | 'nonSensitiveOnly' | 'nonSensitiveOnlyForLocalLikeOnlyForRemote' | null,
+		default: 'nonSensitiveOnly' as 'likeOnly' | 'likeOnlyForRemote' | 'nonSensitiveOnly' | 'nonSensitiveOnlyForLocalLikeOnlyForRemote' | 'noReaction' | null,
 	},
 	mutedAds: {
 		where: 'account',

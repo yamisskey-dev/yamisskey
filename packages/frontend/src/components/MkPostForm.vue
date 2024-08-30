@@ -37,7 +37,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<span v-else><i class="ti ti-rocket-off"></i></span>
 			</button>
 			<button v-click-anime v-tooltip="i18n.ts.reactionAcceptance" class="_button" :class="[$style.headerRightItem, { [$style.danger]: reactionAcceptance === 'likeOnly' }]" @click="toggleReactionAcceptance">
-				<span v-if="reactionAcceptance === 'likeOnly'"><i class="ti ti-heart"></i></span>
+				<span v-if="reactionAcceptance === 'noReaction'"><i class="ti ti-ban"></i></span>
+				<span v-else-if="reactionAcceptance === 'likeOnly'"><i class="ti ti-heart"></i></span>
 				<span v-else-if="reactionAcceptance === 'likeOnlyForRemote'"><i class="ti ti-heart-plus"></i></span>
 				<span v-else><i class="ti ti-icons"></i></span>
 			</button>
@@ -536,6 +537,7 @@ async function toggleReactionAcceptance() {
 			{ value: 'nonSensitiveOnly' as const, text: i18n.ts.nonSensitiveOnly },
 			{ value: 'nonSensitiveOnlyForLocalLikeOnlyForRemote' as const, text: i18n.ts.nonSensitiveOnlyForLocalLikeOnlyForRemote },
 			{ value: 'likeOnly' as const, text: i18n.ts.likeOnly },
+			{ value: 'noReaction' as const, text: i18n.ts.noReaction },
 		],
 		default: reactionAcceptance.value,
 	});

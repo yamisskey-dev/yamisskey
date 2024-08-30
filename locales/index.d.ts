@@ -4244,6 +4244,10 @@ export interface Locale extends ILocale {
      * 非センシティブのみ (リモートはいいねのみ)
      */
     "nonSensitiveOnlyForLocalLikeOnlyForRemote": string;
+		/**
+		 * リアクションを受け入れない
+		 */
+		"noReaction": string;
     /**
      * 自分に割り当てられたロール
      */

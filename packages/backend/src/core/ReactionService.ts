@@ -127,46 +127,47 @@ export class ReactionService {
 
 		let reaction = _reaction ?? FALLBACK;
 
-		if (note.reactionAcceptance === 'likeOnly' || ((note.reactionAcceptance === 'likeOnlyForRemote' || note.reactionAcceptance === 'nonSensitiveOnlyForLocalLikeOnlyForRemote') && (user.host != null))) {
-			reaction = '\u2764';
+		if (note.reactionAcceptance === 'noReaction') {
+				reaction = null;
+		} else if (note.reactionAcceptance === 'likeOnly' || ((note.reactionAcceptance === 'likeOnlyForRemote' || note.reactionAcceptance === 'nonSensitiveOnlyForLocalLikeOnlyForRemote') && (user.host != null))) {
+				reaction = '\u2764';
 		} else if (_reaction != null) {
-			const custom = reaction.match(isCustomEmojiRegexp);
-			if (custom) {
-				const reacterHost = this.utilityService.toPunyNullable(user.host);
+				const custom = reaction.match(isCustomEmojiRegexp);
+				if (custom) {
+						const reacterHost = this.utilityService.toPunyNullable(user.host);
 
-				const name = custom[1];
-				const emoji = reacterHost == null
-					? (await this.customEmojiService.localEmojisCache.fetch()).get(name)
-					: await this.emojisRepository.findOneBy({
-						host: reacterHost,
-						name,
-					});
+						const name = custom[1];
+						const emoji = reacterHost == null
+								? (await this.customEmojiService.localEmojisCache.fetch()).get(name)
+								: await this.emojisRepository.findOneBy({
+										host: reacterHost,
+										name,
+								});
 
-				if (emoji) {
-					if (emoji.roleIdsThatCanBeUsedThisEmojiAsReaction.length === 0 || (await this.roleService.getUserRoles(user.id)).some(r => emoji.roleIdsThatCanBeUsedThisEmojiAsReaction.includes(r.id))) {
-						reaction = reacterHost ? `:${name}@${reacterHost}:` : `:${name}:`;
+						if (emoji) {
+								if (emoji.roleIdsThatCanBeUsedThisEmojiAsReaction.length === 0 || (await this.roleService.getUserRoles(user.id)).some(r => emoji.roleIdsThatCanBeUsedThisEmojiAsReaction.includes(r.id))) {
+										reaction = reacterHost ? `:${name}@${reacterHost}:` : `:${name}:`;
 
-						// センシティブ
-						if ((note.reactionAcceptance === 'nonSensitiveOnly' || note.reactionAcceptance === 'nonSensitiveOnlyForLocalLikeOnlyForRemote') && emoji.isSensitive) {
-							reaction = FALLBACK;
+										// センシティブ
+										if ((note.reactionAcceptance === 'nonSensitiveOnly' || note.reactionAcceptance === 'nonSensitiveOnlyForLocalLikeOnlyForRemote') && emoji.isSensitive) {
+												reaction = FALLBACK;
+										}
+
+										// for media silenced host, custom emoji reactions are not allowed
+										if (reacterHost != null && this.utilityService.isMediaSilencedHost(meta.mediaSilencedHosts, reacterHost)) {
+												reaction = FALLBACK;
+										}
+								} else {
+										// リアクションとして使う権限がない
+										reaction = FALLBACK;
+								}
+						} else {
+								reaction = FALLBACK;
 						}
-
-						// for media silenced host, custom emoji reactions are not allowed
-						if (reacterHost != null && this.utilityService.isMediaSilencedHost(meta.mediaSilencedHosts, reacterHost)) {
-							reaction = FALLBACK;
-						}
-					} else {
-						// リアクションとして使う権限がない
-						reaction = FALLBACK;
-					}
 				} else {
-					reaction = FALLBACK;
+						reaction = this.normalize(reaction);
 				}
-			} else {
-				reaction = this.normalize(reaction);
-			}
 		}
-
 		const record: MiNoteReaction = {
 			id: this.idService.gen(),
 			noteId: note.id,

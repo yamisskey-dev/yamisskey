@@ -104,6 +104,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<option value="nonSensitiveOnly">{{ i18n.ts.nonSensitiveOnly }}</option>
 		<option value="nonSensitiveOnlyForLocalLikeOnlyForRemote">{{ i18n.ts.nonSensitiveOnlyForLocalLikeOnlyForRemote }}</option>
 		<option value="likeOnly">{{ i18n.ts.likeOnly }}</option>
+		<option value="noReaction">{{ i18n.ts.noReaction }}</option>
 	</MkSelect>
 </div>
 </template>

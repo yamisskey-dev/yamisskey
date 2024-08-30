@@ -144,7 +144,7 @@ export const paramDef = {
 		} },
 		cw: { type: 'string', nullable: true, minLength: 1, maxLength: 100 },
 		localOnly: { type: 'boolean', default: false },
-		reactionAcceptance: { type: 'string', nullable: true, enum: [null, 'likeOnly', 'likeOnlyForRemote', 'nonSensitiveOnly', 'nonSensitiveOnlyForLocalLikeOnlyForRemote'], default: null },
+		reactionAcceptance: { type: 'string', nullable: true, enum: [null, 'likeOnly', 'likeOnlyForRemote', 'nonSensitiveOnly', 'nonSensitiveOnlyForLocalLikeOnlyForRemote', 'noReaction'], default: null },
 		noExtractMentions: { type: 'boolean', default: false },
 		noExtractHashtags: { type: 'boolean', default: false },
 		noExtractEmojis: { type: 'boolean', default: false },
