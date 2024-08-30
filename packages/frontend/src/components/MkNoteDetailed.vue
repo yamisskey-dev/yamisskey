@@ -127,7 +127,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button v-else class="_button" :class="$style.noteFooterButton" disabled>
 				<i class="ti ti-ban"></i>
 			</button>
-			<button ref="reactButton" :class="$style.noteFooterButton" class="_button" @click="toggleReact()">
+			<button ref="reactButton" :class="$style.noteFooterButton" class="_button" @click="toggleReact()" v-if="appearNote.reactionAcceptance !== 'noReaction'">
 				<i v-if="appearNote.reactionAcceptance === 'likeOnly' && appearNote.myReaction != null" class="ti ti-heart-filled" style="color: var(--eventReactionHeart);"></i>
 				<i v-else-if="appearNote.myReaction != null" class="ti ti-minus" style="color: var(--accent);"></i>
 				<i v-else-if="appearNote.reactionAcceptance === 'likeOnly'" class="ti ti-heart"></i>
@@ -165,22 +165,22 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</template>
 			</MkPagination>
 		</div>
-		<div v-else-if="tab === 'reactions'" :class="$style.tab_reactions">
-			<div :class="$style.reactionTabs">
-				<button v-for="reaction in Object.keys(appearNote.reactions)" :key="reaction" :class="[$style.reactionTab, { [$style.reactionTabActive]: reactionTabType === reaction }]" class="_button" @click="reactionTabType = reaction">
-					<MkReactionIcon :reaction="reaction"/>
-					<span style="margin-left: 4px;">{{ appearNote.reactions[reaction] }}</span>
-				</button>
-			</div>
-			<MkPagination v-if="reactionTabType" :key="reactionTabType" :pagination="reactionsPagination" :disableAutoLoad="true">
-				<template #default="{ items }">
-					<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); grid-gap: 12px;">
-						<MkA v-for="item in items" :key="item.id" :to="userPage(item.user)">
-							<MkUserCardMini :user="item.user" :withChart="false"/>
-						</MkA>
-					</div>
-				</template>
-			</MkPagination>
+		<div v-else-if="tab === 'reactions' && appearNote.reactionAcceptance !== 'noReaction'" :class="$style.tab_reactions">
+				<div :class="$style.reactionTabs">
+						<button v-for="reaction in Object.keys(appearNote.reactions)" :key="reaction" :class="[$style.reactionTab, { [$style.reactionTabActive]: reactionTabType === reaction }]" class="_button" @click="reactionTabType = reaction">
+								<MkReactionIcon :reaction="reaction"/>
+								<span style="margin-left: 4px;">{{ appearNote.reactions[reaction] }}</span>
+						</button>
+				</div>
+				<MkPagination v-if="reactionTabType" :key="reactionTabType" :pagination="reactionsPagination" :disableAutoLoad="true">
+						<template #default="{ items }">
+								<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); grid-gap: 12px;">
+										<MkA v-for="item in items" :key="item.id" :to="userPage(item.user)">
+												<MkUserCardMini :user="item.user" :withChart="false"/>
+										</MkA>
+								</div>
+						</template>
+				</MkPagination>
 		</div>
 	</div>
 </div>
@@ -372,27 +372,27 @@ useTooltip(renoteButton, async (showing) => {
 });
 
 if (appearNote.value.reactionAcceptance === 'likeOnly') {
-	useTooltip(reactButton, async (showing) => {
-		const reactions = await misskeyApiGet('notes/reactions', {
-			noteId: appearNote.value.id,
-			limit: 10,
-			_cacheKey_: appearNote.value.reactionCount,
-		});
+    useTooltip(reactButton, async (showing) => {
+        const reactions = await misskeyApiGet('notes/reactions', {
+            noteId: appearNote.value.id,
+            limit: 10,
+            _cacheKey_: appearNote.value.reactionCount,
+        });
 
-		const users = reactions.map(x => x.user);
+        const users = reactions.map(x => x.user);
 
-		if (users.length < 1) return;
+        if (users.length < 1) return;
 
-		const { dispose } = os.popup(MkReactionsViewerDetails, {
-			showing,
-			reaction: '❤️',
-			users,
-			count: appearNote.value.reactionCount,
-			targetElement: reactButton.value!,
-		}, {
-			closed: () => dispose(),
-		});
-	});
+        const { dispose } = os.popup(MkReactionsViewerDetails, {
+            showing,
+            reaction: '❤️',
+            users,
+            count: appearNote.value.reactionCount,
+            targetElement: reactButton.value!,
+        }, {
+            closed: () => dispose(),
+        });
+    });
 }
 
 function renote() {
