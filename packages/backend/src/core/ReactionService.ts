@@ -214,6 +214,45 @@ export class ReactionService {
 						.execute();
 		}
 
+		// reactionがnullの場合はリアクションを作成しない
+		if (reaction !== null) {
+				const custom = reaction.match(isCustomEmojiRegexp);
+				if (custom) {
+						const reacterHost = this.utilityService.toPunyNullable(user.host);
+
+						const name = custom[1];
+						const emoji = reacterHost == null
+								? (await this.customEmojiService.localEmojisCache.fetch()).get(name)
+								: await this.emojisRepository.findOneBy({
+										host: reacterHost,
+										name,
+								});
+
+						if (emoji) {
+								if (emoji.roleIdsThatCanBeUsedThisEmojiAsReaction.length === 0 || (await this.roleService.getUserRoles(user.id)).some(r => emoji.roleIdsThatCanBeUsedThisEmojiAsReaction.includes(r.id))) {
+										reaction = reacterHost ? `:${name}@${reacterHost}:` : `:${name}:`;
+
+										// センシティブ
+										if ((note.reactionAcceptance === 'nonSensitiveOnly' || note.reactionAcceptance === 'nonSensitiveOnlyForLocalLikeOnlyForRemote') && emoji.isSensitive) {
+												reaction = null;
+										}
+
+										// for media silenced host, custom emoji reactions are not allowed
+										if (reacterHost != null && this.utilityService.isMediaSilencedHost(meta.mediaSilencedHosts, reacterHost)) {
+												reaction = null;
+										}
+								} else {
+										// リアクションとして使う権限がない
+										reaction = null;
+								}
+						} else {
+								reaction = null;
+						}
+				} else {
+						reaction = this.normalize(reaction);
+				}
+		}
+
 		// 30%の確率、セルフではない、3日以内に投稿されたノートの場合ハイライト用ランキング更新
 		if (
 			Math.random() < 0.3 &&
