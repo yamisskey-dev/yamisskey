@@ -168,6 +168,7 @@ export class ReactionService {
 						reaction = this.normalize(reaction);
 				}
 		}
+
 		const record: MiNoteReaction = {
 			id: this.idService.gen(),
 			noteId: note.id,
@@ -175,40 +176,43 @@ export class ReactionService {
 			reaction,
 		};
 
-		// Create reaction
-		try {
-			await this.noteReactionsRepository.insert(record);
-		} catch (e) {
-			if (isDuplicateKeyValueError(e)) {
-				const exists = await this.noteReactionsRepository.findOneByOrFail({
-					noteId: note.id,
-					userId: user.id,
-				});
+		// reactionがnullの場合はリアクションを作成しない
+		if (reaction !== null) {
+				// Create reaction
+				try {
+						await this.noteReactionsRepository.insert(record);
+				} catch (e) {
+						if (isDuplicateKeyValueError(e)) {
+								const exists = await this.noteReactionsRepository.findOneByOrFail({
+										noteId: note.id,
+										userId: user.id,
+								});
 
-				if (exists.reaction !== reaction) {
-					// 別のリアクションがすでにされていたら置き換える
-					await this.delete(user, note);
-					await this.noteReactionsRepository.insert(record);
-				} else {
-					// 同じリアクションがすでにされていたらエラー
-					throw new IdentifiableError('51c42bb4-931a-456b-bff7-e5a8a70dd298');
+								if (exists.reaction !== reaction) {
+										// 別のリアクションがすでにされていたら置き換える
+										await this.delete(user, note);
+										await this.noteReactionsRepository.insert(record);
+								} else {
+										// 同じリアクションがすでにされていたらエラー
+										throw new IdentifiableError('51c42bb4-931a-456b-bff7-e5a8a70dd298');
+								}
+						} else {
+								throw e;
+						}
 				}
-			} else {
-				throw e;
-			}
-		}
 
-		// Increment reactions count
-		const sql = `jsonb_set("reactions", '{${reaction}}', (COALESCE("reactions"->>'${reaction}', '0')::int + 1)::text::jsonb)`;
-		await this.notesRepository.createQueryBuilder().update()
-			.set({
-				reactions: () => sql,
-				...(note.reactionAndUserPairCache.length < PER_NOTE_REACTION_USER_PAIR_CACHE_MAX ? {
-					reactionAndUserPairCache: () => `array_append("reactionAndUserPairCache", '${user.id}/${reaction}')`,
-				} : {}),
-			})
-			.where('id = :id', { id: note.id })
-			.execute();
+				// Increment reactions count
+				const sql = `jsonb_set("reactions", '{${reaction}}', (COALESCE("reactions"->>'${reaction}', '0')::int + 1)::text::jsonb)`;
+				await this.notesRepository.createQueryBuilder().update()
+						.set({
+								reactions: () => sql,
+								...(note.reactionAndUserPairCache.length < PER_NOTE_REACTION_USER_PAIR_CACHE_MAX ? {
+										reactionAndUserPairCache: () => `array_append("reactionAndUserPairCache", '${user.id}/${reaction}')`,
+								} : {}),
+						})
+						.where('id = :id', { id: note.id })
+						.execute();
+		}
 
 		// 30%の確率、セルフではない、3日以内に投稿されたノートの場合ハイライト用ランキング更新
 		if (
