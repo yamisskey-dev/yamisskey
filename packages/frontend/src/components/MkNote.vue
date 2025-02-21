@@ -278,7 +278,7 @@ const hardMuted = ref(props.withHardMute && checkMute(appearNote.value, $i?.hard
 const translation = ref<Misskey.entities.NotesTranslateResponse | null>(null);
 const translating = ref(false);
 const showTicker = (defaultStore.state.instanceTicker === 'always') || (defaultStore.state.instanceTicker === 'remote' && appearNote.value.user.instance);
-const showInstanceIcon = (defaultStore.state.instanceIcon === true);
+const showInstanceIcon = computed(() => defaultStore.state.instanceIcon);
 const canRenote = computed(() => ['public', 'home'].includes(appearNote.value.visibility) || (appearNote.value.visibility === 'followers' && appearNote.value.userId === $i?.id));
 const renoteCollapsed = ref(
 	defaultStore.state.collapseRenotes && isRenote && (
