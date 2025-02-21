@@ -408,7 +408,6 @@ watch([
 	showNoteActionsOnlyHover,
 	showGapBetweenNotesInTimeline,
 	instanceTicker,
-	instanceIcon,
 	hideReactionCount,
 	overridedDeviceKind,
 	mediaListWithOneImageAppearance,
