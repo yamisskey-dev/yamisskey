@@ -47,6 +47,10 @@ import * as os from '@/os';
 import { $i } from '@/account';
 import { useStream } from '@/stream';
 import { i18n } from '@/i18n.js';
+import { search } from '@/scripts/search';
+import { host } from '@/config';
+import { defaultStore } from '@/store';
+import { misskeyApi } from '@/scripts/misskey-api';
 
 // Type definitions
 interface DeletedNote {
@@ -62,10 +66,17 @@ interface Note {
 
 const name = 'userNotes';
 const timelineKey = ref(0);
-const user = ref<MiUser | null>($i);
+const user = ref<MiUser | null>(null); // Initialize as null
 const notesEl = ref<{ pagingComponent?: any }>();
 const isLoading = ref(false);
 let currentChannel: StreamChannel | null = null;
+
+// Initialize with current user if available
+onMounted(async () => {
+	if ($i) {
+		user.value = $i;
+	}
+});
 
 const widgetPropsDef = {
 	showHeader: {
@@ -105,7 +116,7 @@ const pagination = computed(() => ({
 		includeMyRenotes: true,
 		includeRenotedMyNotes: true,
 	},
-} as Paging));
+}));
 
 const { widgetProps, configure, save } = useWidgetPropsManager(name,
 	widgetPropsDef,
@@ -113,6 +124,7 @@ const { widgetProps, configure, save } = useWidgetPropsManager(name,
 	emit,
 );
 
+// Modified userInfo computed property
 const userInfo = computed(() => {
 	const userName = user.value
 		? `@${user.value.username}${user.value.host ? `@${user.value.host}` : ''}`
@@ -137,30 +149,65 @@ const reload = async () => {
 
 // Enhanced user resolution with proper error handling
 const resolveUser = async (acct: string): Promise<MiUser | null> => {
-	if (!acct) return null;
-	try {
-		const match = acct.match(/^@?(.+?)(?:@(.+))?$/);
-		if (!match) throw new Error('Invalid account format');
+	if (!acct) return $i;
 
-		const [, username, host] = match;
-		return await os.api('users/show', {
-			username,
-			host: host || null,
-		});
+	try {
+		const clean = acct.replace(/^@/, '');
+		const [username, host] = clean.split('@');
+
+		if (!username) return $i;
+
+		try {
+			// Try direct user lookup using misskeyApi
+			const response = await misskeyApi('users/show', {
+				username,
+				host: host || null,
+			});
+			return response;
+		} catch (e) {
+			console.warn('Direct lookup failed, trying search:', e);
+
+			// Try search as fallback using misskeyApi
+			const searchResponse = await misskeyApi('users/search', {
+				query: username,
+				host: host || null,
+				limit: 1,
+			});
+
+			if (searchResponse && searchResponse.length > 0) {
+				return searchResponse[0];
+			}
+
+			// If both methods fail, try remote resolution
+			if (host) {
+				try {
+					const remoteResponse = await misskeyApi('ap/show', {
+						uri: `https://${host}/@${username}`,
+					});
+					return remoteResponse.user;
+				} catch (e) {
+					console.warn('Remote resolution failed:', e);
+				}
+			}
+
+			return null;
+		}
 	} catch (e) {
 		console.error('Failed to resolve user:', e);
-		throw e; // Let the caller handle the error
+		return null;
 	}
 };
 
 // Memoized stream setup function
-const setupStream = (userId: string, withFiles: boolean, withReplies: boolean) => {
+const setupStream = (userId: string, withFiles: boolean, withReplies: boolean): StreamChannel => {
 	const stream = useStream();
-	return stream.useChannel('userTimeline', {
-		userId,
-		withFiles,
-		withReplies,
+	// Fix: Use 'homeTimeline' channel for real-time updates
+	const channel = stream.useChannel('userTimeline', {
+		userId: userId, // Explicitly use the userId parameter
+		withFiles: withFiles,
+		withReplies: withReplies,
 	});
+	return channel;
 };
 
 // Enhanced retry logic with proper error handling
@@ -202,6 +249,7 @@ watch(() => user.value?.id, async () => {
 			currentChannel.on('note', async (note: Note) => {
 				if (note.userId === user.value?.id && notesEl.value?.pagingComponent) {
 					await notesEl.value.pagingComponent.prepend([note]);
+					timelineKey.value++; // Force update
 				}
 			});
 
@@ -228,6 +276,31 @@ watch(() => timelineKey.value, () => {
 		notesEl.value.pagingComponent.reload();
 	}
 });
+
+// Modified watch handler for userAcct changes
+watch(() => widgetProps.userAcct, async (newAcct) => {
+	if (!newAcct) {
+		user.value = $i;
+		return;
+	}
+
+	try {
+		isLoading.value = true;
+		const resolved = await resolveUser(newAcct);
+
+		if (resolved) {
+			user.value = resolved;
+			timelineKey.value++; // Force timeline refresh
+		} else {
+			user.value = null;
+		}
+	} catch (e) {
+		console.error('Failed to resolve user:', e);
+		user.value = null;
+	} finally {
+		isLoading.value = false;
+	}
+}, { immediate: true });
 
 onMounted(() => {
 	// refreshInterval は削除
