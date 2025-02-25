@@ -35,7 +35,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, computed, onMounted, onUnmounted, type Ref } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted, type Ref, nextTick } from 'vue';
 import { useWidgetPropsManager, WidgetComponentEmits, WidgetComponentExpose, WidgetComponentProps } from './widget';
 import type { Paging } from '@/components/MkPagination.vue';
 import type { MiUser } from 'misskey-js';
@@ -107,7 +107,7 @@ const props = defineProps<WidgetComponentProps<WidgetProps>>();
 const emit = defineEmits<WidgetComponentEmits<WidgetProps>>();
 
 const pagination = computed(() => ({
-	endpoint: 'users/notes' as const,
+	endpoint: 'users/notes' as const, // 'notes/user-timeline' から変更
 	params: {
 		userId: user.value?.id,
 		limit: 15,
@@ -115,6 +115,8 @@ const pagination = computed(() => ({
 		withReplies: widgetProps.withReplies,
 		includeMyRenotes: true,
 		includeRenotedMyNotes: true,
+		allowPartial: true,
+		useDbFallback: true,
 	},
 }));
 
@@ -129,19 +131,24 @@ const userInfo = computed(() => {
 	const userName = user.value
 		? `@${user.value.username}${user.value.host ? `@${user.value.host}` : ''}`
 		: i18n.ts.unableToResolveUser;
-	return `${userName} ${i18n.ts._widgets.userNotes}`;
+	return `${i18n.ts._widgets.userNotes} ${userName}`;
 });
 
-// Optimized reload function
+// Fix reload functionality
 const reload = async () => {
 	if (!notesEl.value?.pagingComponent) return;
 
 	try {
 		isLoading.value = true;
+		// 明示的にページングコンポーネントをリセット
 		await notesEl.value.pagingComponent.reload();
+		timelineKey.value++; // 強制的に更新
 	} catch (error) {
 		console.error('Failed to reload notes:', error);
-		// Implement error notification if needed
+		os.toast({
+			type: 'error',
+			text: i18n.ts.failedToReload,
+		});
 	} finally {
 		isLoading.value = false;
 	}
@@ -198,16 +205,70 @@ const resolveUser = async (acct: string): Promise<MiUser | null> => {
 	}
 };
 
-// Memoized stream setup function
-const setupStream = (userId: string, withFiles: boolean, withReplies: boolean): StreamChannel => {
+// Improved stream setup with proper event handling
+const setupStream = (userId: string, withFiles: boolean, withReplies: boolean): StreamChannel[] => {
 	const stream = useStream();
-	// Fix: Use 'homeTimeline' channel for real-time updates
-	const channel = stream.useChannel('userTimeline', {
-		userId: userId, // Explicitly use the userId parameter
-		withFiles: withFiles,
-		withReplies: withReplies,
+	const channels: StreamChannel[] = [];
+
+	// Connect to home timeline for following users' notes (including private notes)
+	const homeChannel = stream.useChannel('homeTimeline', {
+		withFiles,
+		withReplies,
 	});
-	return channel;
+
+	// Connect to global timeline for public notes
+	const globalChannel = stream.useChannel('globalTimeline', {
+		withFiles,
+		withReplies,
+	});
+
+	// Improved note handling function with debounce
+	const handleNote = async (note: Note) => {
+		if (note.userId === userId && notesEl.value?.pagingComponent) {
+			try {
+				console.log('Received note:', note);
+				// プリペンドの前にチェック
+				const existingNotes = notesEl.value.pagingComponent.items || [];
+				if (!existingNotes.some(n => n.id === note.id)) {
+					await notesEl.value.pagingComponent.prepend([note]);
+				}
+			} catch (e) {
+				console.error('Failed to prepend note:', e);
+			}
+		}
+	};
+
+	// Set up note handlers with proper event binding
+	homeChannel.on('note', handleNote);
+	globalChannel.on('note', handleNote);
+
+	// Improved deletion handling
+	const handleDeletion = async (deletedNote: DeletedNote) => {
+		if (notesEl.value?.pagingComponent) {
+			try {
+				notesEl.value.pagingComponent.removeItem(deletedNote.id);
+			} catch (e) {
+				console.error('Failed to remove note:', e);
+			}
+		}
+	};
+
+	homeChannel.on('deleted', handleDeletion);
+	globalChannel.on('deleted', handleDeletion);
+
+	// Add connection status handlers
+	[homeChannel, globalChannel].forEach(channel => {
+		channel.on('_connected_', () => {
+			console.log('Channel connected');
+		});
+
+		channel.on('_disconnected_', () => {
+			console.warn('Channel disconnected');
+		});
+	});
+
+	channels.push(homeChannel, globalChannel);
+	return channels;
 };
 
 // Enhanced retry logic with proper error handling
@@ -217,10 +278,10 @@ const setupStreamWithRetry = async (
 	withFiles: boolean,
 	withReplies: boolean,
 	retryCount = 0,
-): Promise<StreamChannel> => {
+): Promise<StreamChannel[]> => {
 	try {
-		const channel = setupStream(userId, withFiles, withReplies);
-		return channel;
+		const channels = setupStream(userId, withFiles, withReplies);
+		return channels;
 	} catch (error) {
 		console.error(`Stream connection failed (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error);
 		if (retryCount < MAX_RETRIES) {
@@ -231,51 +292,61 @@ const setupStreamWithRetry = async (
 	}
 };
 
-// Optimized stream management
+// Improved note handling function
+const handleNote = async (note: Note) => {
+	if (note.userId === user.value?.id && notesEl.value?.pagingComponent) {
+		try {
+			console.log('Received note:', note);
+			const existingNotes = notesEl.value.pagingComponent.items || [];
+
+			// Check for duplicates and ensure proper ordering
+			if (!existingNotes.some(n => n.id === note.id)) {
+				await notesEl.value.pagingComponent.prepend([note]);
+				// Force a UI update
+				nextTick(() => {
+					timelineKey.value++;
+				});
+			}
+		} catch (e) {
+			console.error('Failed to prepend note:', e);
+		}
+	}
+};
+
+// Modified stream management to handle multiple channels
+let currentChannels: StreamChannel[] = [];
+
+// Update the watch handler
 watch(() => user.value?.id, async () => {
-	if (currentChannel) {
-		currentChannel.dispose();
-		currentChannel = null;
+	// Cleanup existing connections
+	if (currentChannels.length > 0) {
+		currentChannels.forEach(channel => channel.dispose());
+		currentChannels = [];
 	}
 
 	if (user.value?.id) {
 		try {
-			currentChannel = await setupStreamWithRetry(
+			currentChannels = await setupStream(
 				user.value.id,
 				widgetProps.withFiles,
 				widgetProps.withReplies,
 			);
-
-			currentChannel.on('note', async (note: Note) => {
-				if (note.userId === user.value?.id && notesEl.value?.pagingComponent) {
-					await notesEl.value.pagingComponent.prepend([note]);
-					timelineKey.value++; // Force update
-				}
-			});
-
-			currentChannel.on('deleted', async (deletedNote: DeletedNote) => {
-				if (notesEl.value?.pagingComponent) {
-					notesEl.value.pagingComponent.removeItem(deletedNote.id);
-				}
-			});
-
-			currentChannel.on('error', (error: Error) => {
-				console.error('Stream error:', error);
-				// Implement error notification if needed
-			});
 		} catch (error) {
-			console.error('Failed to setup stream:', error);
-			// Implement error notification if needed
+			console.error('Failed to setup streams:', error);
+			os.toast({
+				type: 'error',
+				text: i18n.ts.failedToConnect,
+			});
 		}
 	}
 }, { immediate: true });
 
-// タイムラインのリロードを監視
+// Improved watch handler for timeline updates
 watch(() => timelineKey.value, () => {
 	if (notesEl.value?.pagingComponent) {
 		notesEl.value.pagingComponent.reload();
 	}
-});
+}, { flush: 'post' }); // flush: 'post'を追加して更新タイミングを制御
 
 // Modified watch handler for userAcct changes
 watch(() => widgetProps.userAcct, async (newAcct) => {
@@ -308,9 +379,9 @@ onMounted(() => {
 
 // Proper cleanup
 onUnmounted(() => {
-	if (currentChannel) {
-		currentChannel.dispose();
-		currentChannel = null;
+	if (currentChannels.length > 0) {
+		currentChannels.forEach(channel => channel.dispose());
+		currentChannels = [];
 	}
 });
 
