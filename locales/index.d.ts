@@ -8921,9 +8921,13 @@ export interface Locale extends ILocale {
          */
         "birthdayFollowings": string;
         /**
-         * listenBrainz
+         * なうぷれ
          */
         "listenBrainz": string;
+        /**
+         * ユーザーノート
+         */
+        "userNotes": string;
     };
     "_cw": {
         /**
