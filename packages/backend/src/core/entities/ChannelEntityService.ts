@@ -86,6 +86,7 @@ export class ChannelEntityService {
 			notesCount: channel.notesCount,
 			isSensitive: channel.isSensitive,
 			allowRenoteToExternal: channel.allowRenoteToExternal,
+			propagateToTimelines: channel.propagateToTimelines,
 
 			...(me ? {
 				isFollowing,

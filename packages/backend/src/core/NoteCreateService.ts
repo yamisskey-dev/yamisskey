@@ -731,7 +731,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 			this.pushToTl(note, user, ['localTimeline']);
 		} else {
 			this.pushToTl(note, user);
-		};
+		}
 
 		this.antennaService.addNoteToAntennas(note, user);
 
@@ -1147,6 +1147,41 @@ export class NoteCreateService implements OnApplicationShutdown {
 	@bindThis
 	private async pushToTl(note: MiNote, user: { id: MiUser['id']; host: MiUser['host']; }, notToPush?: FanoutTimelineNamePrefix[]) {
 		if (!this.meta.enableFanoutTimeline) return;
+
+		// チャンネル投稿の場合、チャンネル設定に応じてフィルタリング
+		if (note.channelId) {
+			// チャンネル情報を取得
+			const channel = await this.channelsRepository.findOneBy({ id: note.channelId });
+
+			if (channel && !channel.propagateToTimelines) {
+				// チャンネルタイムラインとホームタイムラインに配信する
+				const r = this.redisForTimelines.pipeline();
+
+				// チャンネルタイムラインには常に配信
+				this.fanoutTimelineService.push(`channelTimeline:${note.channelId}`, note.id, this.config.perChannelMaxNoteCacheCount, r);
+
+				// チャンネルをフォローしている人のホームタイムラインには配信
+				const channelFollowings = await this.channelFollowingsRepository.find({
+				  where: { followeeId: note.channelId },
+				  select: ['followerId'],
+				});
+
+				for (const following of channelFollowings) {
+				  this.fanoutTimelineService.push(`homeTimeline:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax, r);
+				  if (note.fileIds.length > 0) {
+						this.fanoutTimelineService.push(`homeTimelineWithFiles:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
+				  }
+				}
+
+				// UserTimeline には配信
+				if (notToPush === undefined || !notToPush.includes('userTimeline')) {
+				  this.fanoutTimelineService.push(`userTimelineWithChannel:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
+				}
+
+				r.exec();
+				return;
+			  }
+		}
 
 		const r = this.redisForTimelines.pipeline();
 

@@ -515,6 +515,14 @@ export interface Locale extends ILocale {
      */
     "renoteToOtherChannel": string;
     /**
+     * チャンネル投稿をタイムラインに流す
+     */
+    "propagateToTimelines": string;
+    /**
+     * オフにすると、このチャンネルの投稿は他のユーザーのタイムラインに表示されなくなります（投稿者自身には常に表示されます）
+     */
+    "propagateToTimelinesDescription": string;
+    /**
      * ピン留めされたノート
      */
     "pinnedNote": string;

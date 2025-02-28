@@ -437,6 +437,7 @@ export class NoteEntityService implements OnModuleInit {
 				isSensitive: channel.isSensitive,
 				allowRenoteToExternal: channel.allowRenoteToExternal,
 				userId: channel.userId,
+				propagateToTimelines: channel.propagateToTimelines,
 			} : undefined,
 			mentions: note.mentions.length > 0 ? note.mentions : undefined,
 			uri: note.uri ?? undefined,

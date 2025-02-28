@@ -98,4 +98,10 @@ export class MiChannel {
 		default: true,
 	})
 	public allowRenoteToExternal: boolean;
+
+	@Column('boolean', {
+		default: false,
+		comment: 'Whether to propagate channel posts to followers timelines',
+	})
+	public propagateToTimelines: boolean;
 }
