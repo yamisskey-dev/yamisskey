@@ -219,14 +219,21 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			.leftJoinAndSelect('note.reply', 'reply')
 			.leftJoinAndSelect('note.renote', 'renote')
 			.leftJoinAndSelect('reply.user', 'replyUser')
-			.leftJoinAndSelect('renote.user', 'renoteUser');
+			.leftJoinAndSelect('renote.user', 'renoteUser')
+			.leftJoinAndSelect('note.channel', 'channel'); // この行を追加
 
 		if (followingChannels.length > 0) {
 			const followingChannelIds = followingChannels.map(x => x.followeeId);
 
 			query.andWhere(new Brackets(qb => {
-				qb.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds });
-				qb.orWhere('note.channelId IS NULL');
+				qb.where('note.channelId IS NULL'); // チャンネル投稿ではない
+				qb.orWhere(new Brackets(qb2 => {
+					qb2.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds })
+						.andWhere(new Brackets(qb3 => {
+							qb3.where('note.userId = :meId', { meId: me.id }) // 自分の投稿は常に表示
+								.orWhere('channel.propagateToTimelines = TRUE'); // または他人の投稿でpropagateToTimelinesがtrue
+						}));
+				}));
 			}));
 		} else {
 			query.andWhere('note.channelId IS NULL');

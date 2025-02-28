@@ -248,7 +248,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			.leftJoinAndSelect('note.reply', 'reply')
 			.leftJoinAndSelect('note.renote', 'renote')
 			.leftJoinAndSelect('reply.user', 'replyUser')
-			.leftJoinAndSelect('renote.user', 'renoteUser');
+			.leftJoinAndSelect('renote.user', 'renoteUser')
+			.leftJoinAndSelect('note.channel', 'channel');
 
 		if (followees.length > 0 && followingChannels.length > 0) {
 			// ユーザー・チャンネルともにフォローあり
@@ -261,7 +262,12 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 							.where('note.userId IN (:...meOrFolloweeIds)', { meOrFolloweeIds: meOrFolloweeIds })
 							.andWhere('note.channelId IS NULL');
 					}))
-					.orWhere('note.channelId IN (:...followingChannelIds)', { followingChannelIds });
+					.orWhere(new Brackets(qb3 => {
+						qb3
+							.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds })
+							.andWhere('channel.propagateToTimelines = TRUE')
+							.andWhere('note.userId IN (:...meOrFolloweeIds)', { meOrFolloweeIds: meOrFolloweeIds }); // この行を追加
+					}));
 			}));
 		} else if (followees.length > 0) {
 			// ユーザーフォローのみ（チャンネルフォローなし）
@@ -275,7 +281,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			query.andWhere(new Brackets(qb => {
 				qb
 					.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds })
-					.orWhere('note.userId = :meId', { meId: me.id });
+					.andWhere('note.userId = :meId', { meId: me.id }); // 自分の投稿のみに制限
 			}));
 		} else {
 			// フォローなし

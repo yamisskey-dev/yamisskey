@@ -61,8 +61,17 @@ class HybridTimelineChannel extends Channel {
 			(note.channelId == null && isMe) ||
 			(note.channelId == null && Object.hasOwn(this.following, note.userId)) ||
 			(note.channelId == null && (note.user.host == null && note.visibility === 'public')) ||
-			(note.channelId != null && this.followingChannels.has(note.channelId))
+			// チャンネル投稿の場合、チャンネルをフォローしていて、propagateToTimelinesがtrueであれば表示
+			(note.channelId != null && this.followingChannels.has(note.channelId) &&
+			(note.channel && note.channel.propagateToTimelines))
 		)) return;
+
+		if (note.channelId) {
+			if (!this.followingChannels.has(note.channelId)) return;
+
+			// 自分の投稿でなく、かつpropagateToTimelinesがfalseなら表示しない
+			if (!isMe && note.channel && !note.channel.propagateToTimelines) return;
+		}
 
 		if (note.visibility === 'followers') {
 			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
@@ -73,7 +82,7 @@ class HybridTimelineChannel extends Channel {
 		// やみモードが有効な投稿はフォローしている人だけ配信
 		if (note.isNoteInYamiMode) {
 			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
-		};
+		}
 
 		if (this.isNoteMutedOrBlocked(note)) return;
 

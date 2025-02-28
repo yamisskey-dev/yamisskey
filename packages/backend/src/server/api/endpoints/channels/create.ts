@@ -51,6 +51,7 @@ export const paramDef = {
 		color: { type: 'string', minLength: 1, maxLength: 16 },
 		isSensitive: { type: 'boolean', nullable: true },
 		allowRenoteToExternal: { type: 'boolean', nullable: true },
+		propagateToTimelines: { type: 'boolean', default: false },
 	},
 	required: ['name'],
 } as const;
@@ -89,6 +90,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				isSensitive: ps.isSensitive ?? false,
 				...(ps.color !== undefined ? { color: ps.color } : {}),
 				allowRenoteToExternal: ps.allowRenoteToExternal ?? true,
+				propagateToTimelines: ps.propagateToTimelines ?? false,
 			} as MiChannel);
 
 			return await this.channelEntityService.pack(channel, me);

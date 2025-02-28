@@ -48,10 +48,15 @@ class YamiTimelineChannel extends Channel {
 
 		if (this.withFiles && (note.fileIds == null || note.fileIds.length === 0)) return;
 
+		// チャンネル投稿の場合
 		if (note.channelId) {
+			// チャンネルをフォローしていなければ表示しない
 			if (!this.followingChannels.has(note.channelId)) return;
+
+			// propagateToTimelinesがfalseで、自分の投稿でもない場合は表示しない
+			if (note.channel && !note.channel.propagateToTimelines && !isMe) return;
 		} else {
-			// その投稿のユーザーをフォローしていなかったら弾く
+			// チャンネル投稿でない場合は、投稿者をフォローしているか自分かどうか
 			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
 		}
 

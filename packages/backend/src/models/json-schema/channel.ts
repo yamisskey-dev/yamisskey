@@ -72,6 +72,10 @@ export const packedChannelSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
+		propagateToTimelines: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
 		isFollowing: {
 			type: 'boolean',
 			optional: true, nullable: false,
