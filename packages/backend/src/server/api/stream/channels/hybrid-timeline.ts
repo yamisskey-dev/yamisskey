@@ -61,17 +61,12 @@ class HybridTimelineChannel extends Channel {
 			(note.channelId == null && isMe) ||
 			(note.channelId == null && Object.hasOwn(this.following, note.userId)) ||
 			(note.channelId == null && (note.user.host == null && note.visibility === 'public')) ||
-			// チャンネル投稿の場合、チャンネルをフォローしていて、propagateToTimelinesがtrueであれば表示
-			(note.channelId != null && this.followingChannels.has(note.channelId) &&
-			(note.channel && note.channel.propagateToTimelines))
+			// チャンネル投稿の場合、条件を追加
+			(note.channelId != null &&
+			 this.followingChannels.has(note.channelId) && // チャンネルをフォローしている
+			 (note.channel && note.channel.propagateToTimelines) && // propagateToTimelinesがtrue
+			 (isMe || Object.hasOwn(this.following, note.userId))) // 自分の投稿か、フォローしている人の投稿
 		)) return;
-
-		if (note.channelId) {
-			if (!this.followingChannels.has(note.channelId)) return;
-
-			// 自分の投稿でなく、かつpropagateToTimelinesがfalseなら表示しない
-			if (!isMe && note.channel && !note.channel.propagateToTimelines) return;
-		}
 
 		if (note.visibility === 'followers') {
 			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;

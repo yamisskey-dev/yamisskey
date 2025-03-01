@@ -157,20 +157,31 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 		if (followingChannels.length > 0) {
 			const followingChannelIds = followingChannels.map(x => x.followeeId);
+			const followeeIds = followees.map(f => f.followeeId); // フォロー中のユーザーID一覧
 
 			query.andWhere(new Brackets(qb => {
 				// 自分とフォロー中のユーザーの非チャンネル投稿
 				qb.where(new Brackets(qb2 => {
-					qb2.where('note.userId IN (:...meOrFolloweeIds)', { meOrFolloweeIds: [me.id, ...followees.map(f => f.followeeId)] })
+					qb2.where('note.userId IN (:...meOrFolloweeIds)', { meOrFolloweeIds: [me.id, ...followeeIds] })
 						.andWhere('note.channelId IS NULL');
 				}));
 
-				// またはフォロー中のチャンネルの投稿で、自分の投稿かpropagateToTimelinesがtrue
+				// フォロー中のチャンネル投稿
 				qb.orWhere(new Brackets(qb2 => {
 					qb2.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds })
 						.andWhere(new Brackets(qb3 => {
-							qb3.where('note.userId = :meId', { meId: me.id }) // 自分の投稿は常に表示
-								.orWhere('channel.propagateToTimelines = TRUE'); // または他人の投稿でpropagateToTimelinesがtrue
+							// 自分の投稿は常に表示
+							qb3.where('note.userId = :meId', { meId: me.id });
+
+							// フォローしているユーザーがいる場合、その投稿も表示
+							if (followeeIds.length > 0) {
+								qb3.orWhere('note.userId IN (:...followeeIds)', { followeeIds });
+							}
+						}))
+						// propagateToTimelinesがtrueか、自分の投稿
+						.andWhere(new Brackets(qb4 => {
+							qb4.where('channel.propagateToTimelines = TRUE')
+								.orWhere('note.userId = :meId', { meId: me.id });
 						}));
 				}));
 			}));

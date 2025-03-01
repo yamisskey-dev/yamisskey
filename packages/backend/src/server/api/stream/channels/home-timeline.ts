@@ -50,6 +50,9 @@ class HomeTimelineChannel extends Channel {
 
 			// propagateToTimelinesがfalseで、自分の投稿でもない場合は表示しない
 			if (note.channel && !note.channel.propagateToTimelines && !isMe) return;
+
+			// 自分の投稿でなく、かつ投稿者をフォローしていない場合は表示しない
+			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
 		} else {
 			// チャンネル投稿でない場合は、投稿者をフォローしているか自分かどうか
 			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
@@ -119,6 +122,7 @@ export class HomeTimelineChannelService implements MiChannelService<true> {
 	public create(id: string, connection: Channel['connection']): HomeTimelineChannel {
 		return new HomeTimelineChannel(
 			this.noteEntityService,
+			this.userFollowingService,
 			id,
 			connection,
 		);
