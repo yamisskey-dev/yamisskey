@@ -519,7 +519,7 @@ export interface Locale extends ILocale {
      */
     "propagateToTimelines": string;
     /**
-     * オフにすると、このチャンネルの投稿は、このチャンネルをフォローしていないフォロワーのタイムラインに流れなくなります
+     * オフにするとチャンネルをフォローしていても、フォロワーのタイムラインにチャンネル投稿が流れなくなります
      */
     "propagateToTimelinesDescription": string;
     /**

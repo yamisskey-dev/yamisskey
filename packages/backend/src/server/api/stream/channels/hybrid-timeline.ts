@@ -11,6 +11,7 @@ import { bindThis } from '@/decorators.js';
 import { RoleService } from '@/core/RoleService.js';
 import { isRenotePacked, isQuotePacked } from '@/misc/is-renote.js';
 import type { JsonObject } from '@/misc/json-value.js';
+import { UserFollowingService } from '@/core/UserFollowingService.js'; // 追加
 import Channel, { type MiChannelService } from '../channel.js';
 
 class HybridTimelineChannel extends Channel {
@@ -21,12 +22,15 @@ class HybridTimelineChannel extends Channel {
 	private withRenotes: boolean;
 	private withReplies: boolean;
 	private withFiles: boolean;
+	// 追加: following と followingChannels のプロパティ
+	private following: Record<string, { id: string; withReplies: boolean }> = {};
+	private followingChannels: Set<string> = new Set();
 
 	constructor(
 		private metaService: MetaService,
 		private roleService: RoleService,
 		private noteEntityService: NoteEntityService,
-
+		private userFollowingService: UserFollowingService, // 追加
 		id: string,
 		connection: Channel['connection'],
 	) {
@@ -43,8 +47,19 @@ class HybridTimelineChannel extends Channel {
 		this.withReplies = !!(params.withReplies ?? false);
 		this.withFiles = !!(params.withFiles ?? false);
 
+		 // 追加: following と followingChannels の初期化
+		// チャンネルのフォロー情報を取得
+		const channelFollowings = await this.userFollowingService.getFollowingChannelsCache(this.user!.id);
+		this.followingChannels = new Set(channelFollowings);
+
+		// フォロー中のユーザー情報を取得
+		this.following = await this.userFollowingService.getFollowingsCache(this.user!.id);
+
 		// Subscribe events
 		this.subscriber.on('notesStream', this.onNote);
+
+		// チャンネル更新イベントをサブスクライブ
+		this.subscriber.on('channelUpdated', this.onChannelUpdated);
 	}
 
 	@bindThis
@@ -83,7 +98,7 @@ class HybridTimelineChannel extends Channel {
 
 		if (note.reply) {
 			const reply = note.reply;
-			if ((this.following[note.userId]?.withReplies ?? false) || this.withReplies) {
+			if ((this.following[note.userId].withReplies ?? false) || this.withReplies) {
 				// 自分のフォローしていないユーザーの visibility: followers な投稿への返信は弾く
 				if (reply.visibility === 'followers' && !Object.hasOwn(this.following, reply.userId) && reply.userId !== this.user!.id) return;
 			} else {
@@ -115,9 +130,17 @@ class HybridTimelineChannel extends Channel {
 	}
 
 	@bindThis
+	private async onChannelUpdated(channel: any) {
+		if (this.followingChannels.has(channel.id)) {
+			this.connection.cacheChannel(channel);
+		}
+	}
+
+	@bindThis
 	public dispose(): void {
 		// Unsubscribe events
 		this.subscriber.off('notesStream', this.onNote);
+		this.subscriber.off('channelUpdated', this.onChannelUpdated);
 	}
 }
 
@@ -131,6 +154,7 @@ export class HybridTimelineChannelService implements MiChannelService<true> {
 		private metaService: MetaService,
 		private roleService: RoleService,
 		private noteEntityService: NoteEntityService,
+		private userFollowingService: UserFollowingService, // 追加
 	) {
 	}
 
@@ -140,6 +164,7 @@ export class HybridTimelineChannelService implements MiChannelService<true> {
 			this.metaService,
 			this.roleService,
 			this.noteEntityService,
+			this.userFollowingService, // 追加
 			id,
 			connection,
 		);

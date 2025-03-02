@@ -10,6 +10,7 @@ import { bindThis } from '@/decorators.js';
 import { RoleService } from '@/core/RoleService.js';
 import { isRenotePacked, isQuotePacked } from '@/misc/is-renote.js';
 import type { JsonObject } from '@/misc/json-value.js';
+import { UserFollowingService } from '@/core/UserFollowingService.js';
 import Channel, { type MiChannelService } from '../channel.js';
 
 class YamiTimelineChannel extends Channel {
@@ -19,11 +20,13 @@ class YamiTimelineChannel extends Channel {
 	public static kind = 'read:account';
 	private withRenotes: boolean;
 	private withFiles: boolean;
+	private following: Record<string, { id: string; withReplies: boolean }> = {};
+	private followingChannels: Set<string> = new Set();
 
 	constructor(
 		private noteEntityService: NoteEntityService,
 		private roleService: RoleService,
-
+		private userFollowingService: UserFollowingService,
 		id: string,
 		connection: Channel['connection'],
 	) {
@@ -39,7 +42,15 @@ class YamiTimelineChannel extends Channel {
 		this.withRenotes = !!(params.withRenotes ?? true);
 		this.withFiles = !!(params.withFiles ?? false);
 
+		const channelFollowings = await this.userFollowingService.getFollowingChannelsCache(this.user!.id);
+		this.followingChannels = new Set(channelFollowings);
+
+		this.following = await this.userFollowingService.getFollowingsCache(this.user!.id);
+
 		this.subscriber.on('notesStream', this.onNote);
+
+		// チャンネル更新イベントをサブスクライブ
+		this.subscriber.on('channelUpdated', this.onChannelUpdated);
 	}
 
 	@bindThis
@@ -71,7 +82,7 @@ class YamiTimelineChannel extends Channel {
 
 		if (note.reply) {
 			const reply = note.reply;
-			if (this.following[note.userId]?.withReplies) {
+			if (this.following[note.userId].withReplies) {
 				// 自分のフォローしていないユーザーの visibility: followers な投稿への返信は弾く
 				if (reply.visibility === 'followers' && !Object.hasOwn(this.following, reply.userId) && reply.userId !== this.user!.id) return;
 			} else {
@@ -105,9 +116,17 @@ class YamiTimelineChannel extends Channel {
 	}
 
 	@bindThis
+	private async onChannelUpdated(channel: any) {
+		if (this.followingChannels.has(channel.id)) {
+			this.connection.cacheChannel(channel);
+		}
+	}
+
+	@bindThis
 	public dispose() {
 		// Unsubscribe events
 		this.subscriber.off('notesStream', this.onNote);
+		this.subscriber.off('channelUpdated', this.onChannelUpdated);
 	}
 }
 
@@ -120,6 +139,7 @@ export class YamiTimelineChannelService implements MiChannelService<true> {
 	constructor(
 		private noteEntityService: NoteEntityService,
 		private roleService: RoleService,
+		private userFollowingService: UserFollowingService,
 	) {
 	}
 
@@ -128,6 +148,7 @@ export class YamiTimelineChannelService implements MiChannelService<true> {
 		return new YamiTimelineChannel(
 			this.noteEntityService,
 			this.roleService,
+			this.userFollowingService,
 			id,
 			connection,
 		);
