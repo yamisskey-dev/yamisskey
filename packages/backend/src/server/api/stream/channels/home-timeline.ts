@@ -9,7 +9,6 @@ import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { bindThis } from '@/decorators.js';
 import { isRenotePacked, isQuotePacked } from '@/misc/is-renote.js';
 import type { JsonObject } from '@/misc/json-value.js';
-import { UserFollowingService } from '@/core/UserFollowingService.js'; // 追加
 import Channel, { type MiChannelService } from '../channel.js';
 
 class HomeTimelineChannel extends Channel {
@@ -19,13 +18,11 @@ class HomeTimelineChannel extends Channel {
 	public static kind = 'read:account';
 	private withRenotes: boolean;
 	private withFiles: boolean;
-	// 追加: following と followingChannels のプロパティ
 	private following: Record<string, { id: string; withReplies: boolean }> = {};
 	private followingChannels: Set<string> = new Set();
 
 	constructor(
 		private noteEntityService: NoteEntityService,
-		private userFollowingService: UserFollowingService, // 追加
 		id: string,
 		connection: Channel['connection'],
 	) {
@@ -37,19 +34,7 @@ class HomeTimelineChannel extends Channel {
 	public async init(params: JsonObject) {
 		this.withRenotes = !!(params.withRenotes ?? true);
 		this.withFiles = !!(params.withFiles ?? false);
-
-		// 追加: following と followingChannels の初期化
-		// チャンネルのフォロー情報を取得
-		const channelFollowings = await this.userFollowingService.getFollowingChannelsCache(this.user!.id);
-		this.followingChannels = new Set(channelFollowings);
-
-		// フォロー中のユーザー情報を取得
-		this.following = await this.userFollowingService.getFollowingsCache(this.user!.id);
-
 		this.subscriber.on('notesStream', this.onNote);
-
-		// チャンネル更新イベントをサブスクライブ
-		this.subscriber.on('channelUpdated', this.onChannelUpdated);
 	}
 
 	@bindThis
@@ -116,20 +101,9 @@ class HomeTimelineChannel extends Channel {
 	}
 
 	@bindThis
-	private async onChannelUpdated(channel: any) {
-		// フォローしているチャンネルが更新された場合のみ処理
-		if (this.followingChannels.has(channel.id)) {
-			// チャンネルの情報が更新されたら最新のチャンネル情報を取得し直す
-			// 次回のnote表示時には最新のpropagateToTimelinesが反映される
-			this.connection.cacheChannel(channel);
-		}
-	}
-
-	@bindThis
 	public dispose() {
 		// Unsubscribe events
 		this.subscriber.off('notesStream', this.onNote);
-		this.subscriber.off('channelUpdated', this.onChannelUpdated);
 	}
 }
 
@@ -141,7 +115,6 @@ export class HomeTimelineChannelService implements MiChannelService<true> {
 
 	constructor(
 		private noteEntityService: NoteEntityService,
-		private userFollowingService: UserFollowingService, // 追加
 	) {
 	}
 
@@ -149,7 +122,6 @@ export class HomeTimelineChannelService implements MiChannelService<true> {
 	public create(id: string, connection: Channel['connection']): HomeTimelineChannel {
 		return new HomeTimelineChannel(
 			this.noteEntityService,
-			this.userFollowingService, // 追加
 			id,
 			connection,
 		);

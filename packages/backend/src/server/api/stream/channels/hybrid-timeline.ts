@@ -11,7 +11,6 @@ import { bindThis } from '@/decorators.js';
 import { RoleService } from '@/core/RoleService.js';
 import { isRenotePacked, isQuotePacked } from '@/misc/is-renote.js';
 import type { JsonObject } from '@/misc/json-value.js';
-import { UserFollowingService } from '@/core/UserFollowingService.js'; // 追加
 import Channel, { type MiChannelService } from '../channel.js';
 
 class HybridTimelineChannel extends Channel {
@@ -22,7 +21,6 @@ class HybridTimelineChannel extends Channel {
 	private withRenotes: boolean;
 	private withReplies: boolean;
 	private withFiles: boolean;
-	// 追加: following と followingChannels のプロパティ
 	private following: Record<string, { id: string; withReplies: boolean }> = {};
 	private followingChannels: Set<string> = new Set();
 
@@ -30,7 +28,6 @@ class HybridTimelineChannel extends Channel {
 		private metaService: MetaService,
 		private roleService: RoleService,
 		private noteEntityService: NoteEntityService,
-		private userFollowingService: UserFollowingService, // 追加
 		id: string,
 		connection: Channel['connection'],
 	) {
@@ -46,20 +43,7 @@ class HybridTimelineChannel extends Channel {
 		this.withRenotes = !!(params.withRenotes ?? true);
 		this.withReplies = !!(params.withReplies ?? false);
 		this.withFiles = !!(params.withFiles ?? false);
-
-		 // 追加: following と followingChannels の初期化
-		// チャンネルのフォロー情報を取得
-		const channelFollowings = await this.userFollowingService.getFollowingChannelsCache(this.user!.id);
-		this.followingChannels = new Set(channelFollowings);
-
-		// フォロー中のユーザー情報を取得
-		this.following = await this.userFollowingService.getFollowingsCache(this.user!.id);
-
-		// Subscribe events
 		this.subscriber.on('notesStream', this.onNote);
-
-		// チャンネル更新イベントをサブスクライブ
-		this.subscriber.on('channelUpdated', this.onChannelUpdated);
 	}
 
 	@bindThis
@@ -78,9 +62,9 @@ class HybridTimelineChannel extends Channel {
 			(note.channelId == null && (note.user.host == null && note.visibility === 'public')) ||
 			// チャンネル投稿の場合、条件を追加
 			(note.channelId != null &&
-			 this.followingChannels.has(note.channelId) && // チャンネルをフォローしている
-			 (note.channel && note.channel.propagateToTimelines) && // propagateToTimelinesがtrue
-			 (isMe || Object.hasOwn(this.following, note.userId))) // 自分の投稿か、フォローしている人の投稿
+				this.followingChannels.has(note.channelId) && // チャンネルをフォローしている
+				(note.channel && note.channel.propagateToTimelines) && // propagateToTimelinesがtrue
+				(isMe || Object.hasOwn(this.following, note.userId))) // 自分の投稿か、フォローしている人の投稿
 		)) return;
 
 		if (note.visibility === 'followers') {
@@ -130,17 +114,9 @@ class HybridTimelineChannel extends Channel {
 	}
 
 	@bindThis
-	private async onChannelUpdated(channel: any) {
-		if (this.followingChannels.has(channel.id)) {
-			this.connection.cacheChannel(channel);
-		}
-	}
-
-	@bindThis
 	public dispose(): void {
 		// Unsubscribe events
 		this.subscriber.off('notesStream', this.onNote);
-		this.subscriber.off('channelUpdated', this.onChannelUpdated);
 	}
 }
 
@@ -154,7 +130,6 @@ export class HybridTimelineChannelService implements MiChannelService<true> {
 		private metaService: MetaService,
 		private roleService: RoleService,
 		private noteEntityService: NoteEntityService,
-		private userFollowingService: UserFollowingService, // 追加
 	) {
 	}
 
@@ -164,7 +139,6 @@ export class HybridTimelineChannelService implements MiChannelService<true> {
 			this.metaService,
 			this.roleService,
 			this.noteEntityService,
-			this.userFollowingService, // 追加
 			id,
 			connection,
 		);
