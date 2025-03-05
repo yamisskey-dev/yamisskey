@@ -35,7 +35,6 @@ export default function(app: App) {
 	app.component('WidgetClicker', defineAsyncComponent(() => import('./WidgetClicker.vue')));
 	app.component('WidgetBirthdayFollowings', defineAsyncComponent(() => import('./WidgetBirthdayFollowings.vue')));
 	app.component('WidgetListenBrainz', defineAsyncComponent(() => import('./WidgetListenBrainz.vue')));
-	app.component('WidgetUserNotes', defineAsyncComponent(() => import('./WidgetUserNotes.vue')));
 }
 
 export const federationWidgets = [
@@ -74,5 +73,4 @@ export const widgets = [
 	'clicker',
 	'birthdayFollowings',
 	'listenBrainz',
-	'userNotes',
 ];

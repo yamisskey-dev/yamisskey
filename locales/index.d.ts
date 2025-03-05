@@ -8966,10 +8966,6 @@ export interface Locale extends ILocale {
          * なうぷれ
          */
         "listenBrainz": string;
-        /**
-         * ユーザーノート
-         */
-        "userNotes": string;
     };
     "_cw": {
         /**

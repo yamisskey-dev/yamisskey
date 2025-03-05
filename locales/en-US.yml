@@ -2287,7 +2287,6 @@ _widgets:
   clicker: "Clicker"
   birthdayFollowings: "Today's Birthdays"
   listenBrainz: "Now Playing"
-  userNotes: 'User Notes'
 _cw:
   hide: "Hide"
   show: "Show content"
