@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: hitalin
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
 export class UpdateChannelPropagateDefault1740578400000 {
   name = 'UpdateChannelPropagateDefault1740578400000'
 
