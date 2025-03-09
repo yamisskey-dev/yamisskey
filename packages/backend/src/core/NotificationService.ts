@@ -97,6 +97,13 @@ export class NotificationService implements OnApplicationShutdown {
 		// 古いMisskeyバージョンのキャッシュが残っている可能性がある
 		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 		const recieveConfig = (profile.notificationRecieveConfig ?? {})[type];
+
+		// unfollow, blocked, unblocked は設定がない場合、デフォルトでneverとして扱う
+		if ((type === 'unfollow' || type === 'blocked' || type === 'unblocked') && !recieveConfig) {
+			return null; // 通知を送信しない
+		}
+
+		// 既存のチェック
 		if (recieveConfig?.type === 'never') {
 			return null;
 		}
@@ -180,6 +187,8 @@ export class NotificationService implements OnApplicationShutdown {
 
 			if (type === 'follow') this.emailNotificationFollow(notifieeId, await this.usersRepository.findOneByOrFail({ id: notifierId! }));
 			if (type === 'unfollow') this.emailNotificationUnFollow(notifieeId, await this.usersRepository.findOneByOrFail({ id: notifierId! }));
+			if (type === 'blocked') this.emailNotificationBlocked(notifieeId, await this.usersRepository.findOneByOrFail({ id: notifierId! }));
+			if (type === 'unblocked') this.emailNotificationUnBlocked(notifieeId, await this.usersRepository.findOneByOrFail({ id: notifierId! }));
 			if (type === 'receiveFollowRequest') this.emailNotificationReceiveFollowRequest(notifieeId, await this.usersRepository.findOneByOrFail({ id: notifierId! }));
 		}, () => { /* aborted, ignore it */ });
 
@@ -225,6 +234,30 @@ export class NotificationService implements OnApplicationShutdown {
 		// TODO: render user information html
 		sendEmail(userProfile.email, i18n.t('_email._receiveFollowRequest.title'), `${follower.name} (@${Acct.toString(follower)})`, `${follower.name} (@${Acct.toString(follower)})`);
 		*/
+	}
+
+	@bindThis
+	private async emailNotificationBlocked(userId: MiUser['id'], blocker: MiUser) {
+		/* メール通知の実装時に使用
+			const userProfile = await UserProfiles.findOneByOrFail({ userId: userId });
+			if (!userProfile.email || !userProfile.emailNotificationTypes.includes('blocked')) return;
+			const locale = locales[userProfile.lang ?? 'ja-JP'];
+			const i18n = new I18n(locale);
+			// TODO: render user information html
+			sendEmail(userProfile.email, i18n.t('_email._blocked.title'), `${blocker.name} (@${Acct.toString(blocker)})`, `${blocker.name} (@${Acct.toString(blocker)})`);
+			*/
+	}
+
+	@bindThis
+	private async emailNotificationUnBlocked(userId: MiUser['id'], blocker: MiUser) {
+		/* メール通知の実装時に使用
+			const userProfile = await UserProfiles.findOneByOrFail({ userId: userId });
+			if (!userProfile.email || !userProfile.emailNotificationTypes.includes('unblocked')) return;
+			const locale = locales[userProfile.lang ?? 'ja-JP'];
+			const i18n = new I18n(locale);
+			// TODO: render user information html
+			sendEmail(userProfile.email, i18n.t('_email._unblocked.title'), `${blocker.name} (@${Acct.toString(blocker)})`, `${blocker.name} (@${Acct.toString(blocker)})`);
+			*/
 	}
 
 	@bindThis
