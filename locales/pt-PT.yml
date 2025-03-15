@@ -1051,7 +1051,6 @@ thisPostMayBeAnnoyingHome: "Postar na linha do tempo inicial"
 thisPostMayBeAnnoyingCancel: "Cancelar"
 thisPostMayBeAnnoyingIgnore: "Postar mesmo assim"
 collapseRenotes: "Ocultar repostagens já visualizadas"
-collapseRenotesDescription: "Colapsar notas em que você reagiu ou repostou."
 internalServerError: "Erro interno de servidor"
 internalServerErrorDescription: "Houve um erro inesperado no servidor."
 copyErrorInfo: "Copiar detalhes de erro"
@@ -2754,8 +2753,10 @@ _remoteLookupErrors:
   _responseInvalid:
     title: "Resposta inválida"
     description: "Foi possível comunicar com o servidor, porém os dados obtidos foram incorretos."
-  _responseInvalidIdHostNotMatch:
-    description: "O domínio do endereço inserido difere do domínio do endereço final. Se você estiver pesquisando por um servidor de terceiros, tente buscar novamente com um endereço que pode ser obtido através do servidor original."
   _noSuchObject:
     title: "Não encontrado"
     description: "O recurso solicitado não foi encontrado, confira o endereço."
+_search:
+  searchScopeAll: "Todos"
+  searchScopeLocal: "Local"
+  searchScopeUser: "Usuário específico"

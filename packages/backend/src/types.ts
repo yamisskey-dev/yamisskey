@@ -21,6 +21,7 @@
  * achievementEarned - 実績を獲得
  * exportCompleted - エクスポートが完了
  * login - ログイン
+ * createToken - トークン作成
  * app - アプリ通知
  * test - テスト通知（サーバー側）
  */
@@ -42,6 +43,7 @@ export const notificationTypes = [
 	'achievementEarned',
 	'exportCompleted',
 	'login',
+	'createToken',
 	'app',
 	'test',
 ] as const;
@@ -128,6 +130,7 @@ export const moderationLogTypes = [
 	'deletePage',
 	'deleteFlash',
 	'deleteGalleryPost',
+	'updateProxyAccountDescription',
 ] as const;
 
 export type ModerationLogPayloads = {
@@ -385,25 +388,29 @@ export type ModerationLogPayloads = {
 		postUserUsername: string;
 		post: any;
 	};
+	updateProxyAccountDescription: {
+		before: string | null;
+		after: string | null;
+	};
 };
 
 export type Serialized<T> = {
 	[K in keyof T]:
-		T[K] extends Date
-			? string
-			: T[K] extends (Date | null)
-				? (string | null)
-				: T[K] extends Record<string, any>
-					? Serialized<T[K]>
-					: T[K] extends (Record<string, any> | null)
+	T[K] extends Date
+		? string
+		: T[K] extends (Date | null)
+			? (string | null)
+			: T[K] extends Record<string, any>
+				? Serialized<T[K]>
+				: T[K] extends (Record<string, any> | null)
 					? (Serialized<T[K]> | null)
-						: T[K] extends (Record<string, any> | undefined)
+					: T[K] extends (Record<string, any> | undefined)
 						? (Serialized<T[K]> | undefined)
-							: T[K];
+						: T[K];
 };
 
 export type FilterUnionByProperty<
-  Union,
-  Property extends string | number | symbol,
-  Condition
+	Union,
+	Property extends string | number | symbol,
+	Condition,
 > = Union extends Record<Property, Condition> ? Union : never;
