@@ -558,6 +558,10 @@ const routes: RouteDef[] = [{
 	component: page(() => import('@/pages/my-lists/list.vue')),
 	loginRequired: true,
 }, {
+	path: '/floater',
+	component: page(() => import('@/pages/floater/index.vue')),
+	loginRequired: true,
+}, {
 	path: '/my/lists',
 	component: page(() => import('@/pages/my-lists/index.vue')),
 	loginRequired: true,

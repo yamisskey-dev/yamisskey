@@ -9431,6 +9431,10 @@ export interface Locale extends ILocale {
          */
         "global": string;
     };
+    /**
+     * 浮上した人
+     */
+    "floater": string;
     "_play": {
         /**
          * Playの作成

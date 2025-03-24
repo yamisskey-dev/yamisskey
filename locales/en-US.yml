@@ -2404,6 +2404,7 @@ _timelines:
   local: "Local"
   social: "Social"
   global: "Global"
+floater: "Recently active followed users"
 _play:
   new: "Create Play"
   edit: "Edit Play"

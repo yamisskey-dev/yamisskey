@@ -1,6 +1,6 @@
 {
 	"name": "misskey",
-	"version": "2025.3.1-yami-1.5.7",
+	"version": "2025.3.1-yami-1.5.8",
 	"codename": "nasubi",
 	"repository": {
 		"type": "git",
@@ -77,7 +77,8 @@
 		"start-server-and-test": "2.0.10"
 	},
 	"optionalDependencies": {
-		"@tensorflow/tfjs-core": "4.22.0"
+		"@tensorflow/tfjs-core": "4.22.0",
+		"cypress": "14.1.0"
 	},
 	"pnpm": {
 		"overrides": {
