@@ -1779,6 +1779,10 @@ export interface Locale extends ILocale {
      */
     "withReplies": string;
     /**
+     * ハッシュタグ付きを含む
+     */
+    "withHashtags": string;
+    /**
      * 次のアカウントに接続されています
      */
     "connectedTo": string;
