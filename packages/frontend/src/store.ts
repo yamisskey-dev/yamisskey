@@ -245,6 +245,7 @@ export const defaultStore = markRaw(new Storage('base', {
 				withFiles: false,
 				localOnly: true,
 				remoteOnly: true,
+				withHashtags: false,
 			},
 		},
 	},
