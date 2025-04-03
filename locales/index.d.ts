@@ -5223,13 +5223,21 @@ export interface Locale extends ILocale {
      */
     "gameRetry": string;
     /**
-     * ノートの自己消滅の初期値
+     * ノートの時限消滅の初期値
      */
     "defaultScheduledNoteDeleteTime": string;
     /**
-     * ノートの自己消滅が有効になっています
+     * ノートの時限消滅が有効になっています
      */
     "scheduledNoteDeleteEnabled": string;
+    /**
+     * 過去の日時を指定することはできません
+     */
+    "cannotScheduleInPast": string;
+    /**
+     * 時限消滅する期限は予約投稿する時刻より後にしてください
+     */
+    "cannotScheduleDeleteEarlierThanNow": string;
     /**
      * 使用しない場合は空欄にしてください
      */
@@ -5528,7 +5536,7 @@ export interface Locale extends ILocale {
         };
     };
     /**
-     * 時限爆弾
+     * 時限消滅
      */
     "scheduledNoteDelete": string;
     /**
@@ -5540,7 +5548,7 @@ export interface Locale extends ILocale {
      */
     "cannotScheduleLaterThanOneYear": string;
     /**
-     * 時限削除する期限の入力が必要です
+     * 時限消滅する期限の入力が必要です
      */
     "cannotScheduleInputIsRequired": string;
     /**
@@ -5584,7 +5592,7 @@ export interface Locale extends ILocale {
      */
     "clearPost": string;
     /**
-     * デフォルトでノートが自己消滅するように
+     * デフォルトでノートが時限消滅するように
      */
     "defaultScheduledNoteDelete": string;
     "_bubbleGame": {
