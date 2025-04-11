@@ -284,7 +284,7 @@ const showSoftWordMutedWord = computed(() => prefer.s.showSoftWordMutedWord);
 const translation = ref<Misskey.entities.NotesTranslateResponse | null>(null);
 const translating = ref(false);
 const showTicker = (prefer.s.instanceTicker === 'always') || (prefer.s.instanceTicker === 'remote' && appearNote.value.user.instance);
-const showInstanceIcon = ref(prefer.s.instanceIcon);
+const showInstanceIcon = computed(() => prefer.s.instanceIcon);
 const canRenote = computed(() => ['public', 'home'].includes(appearNote.value.visibility) || (appearNote.value.visibility === 'followers' && appearNote.value.userId === $i?.id));
 const renoteCollapsed = ref(
 	prefer.s.collapseRenotes && isRenote && (
