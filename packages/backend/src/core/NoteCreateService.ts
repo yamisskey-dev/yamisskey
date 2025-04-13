@@ -726,7 +726,15 @@ export class NoteCreateService implements OnApplicationShutdown {
 		// やみモードが有効なユーザーであることと、やみモード内でのノートであることは等価であることが保証されているので
 		// チャンネルに関してもこれでOK
 		if (note.isNoteInYamiMode) {
-			this.pushToTl(note, user, ['localTimeline']);
+			// 通常のタイムラインには流さない（ローカル、ホーム、ソーシャル）
+			this.pushToTl(note, user, ['localTimeline', 'homeTimeline', 'hybridTimeline']);
+
+			const r = this.redisForTimelines.pipeline();
+
+			// やみモードノートはやみTLにも追加（visibility関係なく）
+			this.fanoutTimelineService.push('yamiTimeline', note.id, 300, r);
+
+			r.exec().catch(err => this.logger.error(err));
 		} else {
 			this.pushToTl(note, user);
 		}
@@ -1135,7 +1143,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 			// チャンネルタイムラインには常に配信（チャンネル自体のタイムラインなので）
 			this.fanoutTimelineService.push(`channelTimeline:${note.channelId}`, note.id, this.config.perChannelMaxNoteCacheCount, r);
 
-			 // 投稿者自身のuserTimelineには常に配信する
+			// 投稿者自身のuserTimelineには常に配信する
 			this.fanoutTimelineService.push(`userTimeline:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
 			if (note.fileIds.length > 0) {
 				this.fanoutTimelineService.push(`userTimelineWithFiles:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax / 2 : this.meta.perRemoteUserUserTimelineCacheMax / 2, r);
