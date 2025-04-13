@@ -61,10 +61,6 @@ export type RolePolicies = {
 	userEachUserListsLimit: number;
 	rateLimitFactor: number;
 	avatarDecorationLimit: number;
-	canChangeQuoteNotificationSetting: boolean;
-	canChangeUnfollowNotificationSetting: boolean;
-	canChangeBlockedNotificationSetting: boolean;
-	canChangeUnblockedNotificationSetting: boolean;
 	canFollow: boolean;
 	canFollowed: boolean;
 	canImportAntennas: boolean;
@@ -73,6 +69,11 @@ export type RolePolicies = {
 	canImportMuting: boolean;
 	canImportUserLists: boolean;
 	canImportNotes: boolean;
+	chatAvailability: 'available' | 'readonly' | 'unavailable';
+	canUseQuoteNotification: boolean;
+	canUseUnFollowNotification: boolean;
+	canUseBlockedNotification: boolean;
+	canUseUnBlockedNotification: boolean;
 };
 
 export const DEFAULT_POLICIES: RolePolicies = {
@@ -105,10 +106,6 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	userEachUserListsLimit: 50,
 	rateLimitFactor: 1,
 	avatarDecorationLimit: 1,
-	canChangeQuoteNotificationSetting: false,
-	canChangeUnfollowNotificationSetting: false,
-	canChangeBlockedNotificationSetting: false,
-	canChangeUnblockedNotificationSetting: false,
 	canFollow: true,
 	canFollowed: true,
 	canImportAntennas: true,
@@ -117,6 +114,11 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	canImportMuting: true,
 	canImportUserLists: true,
 	canImportNotes: true,
+	chatAvailability: 'available',
+	canUseQuoteNotification: true,
+	canUseUnFollowNotification: true,
+	canUseBlockedNotification: true,
+	canUseUnBlockedNotification: true,
 };
 
 @Injectable()
@@ -400,6 +402,12 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			return aggregate(policies.map(policy => policy.useDefault ? basePolicies[name] : policy.value));
 		}
 
+		function aggregateChatAvailability(vs: RolePolicies['chatAvailability'][]) {
+			if (vs.some(v => v === 'available')) return 'available';
+			if (vs.some(v => v === 'readonly')) return 'readonly';
+			return 'unavailable';
+		}
+
 		return {
 			gtlAvailable: calc('gtlAvailable', vs => vs.some(v => v === true)),
 			ltlAvailable: calc('ltlAvailable', vs => vs.some(v => v === true)),
@@ -430,10 +438,6 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			userEachUserListsLimit: calc('userEachUserListsLimit', vs => Math.max(...vs)),
 			rateLimitFactor: calc('rateLimitFactor', vs => Math.max(...vs)),
 			avatarDecorationLimit: calc('avatarDecorationLimit', vs => Math.max(...vs)),
-			canChangeQuoteNotificationSetting: calc('canChangeQuoteNotificationSetting', vs => vs.some(v => v === true)),
-			canChangeUnfollowNotificationSetting: calc('canChangeUnfollowNotificationSetting', vs => vs.some(v => v === true)),
-			canChangeBlockedNotificationSetting: calc('canChangeBlockedNotificationSetting', vs => vs.some(v => v === true)),
-			canChangeUnblockedNotificationSetting: calc('canChangeUnblockedNotificationSetting', vs => vs.some(v => v === true)),
 			canFollow: calc('canFollow', vs => vs.some(v => v === true)),
 			canFollowed: calc('canFollowed', vs => vs.some(v => v === true)),
 			canImportAntennas: calc('canImportAntennas', vs => vs.some(v => v === true)),
@@ -442,6 +446,11 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			canImportMuting: calc('canImportMuting', vs => vs.some(v => v === true)),
 			canImportUserLists: calc('canImportUserLists', vs => vs.some(v => v === true)),
 			canImportNotes: calc('canImportNotes', vs => vs.some(v => v === true)),
+			chatAvailability: calc('chatAvailability', aggregateChatAvailability),
+			canUseQuoteNotification: calc('canUseQuoteNotification', vs => vs.some(v => v === true)),
+			canUseUnFollowNotification: calc('canUseUnFollowNotification', vs => vs.some(v => v === true)),
+			canUseBlockedNotification: calc('canUseBlockedNotification', vs => vs.some(v => v === true)),
+			canUseUnBlockedNotification: calc('canUseUnBlockedNotification', vs => vs.some(v => v === true)),
 		};
 	}
 
@@ -669,6 +678,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			isModerator: values.isModerator,
 			isExplorable: values.isExplorable,
 			asBadge: values.asBadge,
+			preserveAssignmentOnMoveAccount: values.preserveAssignmentOnMoveAccount,
 			canEditMembersByModerator: values.canEditMembersByModerator,
 			displayOrder: values.displayOrder,
 			policies: values.policies,
