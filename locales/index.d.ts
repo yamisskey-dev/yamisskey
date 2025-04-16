@@ -6474,7 +6474,7 @@ export interface Locale extends ILocale {
     };
     "_timelineDescription": {
         /**
-         * やみタイムラインでは、病んでいる人のみが閲覧・投稿できます。
+         * やみタイムラインでは、やみモードが有効の人のみが閲覧・投稿できます。
          */
         "yami": string;
         /**
@@ -9664,7 +9664,7 @@ export interface Locale extends ILocale {
          */
         "yami": string;
         /**
-         * やみタイムラインに公開
+         * やみタイムラインのみに公開
          */
         "yamiDescription": string;
         /**
@@ -11866,7 +11866,7 @@ export interface Locale extends ILocale {
              */
             "normal1": string;
             /**
-             * 公開範囲「パブリック」で投稿した内容はLTL・HTL・STLに表示されます
+             * 全ての投稿した内容はやみタイムラインに表示されません
              */
             "normal2": string;
             /**
@@ -11878,13 +11878,9 @@ export interface Locale extends ILocale {
              */
             "yami1": string;
             /**
-             * 公開範囲「パブリック」で投稿した内容はLTL・HTL・STLに表示されません
+             * 全ての投稿した内容はやみタイムラインのみに表示されます
              */
             "yami2": string;
-            /**
-             * 公開範囲「パブリック」以外で投稿した内容はHTL・STLに表示されません
-             */
-            "yami3": string;
             /**
              * SNSに疲れてカームダウンしたい方
              */
