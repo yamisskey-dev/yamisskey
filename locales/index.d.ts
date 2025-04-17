@@ -11878,7 +11878,7 @@ export interface Locale extends ILocale {
              */
             "normal": string;
             /**
-             * やみTLが使えません"
+             * 他人のやみノートを見ることはできません
              */
             "normal1": string;
             /**
@@ -11890,7 +11890,7 @@ export interface Locale extends ILocale {
              */
             "normalRecommend": string;
             /**
-             * やみTLが使えます
+             * 他人のやみノートを見ることができます
              */
             "yami1": string;
             /**
