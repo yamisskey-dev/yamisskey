@@ -11852,6 +11852,18 @@ export interface Locale extends ILocale {
          * やみ
          */
         "yamiModeShort": string;
+        /**
+         * 通常ノート
+         */
+        "normalNote": string;
+        /**
+         * やみノート
+         */
+        "yamiNote": string;
+        /**
+         * やみタイムライン
+         */
+        "yamiTimeline": string;
         "_yamiModeSwitcher": {
             /**
              * こんな方におすすめ
@@ -11862,11 +11874,11 @@ export interface Locale extends ILocale {
              */
             "normal": string;
             /**
-             * LTLが使えます
+             * 他人のやみノートを見ることはできません
              */
             "normal1": string;
             /**
-             * 全ての投稿した内容はやみタイムラインに表示されません
+             * デフォルトで全投稿が通常ノートになり、やみタイムラインに表示されません
              */
             "normal2": string;
             /**
@@ -11874,11 +11886,11 @@ export interface Locale extends ILocale {
              */
             "normalRecommend": string;
             /**
-             * やみTLが使えます
+             * 他人のやみノートを見ることができます
              */
             "yami1": string;
             /**
-             * 全ての投稿した内容はやみタイムラインのみに表示されます
+             * デフォルトで全投稿がやみノートになり、やみタイムラインのみに表示されます
              */
             "yami2": string;
             /**

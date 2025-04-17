@@ -22,11 +22,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<template v-if="!(channel != null && fixed)">
 				<!-- やみノート切り替えボタン -->
 				<button
-					v-tooltip="i18n.ts._yami.yamiMode"
-					:class="['_button', $style.headerRightItem, { [$style.danger]: !isNoteInYamiMode }]"
+					v-tooltip="isNoteInYamiMode ? i18n.ts._yami.yamiNote : i18n.ts._yami.normalNote"
+					:class="['_button', $style.headerRightItem]"
 					@click="toggleYamiMode"
 				>
-					<i class="ti ti-moon"></i>
+					<i :class="isNoteInYamiMode ? 'ti ti-moon' : 'ti ti-users-group'"></i>
 				</button>
 
 				<!-- 既存の公開範囲ボタン -->
@@ -220,6 +220,8 @@ watch(() => prefer.s.defaultScheduledNoteDelete, (newValue) => {
 // フォームがリセットされたときに初期化（新規投稿時）
 watch(() => props.initialNote, () => {
 	scheduledNoteDelete.value = getInitialScheduledDelete();
+	// ユーザーのやみモード状態を反映するように追加
+	isNoteInYamiMode.value = $i.isInYamiMode;
 });
 const useCw = ref<boolean>(!!props.initialCw);
 const showPreview = ref(store.s.showPreview);
