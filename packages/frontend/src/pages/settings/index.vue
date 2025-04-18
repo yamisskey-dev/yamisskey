@@ -103,18 +103,6 @@ const menuDef = computed<SuperMenuDef[]>(() => [{
 	}],
 }, {
 	items: [{
-		icon: 'ti ti-moon',
-		text: i18n.ts._yami.yamiMode,
-		to: '/settings/yamimode',
-		active: currentPage.value?.route.name === 'yamimode',
-	}, {
-		icon: 'ti ti-key',
-		text: i18n.ts._yami.yamiSet,
-		to: '/settings/yamiset',
-		active: currentPage.value?.route.name === 'yamiset',
-	}],
-}, {
-	items: [{
 		icon: 'ti ti-adjustments',
 		text: i18n.ts.preferences,
 		to: '/settings/preferences',

@@ -11837,6 +11837,10 @@ export interface Locale extends ILocale {
     };
     "_yami": {
         /**
+         * モード切り替え
+         */
+        "switchMode": string;
+        /**
          * やみ設定
          */
         "yamiSet": string;
@@ -11861,10 +11865,38 @@ export interface Locale extends ILocale {
          */
         "yamiNote": string;
         /**
+         * やみノートに切り替えますか？
+         */
+        "enableYamiNoteConfirm": string;
+        /**
+         * やみノートはやみモードユーザーのみが閲覧できる特殊な投稿です。閲覧対象が限られるため、より自由な表現が可能です。
+         */
+        "enableYamiNoteConfirmWarn": string;
+        /**
+         * やみノートを使用する
+         */
+        "enableYamiNoteOk": string;
+        /**
+         * やみモード時にデフォルトでやみノートで投稿する
+         */
+        "defaultUseYamiNote": string;
+        /**
+         * オフにすると、やみモードでも通常の投稿が初期状態になります。
+         */
+        "defaultUseYamiNoteDescription": string;
+        /**
          * やみタイムライン
          */
         "yamiTimeline": string;
         "_yamiModeSwitcher": {
+            /**
+             * やみモードに切り替えますか？やみモードにすると、やみノートを閲覧・投稿できるようになります
+             */
+            "enterYamiModeConfirm": string;
+            /**
+             * 通常モードに戻りますか？通常モードにすると、やみノートを閲覧・投稿できなくなります
+             */
+            "exitYamiModeConfirm": string;
             /**
              * 通常モード
              */
@@ -11874,9 +11906,21 @@ export interface Locale extends ILocale {
              */
             "normal1": string;
             /**
+             * やみノートを投稿できません
+             */
+            "normal2": string;
+            /**
+             * やみモード
+             */
+            "yami": string;
+            /**
              * 他人のやみノートを表示します
              */
             "yami1": string;
+            /**
+             * やみノートを投稿できます
+             */
+            "yami2": string;
             /**
              * モードを切り替えると、やみノートを表示するか変わります
              */

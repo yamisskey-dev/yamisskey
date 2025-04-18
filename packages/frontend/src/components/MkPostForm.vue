@@ -20,8 +20,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 		<div :class="$style.headerRight">
 			<template v-if="!(channel != null && fixed)">
-				<!-- やみノート切り替えボタン -->
+				<!-- やみノート切り替えボタン - やみモードユーザーにのみ表示 -->
 				<button
+					v-if="$i.isInYamiMode"
 					v-tooltip="isNoteInYamiMode ? i18n.ts._yami.yamiNote : i18n.ts._yami.normalNote"
 					:class="['_button', $style.headerRightItem]"
 					@click="toggleYamiMode"
@@ -211,8 +212,11 @@ const getInitialScheduledDelete = () => {
 };
 // 初期化
 const scheduledNoteDelete = ref<DeleteScheduleEditorModelValue | null>(getInitialScheduledDelete());
-// やみノート状態を管理する変数（ユーザーのやみモード状態をデフォルト値とする）
-const isNoteInYamiMode = ref($i.isInYamiMode);
+// やみノート状態を管理する変数
+// デフォルト設定から初期値を取得
+const isNoteInYamiMode = ref($i.isInYamiMode ?
+	(prefer.s.rememberNoteVisibility ? prefer.s.isNoteInYamiMode : prefer.s.defaultIsNoteInYamiMode) :
+	false);
 // デフォルト設定の変更を監視
 watch(() => prefer.s.defaultScheduledNoteDelete, (newValue) => {
 	scheduledNoteDelete.value = getInitialScheduledDelete();
@@ -1185,8 +1189,53 @@ function toggleScheduleNote() {
 	}
 }
 
-function toggleYamiMode() {
+// やみノートモードの切り替え関数
+async function toggleYamiMode() {
+	// 通常モードユーザーの場合は切り替え不可
+	if (!$i.isInYamiMode) return;
+
+	// 現在がやみノートでない状態から切り替える場合にダイアログを表示
+	if (!isNoteInYamiMode.value) {
+		const neverShowYamiModeInfo = miLocalStorage.getItem('neverShowYamiModeInfo');
+
+		if (neverShowYamiModeInfo !== 'true') {
+			const confirm = await os.actions({
+				type: 'question',
+				title: i18n.ts._yami.enableYamiNoteConfirm,
+				text: i18n.ts._yami.enableYamiNoteConfirmWarn,
+				actions: [
+					{
+						value: 'yes' as const,
+						text: i18n.ts._yami.enableYamiNoteOk,
+						primary: true,
+					},
+					{
+						value: 'neverShow' as const,
+						text: `${i18n.ts._yami.enableYamiNoteOk} (${i18n.ts.neverShow})`,
+						danger: true,
+					},
+					{
+						value: 'no' as const,
+						text: i18n.ts.cancel,
+					},
+				],
+			});
+
+			if (confirm.canceled) return;
+			if (confirm.result === 'no') return;
+
+			if (confirm.result === 'neverShow') {
+				miLocalStorage.setItem('neverShowYamiModeInfo', 'true');
+			}
+		}
+	}
+
 	isNoteInYamiMode.value = !isNoteInYamiMode.value;
+
+	// 設定を記憶する場合のみ保存
+	if (prefer.s.rememberNoteVisibility) {
+		prefer.commit('isNoteInYamiMode', isNoteInYamiMode.value);
+	}
 }
 
 // function showOtherMenu(ev: MouseEvent) {
@@ -1253,8 +1302,11 @@ onMounted(() => {
 				if (draft.data.scheduledNoteDelete) {
 					scheduledNoteDelete.value = draft.data.scheduledNoteDelete;
 				}
-				// やみノート状態を復元
-				isNoteInYamiMode.value = draft.data.isNoteInYamiMode ?? $i.isInYamiMode;
+				// やみノート状態を復元 - 通常モードユーザーは常にfalseに
+				isNoteInYamiMode.value = $i.isInYamiMode ?
+					(draft.data.isNoteInYamiMode ??
+					 (prefer.s.rememberNoteVisibility ? prefer.s.isNoteInYamiMode : $i.isInYamiMode)) :
+					false;
 			}
 		}
 
