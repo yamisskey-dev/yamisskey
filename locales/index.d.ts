@@ -11841,6 +11841,10 @@ export interface Locale extends ILocale {
     };
     "_yami": {
         /**
+         * モード切り替え
+         */
+        "switchMode": string;
+        /**
          * やみ設定
          */
         "yamiSet": string;
@@ -11890,6 +11894,14 @@ export interface Locale extends ILocale {
         "yamiTimeline": string;
         "_yamiModeSwitcher": {
             /**
+             * やみモードに切り替えますか？やみモードにすると、やみノートを閲覧・投稿できるようになります
+             */
+            "enterYamiModeConfirm": string;
+            /**
+             * 通常モードに戻りますか？通常モードにすると、やみノートを閲覧・投稿できなくなります
+             */
+            "exitYamiModeConfirm": string;
+            /**
              * 通常モード
              */
             "normal": string;
@@ -11901,6 +11913,10 @@ export interface Locale extends ILocale {
              * やみノートを投稿できません
              */
             "normal2": string;
+            /**
+             * やみモード
+             */
+            "yami": string;
             /**
              * 他人のやみノートを表示します
              */
