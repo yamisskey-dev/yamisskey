@@ -9,7 +9,7 @@ import { clearCache } from './utility/clear-cache.js';
 import { $i } from '@/i.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { openInstanceMenu, openToolsMenu } from '@/ui/_common_/common.js';
-import { changeNormalMode, changeYamiMode } from '@/change-mode.js';
+import { changeYamiMode } from '@/change-mode.js';
 import { lookup } from '@/utility/lookup.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
@@ -159,12 +159,7 @@ export const navbarItemDef = reactive({
 		title: computed(() => $i?.isInYamiMode ? i18n.ts._yami._yamiModeSwitcher.normal : i18n.ts._yami._yamiModeSwitcher.yami),
 		icon: computed(() => $i?.isInYamiMode ? 'ti ti-users-group' : 'ti ti-moon'),
 		action: (ev) => {
-			if ($i?.isInYamiMode) {
-				changeNormalMode(ev);
-			}
-			if (!$i?.isInYamiMode) {
-				changeYamiMode(ev);
-			}
+			changeYamiMode(ev);
 		},
 	},
 	about: {
