@@ -11892,6 +11892,14 @@ export interface Locale extends ILocale {
          * やみタイムライン
          */
         "yamiTimeline": string;
+        /**
+         * フォローしていないユーザーのパブリックやみノートを表示
+         */
+        "showYamiNonFollowingPublicNotes": string;
+        /**
+         * フォローしているユーザーのやみノートを表示
+         */
+        "showYamiFollowingNotes": string;
         "_yamiModeSwitcher": {
             /**
              * やみモードに切り替えますか？やみモードにすると、やみノートを閲覧・投稿できるようになります
