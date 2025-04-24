@@ -141,6 +141,7 @@ export const PREF_DEF = {
 			'search',
 			'-',
 			'ui',
+			'mode',
 		],
 	},
 	statusbars: {
@@ -446,6 +447,18 @@ export const PREF_DEF = {
 	},
 	reactionChecksMuting: {
 		default: true,
+	},
+	isNoteInYamiMode: {
+		default: false, // 記憶用の変数
+	},
+	defaultIsNoteInYamiMode: {
+		default: false, // やみモードユーザー向けのデフォルト設定（初期値は無効）
+	},
+	showYamiNonFollowingPublicNotes: {
+		default: true, // パブリックやみノートを表示にするかどうか
+	},
+	showYamiFollowingNotes: {
+		default: true, // フォロー中のやみノートを表示にするかどうか
 	},
 	searchEngine: {
 		default: 'https://search.yami.ski/search?',

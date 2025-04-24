@@ -2,15 +2,9 @@
  * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
-// ホームタイムラインとfeaturedから持ってくる
-// UntilIDが3日より前だった場合はもうfeauturedから取得しない（feauturedがそれより前のデータを持っていないため）
-// ホームライムラインからの結果が最小のID（最古のノートになるように返す）ページネーションが壊れる+ホームタイムラインの結果に抜け漏れが発生するため
-// feauturedに抜け漏れが出るのはTODO
-// featuredのミュートとブロックを確認→2つの結果を比べる→feauturedをホームタイムラインの結果より新しくなるようにトリム→2つの結果を一意にしつつlimitでトリム→id順にソートしてreturn
-
 import { Brackets } from 'typeorm';
 import { Inject, Injectable } from '@nestjs/common';
-import type { NotesRepository, ChannelFollowingsRepository } from '@/models/_.js';
+import type { NotesRepository, ChannelFollowingsRepository, FollowingsRepository } from '@/models/_.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { QueryService } from '@/core/QueryService.js';
 import ActiveUsersChart from '@/core/chart/charts/active-users.js';
@@ -67,6 +61,8 @@ export const paramDef = {
 		withFiles: { type: 'boolean', default: false },
 		withRenotes: { type: 'boolean', default: true },
 		localOnly: { type: 'boolean', default: false }, // ローカルのみフィルター
+		showYamiNonFollowingPublicNotes: { type: 'boolean', default: true }, // フォローしていないユーザーのパブリックやみノート表示
+		showYamiFollowingNotes: { type: 'boolean', default: true }, // フォローしているユーザーのやみノート表示
 	},
 	required: [],
 } as const;
@@ -83,6 +79,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		@Inject(DI.channelFollowingsRepository)
 		private channelFollowingsRepository: ChannelFollowingsRepository,
 
+		@Inject(DI.followingsRepository)
+		private followingsRepository: FollowingsRepository,
+
 		private noteEntityService: NoteEntityService,
 		private roleService: RoleService,
 		private activeUsersChart: ActiveUsersChart,
@@ -95,255 +94,119 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private featuredService: FeaturedService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
-			const untilId = ps.untilId ?? (ps.untilDate ? this.idService.gen(ps.untilDate!) : null);
-			const sinceId = ps.sinceId ?? (ps.sinceDate ? this.idService.gen(ps.sinceDate!) : null);
-
-			const policies = await this.roleService.getUserPolicies(me ? me.id : null);
+			// ポリシーチェック
+			const policies = await this.roleService.getUserPolicies(me.id);
 			if (!policies.yamiTlAvailable) {
 				throw new ApiError(meta.errors.YamiTlDisabled);
 			}
 
-			const serverSettings = await this.metaService.fetch();
+			// Redis Timelinesを使用した実装 - シンプルに
+			const redisTimelines = ps.withFiles
+				? ['yamiTimeline', 'yamiTimelineWithFiles']
+				: ['yamiTimeline'];
 
-			if (!serverSettings.enableFanoutTimeline) {
-				const timeline = await this.getFromDb({
-					untilId,
-					sinceId,
-					limit: ps.limit,
-					includeMyRenotes: ps.includeMyRenotes,
-					includeRenotedMyNotes: ps.includeRenotedMyNotes,
-					includeLocalRenotes: ps.includeLocalRenotes,
-					withFiles: ps.withFiles,
-					withRenotes: ps.withRenotes,
-				}, me);
-
-				process.nextTick(() => {
-					this.activeUsersChart.read(me);
-				});
-
-				return await this.noteEntityService.packMany(timeline, me);
-			}
-
-			const [
-				followings,
-			] = await Promise.all([
-				this.cacheService.userFollowingsCache.fetch(me.id),
-			]);
-
-			const packedHomeTimelineNotes = await this.fanoutTimelineEndpointService.timeline({
-				untilId,
-				sinceId,
+			return await this.fanoutTimelineEndpointService.timeline({
+				untilId: ps.untilId ?? (ps.untilDate ? this.idService.gen(ps.untilDate!) : null),
+				sinceId: ps.sinceId ?? (ps.sinceDate ? this.idService.gen(ps.sinceDate!) : null),
 				limit: ps.limit,
-				allowPartial: ps.allowPartial,
+				allowPartial: false, // 必ず完全な結果を使用
 				me,
-				useDbFallback: serverSettings.enableFanoutTimelineDbFallback,
-				redisTimelines: ps.withFiles ? [`homeTimelineWithFiles:${me.id}`] : [`homeTimeline:${me.id}`],
-				alwaysIncludeMyNotes: true,
-				excludePureRenotes: !ps.withRenotes,
-				localOnly: ps.localOnly, // ローカルのみフィルター
+				useDbFallback: true,
+				redisTimelines: redisTimelines,
 				noteFilter: note => {
-					if (note.reply && note.reply.visibility === 'followers') {
-						if (!Object.hasOwn(followings, note.reply.userId) && note.reply.userId !== me.id) return false;
+					// クライアントサイドでの追加フィルタリング (Redis結果用)
+					if (!note.isNoteInYamiMode) return false;
+
+					// フォロー状態に基づくフィルタリング
+					const isFollowing = this.userFollowingService.isFollowing(me.id, note.userId);
+					if (isFollowing) {
+						return ps.showYamiFollowingNotes;
+					} else if (note.visibility === 'public') {
+						return ps.showYamiNonFollowingPublicNotes;
+					}
+					return false;
+				},
+				excludePureRenotes: !ps.withRenotes,
+				localOnly: ps.localOnly,
+				dbFallback: async (untilId, sinceId, limit) => {
+					const query = this.queryService.makePaginationQuery(this.notesRepository.createQueryBuilder('note'),
+						sinceId, untilId)
+						.innerJoinAndSelect('note.user', 'user')
+						.leftJoinAndSelect('note.reply', 'reply')
+						.leftJoinAndSelect('note.renote', 'renote')
+						.leftJoinAndSelect('reply.user', 'replyUser')
+						.leftJoinAndSelect('renote.user', 'renoteUser')
+						.andWhere('note.isNoteInYamiMode = TRUE');
+
+					// 自分がやみモードでない場合は自分の投稿だけ表示
+					if (!me.isInYamiMode) {
+						query.andWhere('note.userId = :meId', { meId: me.id });
+					} else {
+						// やみモードONの場合は通常のフィルタリング
+						const followings = await this.followingsRepository.find({
+							where: { followerId: me.id },
+							select: ['followeeId'],
+						});
+
+						const followingIds = followings.map(x => x.followeeId);
+						query.andWhere(new Brackets(qb => {
+							// 条件1: 自分の投稿は常に表示
+							qb.where('note.userId = :meId', { meId: me.id });
+
+							// 条件2: フォロー中のユーザーの投稿 (showYamiFollowingNotes が true の場合のみ)
+							if (followingIds.length > 0 && ps.showYamiFollowingNotes) {
+								qb.orWhere(new Brackets(qb2 => {
+									// フォローしているユーザーのノート（可視性に応じて制限）
+									qb2.where(new Brackets(qb3 => {
+										// パブリック投稿
+										qb3.where('note.userId IN (:...followingIds) AND note.visibility = :public',
+											{ followingIds, public: 'public' });
+
+										// フォロワー限定投稿
+										qb3.orWhere('note.userId IN (:...followingIds) AND note.visibility = :followers',
+											{ followingIds, followers: 'followers' });
+
+										// ホーム投稿
+										qb3.orWhere('note.userId IN (:...followingIds) AND note.visibility = :home',
+											{ followingIds, home: 'home' });
+									}));
+								}));
+							}
+
+							// ダイレクト投稿 (常に表示)
+							qb.orWhere(new Brackets(qb2 => {
+								qb2.where('note.visibility = :specified', { specified: 'specified' })
+									.andWhere(':meId = ANY(note."visibleUserIds")', { meId: me.id });
+							}));
+
+							// 条件3: パブリックやみノート（ローカルのみ） - showYamiNonFollowingPublicNotes が true の場合のみ
+							if (ps.showYamiNonFollowingPublicNotes) {
+								qb.orWhere(new Brackets(qb3 => {
+									qb3.where('note.visibility = :public AND note.userHost IS NULL', { public: 'public' })
+										// フォローしているユーザーのノートは条件2で既に処理されているため除外
+										.andWhere('note.userId NOT IN (:...followingIds)',
+											{ followingIds: followingIds.length > 0 ? followingIds : [me.id] });
+								}));
+							}
+						}));
 					}
 
-					return true;
+					// 他のフィルター条件を追加
+					if (ps.withFiles) {
+						query.andWhere('note.fileIds != \'{}\'');
+					}
+
+					if (ps.withRenotes === false) {
+						query.andWhere('note.renoteId IS NULL');
+					}
+
+					// ソート順を明示的に指定
+					query.orderBy('note.id', 'DESC');
+
+					const notes = await query.limit(limit).getMany();
+					return notes;
 				},
-				dbFallback: async (untilId, sinceId, limit) => await this.getFromDb({
-					untilId,
-					sinceId,
-					limit,
-					includeMyRenotes: ps.includeMyRenotes,
-					includeRenotedMyNotes: ps.includeRenotedMyNotes,
-					includeLocalRenotes: ps.includeLocalRenotes,
-					withFiles: ps.withFiles,
-					withRenotes: ps.withRenotes,
-				}, me),
 			});
-
-			process.nextTick(() => {
-				this.activeUsersChart.read(me);
-			});
-
-			// 3日経っていないことを確認
-			if (ps.untilId) {
-				if (this.idService.parse(ps.untilId).date.getTime() < Date.now() - 1000 * 60 * 60 * 24 * 3 ) {
-					return packedHomeTimelineNotes;
-				}
-			}
-
-			let feauturedNoteIds: string[];
-			if (this.globalNotesRankingCacheLastFetchedAt !== 0 && (Date.now() - this.globalNotesRankingCacheLastFetchedAt < 1000 * 60 * 30)) {
-				feauturedNoteIds = this.globalNotesRankingCache;
-			} else {
-				feauturedNoteIds = await this.featuredService.getGlobalNotesRanking(100);
-				this.globalNotesRankingCache = feauturedNoteIds;
-				this.globalNotesRankingCacheLastFetchedAt = Date.now();
-			}
-
-			// feauturedのノート数が0でないことを確認
-			if (feauturedNoteIds.length === 0) {
-				return packedHomeTimelineNotes;
-			}
-
-			const [
-				userIdsWhoMeMuting,
-				userIdsWhoBlockingMe,
-			] = await Promise.all([
-				this.cacheService.userMutingsCache.fetch(me.id),
-				this.cacheService.userBlockedCache.fetch(me.id),
-			]);
-
-			const query = this.queryService.makePaginationQuery(this.notesRepository.createQueryBuilder('note'), ps.sinceId, ps.untilId)
-				.where('note.id IN (:...noteIds)', { noteIds: feauturedNoteIds })
-				.innerJoinAndSelect('note.user', 'user')
-				.leftJoinAndSelect('note.reply', 'reply')
-				.leftJoinAndSelect('note.renote', 'renote')
-				.leftJoinAndSelect('reply.user', 'replyUser')
-				.leftJoinAndSelect('renote.user', 'renoteUser')
-				.leftJoinAndSelect('note.channel', 'channel');
-
-			const feauturedNotes = (await query.getMany()).filter(note => {
-				if (isUserRelated(note, userIdsWhoBlockingMe)) return false;
-				if (isUserRelated(note, userIdsWhoMeMuting)) return false;
-
-				return true;
-			});
-
-			// 取得した中で最古のホームタイムラインのnoteIDを抽出する
-			const minHomeTimelineId = packedHomeTimelineNotes.length > 0 ? packedHomeTimelineNotes[packedHomeTimelineNotes.length - 1].id : null;
-			// 結果を一意にした上で最古のnoteIdがホームタイムライン由来にする
-			const filteredFeaturedNotes = feauturedNotes.filter(note => {
-				if (!minHomeTimelineId) return true;
-				return note.id < minHomeTimelineId;
-			});
-
-			if (filteredFeaturedNotes.length === 0) {
-				return packedHomeTimelineNotes;
-			}
-
-			const packedFeauturedNotes = await this.noteEntityService.packMany(filteredFeaturedNotes, me);
-
-			const allNotes = [...packedHomeTimelineNotes, ...packedFeauturedNotes]
-				.sort((a, b) => a.id > b.id ? -1 : 1)
-				.filter((note, index, self) =>
-					index === self.findIndex(n => n.id === note.id), // 一意にする
-				)
-				.slice(0, ps.limit); // ps.limitでトリム
-
-			return allNotes;
 		});
-	}
-
-	private async getFromDb(ps: { untilId: string | null; sinceId: string | null; limit: number; includeMyRenotes: boolean; includeRenotedMyNotes: boolean; includeLocalRenotes: boolean; withFiles: boolean; withRenotes: boolean; }, me: MiLocalUser) {
-		const followees = await this.userFollowingService.getFollowees(me.id);
-		const followingChannels = await this.channelFollowingsRepository.find({
-			where: {
-				followerId: me.id,
-			},
-		});
-
-		//#region Construct query
-		const query = this.queryService.makePaginationQuery(this.notesRepository.createQueryBuilder('note'), ps.sinceId, ps.untilId)
-			.innerJoinAndSelect('note.user', 'user')
-			.leftJoinAndSelect('note.reply', 'reply')
-			.leftJoinAndSelect('note.renote', 'renote')
-			.leftJoinAndSelect('reply.user', 'replyUser')
-			.leftJoinAndSelect('renote.user', 'renoteUser')
-			.leftJoinAndSelect('note.channel', 'channel');
-
-		if (followees.length > 0 && followingChannels.length > 0) {
-			// ユーザー・チャンネルともにフォローあり
-			const meOrFolloweeIds = [me.id, ...followees.map(f => f.followeeId)];
-			const followingChannelIds = followingChannels.map(x => x.followeeId);
-			query.andWhere(new Brackets(qb => {
-				qb
-					.where(new Brackets(qb2 => {
-						qb2
-							.where('note.userId IN (:...meOrFolloweeIds)', { meOrFolloweeIds: meOrFolloweeIds })
-							.andWhere('note.channelId IS NULL');
-					}))
-					.orWhere(new Brackets(qb3 => {
-						qb3
-							.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds })
-							.andWhere('channel.propagateToTimelines = TRUE')
-							.andWhere('note.userId IN (:...meOrFolloweeIds)', { meOrFolloweeIds: meOrFolloweeIds }); // この行を追加
-					}));
-			}));
-		} else if (followees.length > 0) {
-			// ユーザーフォローのみ（チャンネルフォローなし）
-			const meOrFolloweeIds = [me.id, ...followees.map(f => f.followeeId)];
-			query
-				.andWhere('note.channelId IS NULL')
-				.andWhere('note.userId IN (:...meOrFolloweeIds)', { meOrFolloweeIds: meOrFolloweeIds });
-		} else if (followingChannels.length > 0) {
-			// チャンネルフォローのみ（ユーザーフォローなし）
-			const followingChannelIds = followingChannels.map(x => x.followeeId);
-			query.andWhere(new Brackets(qb => {
-				qb
-					.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds })
-					.andWhere('note.userId = :meId', { meId: me.id }); // 自分の投稿のみに制限
-			}));
-		} else {
-			// フォローなし
-			query
-				.andWhere('note.channelId IS NULL')
-				.andWhere('note.userId = :meId', { meId: me.id });
-		}
-
-		query.andWhere(new Brackets(qb => {
-			qb
-				.where('note.replyId IS NULL') // 返信ではない
-				.orWhere(new Brackets(qb => {
-					qb // 返信だけど投稿者自身への返信
-						.where('note.replyId IS NOT NULL')
-						.andWhere('note.replyUserId = note.userId');
-				}));
-		}));
-
-		this.queryService.generateVisibilityQuery(query, me);
-		this.queryService.generateMutedUserQueryForNotes(query, me); // Change method name
-		this.queryService.generateBlockedUserQueryForNotes(query, me); // Change method name
-		this.queryService.generateMutedUserRenotesQueryForNotes(query, me);
-
-		if (ps.includeMyRenotes === false) {
-			query.andWhere(new Brackets(qb => {
-				qb.orWhere('note.userId != :meId', { meId: me.id });
-				qb.orWhere('note.renoteId IS NULL');
-				qb.orWhere('note.text IS NOT NULL');
-				qb.orWhere('note.fileIds != \'{}\'');
-				qb.orWhere('0 < (SELECT COUNT(*) FROM poll WHERE poll."noteId" = note.id)');
-			}));
-		}
-
-		if (ps.includeRenotedMyNotes === false) {
-			query.andWhere(new Brackets(qb => {
-				qb.orWhere('note.renoteUserId != :meId', { meId: me.id });
-				qb.orWhere('note.renoteId IS NULL');
-				qb.orWhere('note.text IS NOT NULL');
-				qb.orWhere('note.fileIds != \'{}\'');
-				qb.orWhere('0 < (SELECT COUNT(*) FROM poll WHERE poll."noteId" = note.id)');
-			}));
-		}
-
-		if (ps.includeLocalRenotes === false) {
-			query.andWhere(new Brackets(qb => {
-				qb.orWhere('note.renoteUserHost IS NOT NULL');
-				qb.orWhere('note.renoteId IS NULL');
-				qb.orWhere('note.text IS NOT NULL');
-				qb.orWhere('note.fileIds != \'{}\'');
-				qb.orWhere('0 < (SELECT COUNT(*) FROM poll WHERE poll."noteId" = note.id)');
-			}));
-		}
-
-		if (ps.withFiles) {
-			query.andWhere('note.fileIds != \'{}\'');
-		}
-
-		if (ps.withRenotes === false) {
-			query.andWhere('note.renoteId IS NULL');
-		}
-		//#endregion
-
-		return await query.limit(ps.limit).getMany();
 	}
 }

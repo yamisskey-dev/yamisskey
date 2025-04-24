@@ -9,6 +9,7 @@ import { clearCache } from './utility/clear-cache.js';
 import { $i } from '@/i.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { openInstanceMenu, openToolsMenu } from '@/ui/_common_/common.js';
+import { changeNormalMode, changeYamiMode } from '@/change-mode.js';
 import { lookup } from '@/utility/lookup.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
@@ -154,6 +155,18 @@ export const navbarItemDef = reactive({
 			}], ev.currentTarget ?? ev.target);
 		},
 	},
+	mode: {
+		title: computed(() => $i?.isInYamiMode ? i18n.ts._yami._yamiModeSwitcher.yami : i18n.ts._yami._yamiModeSwitcher.normal),
+		icon: computed(() => $i?.isInYamiMode ? 'ti ti-moon' : 'ti ti-users-group'),
+		action: (ev) => {
+			if ($i?.isInYamiMode) {
+				changeNormalMode(ev);
+			}
+			if (!$i?.isInYamiMode) {
+				changeYamiMode(ev);
+			}
+		},
+	},
 	about: {
 		title: i18n.ts.about,
 		icon: 'ti ti-info-circle',
@@ -171,7 +184,7 @@ export const navbarItemDef = reactive({
 	reload: {
 		title: i18n.ts.reload,
 		icon: 'ti ti-refresh',
-		action: (ev) => {
+		action: () => {
 			window.location.reload();
 		},
 	},

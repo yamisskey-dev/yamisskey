@@ -363,6 +363,44 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkPreferenceContainer>
 							</SearchMarker>
 
+							<SearchMarker :keywords="['default', 'note', 'visibility']">
+								<MkDisableSection :disabled="rememberNoteVisibility">
+									<MkFolder>
+										<div class="_gaps_m">
+											<template v-if="$i.isInYamiMode">
+												<MkPreferenceContainer k="defaultIsNoteInYamiMode">
+													<MkSwitch v-model="defaultIsNoteInYamiMode">
+														<template #label>{{ i18n.ts._yami.defaultUseYamiNote }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+														<template #caption>{{ i18n.ts._yami.defaultUseYamiNoteDescription }}</template>
+													</MkSwitch>
+												</MkPreferenceContainer>
+											</template>
+										</div>
+
+										<template #label><SearchLabel>{{ i18n.ts.defaultNoteVisibility }}</SearchLabel></template>
+										<template v-if="defaultNoteVisibility === 'public'" #suffix>{{ i18n.ts._visibility.public }}</template>
+										<template v-else-if="defaultNoteVisibility === 'home'" #suffix>{{ i18n.ts._visibility.home }}</template>
+										<template v-else-if="defaultNoteVisibility === 'followers'" #suffix>{{ i18n.ts._visibility.followers }}</template>
+										<template v-else-if="defaultNoteVisibility === 'specified'" #suffix>{{ i18n.ts._visibility.specified }}</template>
+
+										<div class="_gaps_m">
+											<MkPreferenceContainer k="defaultNoteVisibility">
+												<MkSelect v-model="defaultNoteVisibility">
+													<option value="public">{{ i18n.ts._visibility.public }}</option>
+													<option value="home">{{ i18n.ts._visibility.home }}</option>
+													<option value="followers">{{ i18n.ts._visibility.followers }}</option>
+													<option value="specified">{{ i18n.ts._visibility.specified }}</option>
+												</MkSelect>
+											</MkPreferenceContainer>
+
+											<MkPreferenceContainer k="defaultNoteLocalOnly">
+												<MkSwitch v-model="defaultNoteLocalOnly">{{ i18n.ts._visibility.disableFederation }}</MkSwitch>
+											</MkPreferenceContainer>
+										</div>
+									</MkFolder>
+								</MkDisableSection>
+							</SearchMarker>
+
 							<!-- 自動削除設定 -->
 							<SearchMarker :keywords="['auto', 'delete', 'scheduled', 'note']">
 								<MkPreferenceContainer k="defaultScheduledNoteDelete">
@@ -781,6 +819,21 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</div>
 							</MkFolder>
 						</SearchMarker>
+
+						<SearchMarker :keywords="['search', 'engine', 'searx', 'yami']">
+							<MkPreferenceContainer k="searchEngine">
+								<MkSelect v-model="searchEngine">
+									<template #label><SearchLabel>{{ i18n.ts.searchEngine }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+									<template #caption><SearchKeyword>{{ i18n.ts._yami.searchEngineDescription }}</SearchKeyword></template>
+									<option value="https://google.com/search?">Google Search (google.com)</option>
+									<option value="https://duckduckgo.com/?">DuckDuckGo (duckduckgo.com)</option>
+									<option value="https://search.yahoo.com/search?">Yahoo! Search (search.yahoo.com)</option>
+									<option value="https://www.ecosia.org/search?">Ecosia (ecosia.org)</option>
+									<option value="https://www.startpage.com/do/search?">Startpage (startpage.com)</option>
+									<option value="https://search.yami.ski/search?">SearX (search.yami.ski)</option>
+								</MkSelect>
+							</MkPreferenceContainer>
+						</SearchMarker>
 					</div>
 				</MkFolder>
 			</SearchMarker>
@@ -927,6 +980,9 @@ const makeEveryTextElementsSelectable = prefer.model('makeEveryTextElementsSelec
 const hideReactionUsers = prefer.model('hideReactionUsers');
 const hideReactionCount = prefer.model('hideReactionCount');
 const reactionChecksMuting = prefer.model('reactionChecksMuting');
+const isNoteInYamiMode = prefer.model('isNoteInYamiMode');
+const defaultIsNoteInYamiMode = prefer.model('defaultIsNoteInYamiMode');
+const searchEngine = prefer.model('searchEngine');
 
 const fontSize = ref(miLocalStorage.getItem('fontSize'));
 const useSystemFont = ref(miLocalStorage.getItem('useSystemFont') != null);

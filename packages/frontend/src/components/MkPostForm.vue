@@ -20,14 +20,27 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 		<div :class="$style.headerRight">
 			<template v-if="!(channel != null && fixed)">
+				<!-- やみノート切り替えボタン - やみモードユーザーにのみ表示 -->
+				<button
+					v-if="$i.isInYamiMode"
+					v-tooltip="parentIsYamiNote
+						? i18n.ts._yami.parentIsYamiNote
+						: (isNoteInYamiMode ? i18n.ts._yami.yamiNote : i18n.ts._yami.normalNote)"
+					:class="['_button', $style.headerRightItem, { [$style.headerRightItemActive]: isNoteInYamiMode || parentIsYamiNote }]"
+					:disabled="parentIsYamiNote"
+					@click="toggleYamiMode"
+				>
+					<i class="ti" :class="isNoteInYamiMode || parentIsYamiNote ? 'ti-moon' : 'ti-users-group'"></i>
+				</button>
+
+				<!-- 既存の公開範囲ボタン -->
 				<button v-if="channel == null" ref="visibilityButton" v-tooltip="i18n.ts.visibility" :class="['_button', $style.headerRightItem, $style.visibility]" @click="setVisibility">
-					<span v-if="visibility === 'public' && $i.isInYamiMode"><i class="ti ti-moon"></i></span>
-					<span v-else-if="visibility === 'public'"><i class="ti ti-world"></i></span>
+					<span v-if="visibility === 'public'"><i class="ti ti-world"></i></span>
 					<span v-if="visibility === 'home'"><i class="ti ti-home"></i></span>
 					<span v-if="visibility === 'followers'"><i class="ti ti-lock"></i></span>
 					<span v-if="visibility === 'specified'"><i class="ti ti-mail"></i></span>
 					<span :class="$style.headerRightButtonText">
-						{{ i18n.ts._visibility[visibility] }}{{ visibility === 'public' && $i.isInYamiMode ? ` (${i18n.ts._yami.yamiModeShort})` : '' }}
+						{{ i18n.ts._visibility[visibility] }}
 					</span>
 				</button>
 				<button v-else class="_button" :class="[$style.headerRightItem, $style.visibility]" disabled>
@@ -202,6 +215,22 @@ const getInitialScheduledDelete = () => {
 };
 // 初期化
 const scheduledNoteDelete = ref<DeleteScheduleEditorModelValue | null>(getInitialScheduledDelete());
+// やみノート状態を管理する変数
+// 親投稿がやみノートの場合は強制的にやみノートにする
+const isNoteInYamiMode = ref(
+	// 親投稿がやみノートの場合は必ずtrue
+	(props.reply?.isNoteInYamiMode || props.renote?.isNoteInYamiMode)
+		? true
+	// それ以外は既存のロジック
+		: ($i.isInYamiMode
+			? (prefer.s.rememberNoteVisibility ? prefer.s.isNoteInYamiMode : prefer.s.defaultIsNoteInYamiMode)
+			: false),
+);
+
+// 親投稿がやみノートかどうかの判定を計算プロパティに
+const parentIsYamiNote = computed(() => {
+	return (props.reply?.isNoteInYamiMode || props.renote?.isNoteInYamiMode) ?? false;
+});
 // デフォルト設定の変更を監視
 watch(() => prefer.s.defaultScheduledNoteDelete, (newValue) => {
 	scheduledNoteDelete.value = getInitialScheduledDelete();
@@ -486,6 +515,7 @@ function watchForDraft() {
 	watch(localOnly, () => saveDraft());
 	watch(quoteId, () => saveDraft());
 	watch(reactionAcceptance, () => saveDraft());
+	watch(isNoteInYamiMode, () => saveDraft()); // やみノート状態も監視
 }
 
 function checkMissingMention() {
@@ -599,6 +629,7 @@ function setVisibility() {
 		isSilenced: $i.isSilenced,
 		localOnly: localOnly.value,
 		src: visibilityButton.value,
+		isNoteInYamiMode: isNoteInYamiMode.value, // Add this prop to pass the note-specific YamiMode flag
 		...(props.reply ? { isReplyVisibilitySpecified: props.reply.visibility === 'specified' } : {}),
 	}, {
 		changeVisibility: v => {
@@ -890,6 +921,7 @@ function saveDraft() {
 			reactionAcceptance: reactionAcceptance.value,
 			scheduledNoteDelete: scheduledNoteDelete.value,
 			scheduleNote: scheduleNote.value,
+			isNoteInYamiMode: isNoteInYamiMode.value, // やみノート状態を保存
 		},
 	};
 
@@ -969,6 +1001,7 @@ async function post(ev?: MouseEvent) {
 		visibleUserIds: visibility.value === 'specified' ? visibleUsers.value.map(u => u.id) : undefined,
 		reactionAcceptance: reactionAcceptance.value,
 		scheduleNote: scheduleNote.value ?? undefined,
+		isNoteInYamiMode: isNoteInYamiMode.value, // やみノート状態を保存
 	};
 
 	if (withHashtags.value && hashtags.value && hashtags.value.trim() !== '') {
@@ -1170,6 +1203,58 @@ function toggleScheduleNote() {
 	}
 }
 
+// やみノートモードの切り替え関数
+async function toggleYamiMode() {
+	// 通常モードユーザーの場合は切り替え不可
+	if (!$i.isInYamiMode) return;
+
+	// 親がやみノートの場合は切り替え不可
+	if (parentIsYamiNote.value) return;
+
+	// 現在がやみノートでない状態から切り替える場合にダイアログを表示
+	if (!isNoteInYamiMode.value) {
+		const neverShowYamiModeInfo = miLocalStorage.getItem('neverShowYamiModeInfo');
+
+		if (neverShowYamiModeInfo !== 'true') {
+			const confirm = await os.actions({
+				type: 'question',
+				title: i18n.ts._yami.enableYamiNoteConfirm,
+				text: i18n.ts._yami.enableYamiNoteConfirmWarn,
+				actions: [
+					{
+						value: 'yes' as const,
+						text: i18n.ts._yami.enableYamiNoteOk,
+						primary: true,
+					},
+					{
+						value: 'neverShow' as const,
+						text: `${i18n.ts._yami.enableYamiNoteOk} (${i18n.ts.neverShow})`,
+						danger: true,
+					},
+					{
+						value: 'no' as const,
+						text: i18n.ts.cancel,
+					},
+				],
+			});
+
+			if (confirm.canceled) return;
+			if (confirm.result === 'no') return;
+
+			if (confirm.result === 'neverShow') {
+				miLocalStorage.setItem('neverShowYamiModeInfo', 'true');
+			}
+		}
+	}
+
+	isNoteInYamiMode.value = !isNoteInYamiMode.value;
+
+	// 設定を記憶する場合のみ保存
+	if (prefer.s.rememberNoteVisibility) {
+		prefer.commit('isNoteInYamiMode', isNoteInYamiMode.value);
+	}
+}
+
 // function showOtherMenu(ev: MouseEvent) {
 // 	const menuItems: MenuItem[] = [];
 
@@ -1234,6 +1319,11 @@ onMounted(() => {
 				if (draft.data.scheduledNoteDelete) {
 					scheduledNoteDelete.value = draft.data.scheduledNoteDelete;
 				}
+				// やみノート状態を復元 - 通常モードユーザーは常にfalseに
+				isNoteInYamiMode.value = $i.isInYamiMode ?
+					(draft.data.isNoteInYamiMode ??
+					 (prefer.s.rememberNoteVisibility ? prefer.s.isNoteInYamiMode : $i.isInYamiMode)) :
+					false;
 			}
 		}
 

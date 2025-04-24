@@ -6482,13 +6482,13 @@ export interface Locale extends ILocale {
     };
     "_timelineDescription": {
         /**
-         * やみタイムラインでは、病んでいる人のみが閲覧・投稿できます。
-         */
-        "yami": string;
-        /**
          * ホームタイムラインでは、あなたがフォローしているアカウントの投稿を見られます。
          */
         "home": string;
+        /**
+         * やみタイムラインでは、あなたがフォローしているアカウントのやみノートとパブリックやみノートを見られます。
+         */
+        "yami": string;
         /**
          * ローカルタイムラインでは、このサーバーにいるユーザー全員の投稿を見られます。
          */
@@ -9668,6 +9668,14 @@ export interface Locale extends ILocale {
          */
         "homeDescription": string;
         /**
+         * やみ
+         */
+        "yami": string;
+        /**
+         * やみタイムラインのみに公開
+         */
+        "yamiDescription": string;
+        /**
          * フォロワー
          */
         "followers": string;
@@ -11837,6 +11845,10 @@ export interface Locale extends ILocale {
     };
     "_yami": {
         /**
+         * モード切り替え
+         */
+        "switchMode": string;
+        /**
          * やみ設定
          */
         "yamiSet": string;
@@ -11852,45 +11864,85 @@ export interface Locale extends ILocale {
          * やみ
          */
         "yamiModeShort": string;
+        /**
+         * 通常ノート
+         */
+        "normalNote": string;
+        /**
+         * やみノート
+         */
+        "yamiNote": string;
+        /**
+         * 親やみノートを継承
+         */
+        "parentIsYamiNote": string;
+        /**
+         * やみノートに切り替えますか？
+         */
+        "enableYamiNoteConfirm": string;
+        /**
+         * やみノートはやみモードユーザーのみが閲覧できる特殊な投稿です。閲覧対象が限られるため、より自由な表現が可能です。
+         */
+        "enableYamiNoteConfirmWarn": string;
+        /**
+         * やみノートを使用する
+         */
+        "enableYamiNoteOk": string;
+        /**
+         * やみモード時にデフォルトでやみノートで投稿する
+         */
+        "defaultUseYamiNote": string;
+        /**
+         * オフにすると、やみモードでも通常の投稿が初期状態になります。
+         */
+        "defaultUseYamiNoteDescription": string;
+        /**
+         * やみタイムライン
+         */
+        "yamiTimeline": string;
+        /**
+         * フォローしていないユーザーのパブリックやみノートを表示
+         */
+        "showYamiNonFollowingPublicNotes": string;
+        /**
+         * フォローしているユーザーのやみノートを表示
+         */
+        "showYamiFollowingNotes": string;
         "_yamiModeSwitcher": {
             /**
-             * こんな方におすすめ
+             * やみモードに切り替えますか？やみモードにすると、やみノートを閲覧・投稿できるようになります
              */
-            "recommendedFor": string;
+            "enterYamiModeConfirm": string;
             /**
-             * 通常
+             * 通常モードに戻りますか？通常モードにすると、やみノートを閲覧・投稿できなくなります
+             */
+            "exitYamiModeConfirm": string;
+            /**
+             * 通常モード
              */
             "normal": string;
             /**
-             * LTLが使えます
+             * 他人のやみノートを表示しません
              */
             "normal1": string;
             /**
-             * 公開範囲「パブリック」で投稿した内容はLTLに表示されます
+             * やみノートを投稿できません
              */
             "normal2": string;
             /**
-             * SNSでの通常の交流を楽しみたい方
+             * やみモード
              */
-            "normalRecommend": string;
+            "yami": string;
             /**
-             * フォロワーのやみTLに自分の非パブリック投稿を流します（フォロワーが非表示にできるオプションを開発予定）
+             * 他人のやみノートを表示します
              */
             "yami1": string;
             /**
-             * パブリック投稿をフォロワーのやみTLとグローバルTLにのみ流します（フォロワーが非表示にできるオプションを開発予定）
+             * やみノートを投稿できます
              */
             "yami2": string;
             /**
-             * パブリック投稿のうち人気のものだけ、フォロワー外のやみTLに流します（フォロワー外が非表示できるオプションを開発予定）
-             */
-            "yami3": string;
-            /**
-             * 同調圧力から解放されたい方（開発中のため、パブリック投稿がまだホームTLとソーシャルTLにも流れます）
-             */
-            "yamiRecommend": string;
-            /**
-             * モード切替できる回数には時間制限があります。
+             * モードを切り替えると、やみノートを表示するか変わります
              */
             "saveConfirmDescription": string;
         };

@@ -19,6 +19,26 @@ export type FanoutTimelineName = (
 	| 'localTimelineWithReplies' // only replies are included
 	| `localTimelineWithReplyTo:${string}` // Only replies to specific local user are included. Parameter is reply user id.
 
+	// hybrid timeline
+	| 'hybridTimeline' // replies are not included
+	| 'hybridTimelineWithFiles' // only non-reply notes with files are included
+	| 'hybridTimelineWithReplies' // only replies are included
+	| `hybridTimelineWithReplyTo:${string}` // Only replies to specific local user are included. Parameter is reply user id.
+	// yami timeline
+	| 'yamiTimeline' // グローバルやみタイムライン
+	| `yamiTimeline:${string}` // ユーザー個別のやみタイムライン
+	| 'yamiTimelineWithFiles'
+	| `yamiTimelineWithFiles:${string}`
+	| 'yamiNonFollowingPublicNotes' // フォローしていないユーザーのパブリックやみノート
+	| 'yamiNonFollowingPublicNotesWithFiles' // フォローしていないユーザーのファイル付きパブリックやみノート
+	| 'yamiTimelineWithReplies' // only replies are included
+	| `yamiTimelineWithReplyTo:${string}` // Only replies to specific local user are included. Parameter is reply user id.
+	// global timeline
+	| 'globalTimeline' // replies are not included
+	| 'globalTimelineWithFiles' // only non-reply notes with files are included
+	| 'globalTimelineWithReplies' // only replies are included
+	| `globalTimelineWithReplyTo:${string}` // Only replies to specific local user are included. Parameter is reply user id.
+
 	// antenna
 	| `antennaTimeline:${string}`
 
@@ -39,11 +59,13 @@ export type FanoutTimelineName = (
 	| `roleTimeline:${string}` // any notes are included
 );
 
-export type FanoutTimelineNamePrefix = 'homeTimeline' | 'localTimeline' | 'antennaTimeline' | 'userTimeline' | 'userListTimeline' | 'channelTimeline' | 'roleTimeline';
+export type FanoutTimelineNamePrefix =
+	'homeTimeline' | 'localTimeline' | 'hybridTimeline' | 'yamiTimeline' | 'globalTimeline' |
+	'antennaTimeline' | 'userTimeline' | 'userListTimeline' | 'channelTimeline' | 'roleTimeline';
 
 export type TimelineOptions = {
-    localOnly?: boolean; // ホーム/ソーシャルTL用
-    remoteOnly?: boolean; // グローバルTL用
+	localOnly?: boolean; // ホーム/ソーシャルTL用
+	remoteOnly?: boolean; // グローバルTL用
 };
 
 @Injectable()
@@ -118,5 +140,10 @@ export class FanoutTimelineService {
 	@bindThis
 	public purge(name: FanoutTimelineName) {
 		return this.redisForTimelines.del('list:' + name);
+	}
+
+	@bindThis
+	public removeFromTimeline(tl: FanoutTimelineName, noteId: string, pipeline: Redis.ChainableCommander) {
+		pipeline.lrem(`list:${tl}`, 0, noteId);
 	}
 }
