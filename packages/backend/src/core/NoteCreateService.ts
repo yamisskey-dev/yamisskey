@@ -235,7 +235,14 @@ export class NoteCreateService implements OnApplicationShutdown {
 	}, data: Option, silent = false): Promise<MiNote> {
 		// ノートのisNoteInYamiMode属性は投稿時のユーザーの属性に基本的に依存する
 		if (data.isNoteInYamiMode == null) {
-			data.isNoteInYamiMode = user.isInYamiMode;
+			// リプライ先またはリノート元がやみノートの場合は強制的にやみノート
+			if ((data.reply && data.reply.isNoteInYamiMode) ||
+				(data.renote && data.renote.isNoteInYamiMode)) {
+				data.isNoteInYamiMode = true;
+			} else {
+				// それ以外の場合は従来通りユーザーのやみモードに合わせる
+				data.isNoteInYamiMode = user.isInYamiMode;
+			}
 		}
 
 		// チャンネル外にリプライしたら対象のスコープに合わせる
@@ -1123,34 +1130,14 @@ export class NoteCreateService implements OnApplicationShutdown {
 	private async pushToTl(note: MiNote, user: { id: MiUser['id']; host: MiUser['host']; }, notToPush?: FanoutTimelineNamePrefix[]) {
 		if (!this.meta.enableFanoutTimeline) return;
 
-		// やみモード投稿とそれ以外で分岐
+		// やみモード投稿はやみタイムラインのみに流す
 		if (note.isNoteInYamiMode) {
-			// やみモード投稿はやみタイムラインのみに流す
 			const r = this.redisForTimelines.pipeline();
 
 			// 自分自身のやみタイムラインに追加
 			this.fanoutTimelineService.push(`yamiTimeline:${user.id}`, note.id, 300, r);
 			if (note.fileIds.length > 0) {
 				this.fanoutTimelineService.push(`yamiTimelineWithFiles:${user.id}`, note.id, 300, r);
-			}
-
-			// パブリックなやみノートは共通キーにも追加
-			if (note.visibility === 'public' && note.userHost == null) {
-				this.fanoutTimelineService.push('yamiPublicNotes', note.id, 1000, r);
-				if (note.fileIds.length > 0) {
-					this.fanoutTimelineService.push('yamiPublicNotesWithFiles', note.id, 500, r);
-				}
-			}
-
-			// 自分自身のプロフィールタイムラインにも追加
-			this.fanoutTimelineService.push(`userTimeline:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
-			if (note.fileIds.length > 0) {
-				this.fanoutTimelineService.push(`userTimelineWithFiles:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax / 2 : this.meta.perRemoteUserUserTimelineCacheMax / 2, r);
-			}
-
-			// 返信の場合は返信タイムラインにも追加
-			if (isReply(note)) {
-				this.fanoutTimelineService.push(`userTimelineWithReplies:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
 			}
 
 			// フォロワーのやみタイムラインに追加
@@ -1174,6 +1161,35 @@ export class NoteCreateService implements OnApplicationShutdown {
 				followingsPipeline.exec().catch(err => this.logger.error(err));
 			});
 
+			// パブリックなやみノートの場合の処理を修正
+			if (note.visibility === 'public' && note.userHost == null) {
+				this.fanoutTimelineService.push('yamiPublicNotes', note.id, 1000, r);
+				if (note.fileIds.length > 0) {
+					this.fanoutTimelineService.push('yamiPublicNotesWithFiles', note.id, 500, r);
+				}
+			}
+
+			// 自分自身のプロフィールタイムラインにも追加
+			// (これは他のタイムラインとは別の表示用なので残す)
+			this.fanoutTimelineService.push(`userTimeline:${user.id}`, note.id,
+				user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
+			if (note.fileIds.length > 0) {
+				this.fanoutTimelineService.push(`userTimelineWithFiles:${user.id}`, note.id,
+					user.host == null ? this.meta.perLocalUserUserTimelineCacheMax / 2 : this.meta.perRemoteUserUserTimelineCacheMax / 2, r);
+			}
+
+			// 返信の場合は返信タイムラインにも追加
+			if (isReply(note)) {
+				this.fanoutTimelineService.push(`userTimelineWithReplies:${user.id}`, note.id,
+					user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
+
+				// 特定ユーザーへの返信の場合
+				if (note.replyUserId) {
+					this.fanoutTimelineService.push(`yamiTimelineWithReplyTo:${note.replyUserId}`, note.id, 300, r);
+				}
+			}
+
+			// パイプライン実行
 			r.exec().catch(err => this.logger.error(err));
 			return;
 		}
@@ -1255,7 +1271,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 			this.followingsRepository.find({
 				where: {
 					followeeId: user.id,
-					followerHost: IsNull(),
+					followerHost: IsNull(), // リモートユーザーのフォローは除外
 					isFollowerHibernated: false,
 				},
 				select: ['followerId', 'withReplies'],
