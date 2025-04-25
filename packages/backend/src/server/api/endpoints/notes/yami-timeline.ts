@@ -100,57 +100,75 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				throw new ApiError(meta.errors.YamiTlDisabled);
 			}
 
-			// Redis Timelinesを使用した実装 - 新しい命名規則に合わせる
+			// Redis Timelinesを使用した実装
 			const redisTimelines = [];
 
-			// ユーザー個別タイムライン (自分のフォローの投稿など)
-			if (ps.showYamiFollowingNotes) {
-				redisTimelines.push(`yamiTimeline:${me.id}`);
-				if (ps.withFiles) {
-					redisTimelines.push(`yamiTimelineWithFiles:${me.id}`);
+			// やみモードONの場合のみRedisタイムラインを設定
+			if (me.isInYamiMode) {
+				// フォローしているユーザーのやみノート
+				if (ps.showYamiFollowingNotes) {
+					redisTimelines.push(`yamiTimeline:${me.id}`);
+					if (ps.withFiles) {
+						redisTimelines.push(`yamiTimelineWithFiles:${me.id}`);
+					}
+				}
+
+				// 非フォローユーザーのパブリックノート
+				if (ps.showYamiNonFollowingPublicNotes) {
+					redisTimelines.push('yamiPublicNotes');
+					if (ps.withFiles) {
+						redisTimelines.push('yamiPublicNotesWithFiles');
+					}
 				}
 			}
 
-			// 非フォローユーザーのパブリックノート (showYamiNonFollowingPublicNotesが有効な場合)
-			if (ps.showYamiNonFollowingPublicNotes) {
-				redisTimelines.push('yamiPublicNotes');
-				if (ps.withFiles) {
-					redisTimelines.push('yamiPublicNotesWithFiles');
-				}
-			}
+			// DBフォールバック強制フラグを設定
+			const forceDbFallback = ps.showYamiNonFollowingPublicNotes && !ps.showYamiFollowingNotes;
+
+			// 特殊なsinceIdを生成（約3ヶ月前）- ただしフロントエンドから明示的にsinceIdが指定された場合は使用しない
+			const forcedSinceId = (forceDbFallback && !ps.sinceId && !ps.sinceDate)
+				? this.idService.gen(Date.now() - 90 * 24 * 60 * 60 * 1000)
+				: null;
 
 			return await this.fanoutTimelineEndpointService.timeline({
 				untilId: ps.untilId ?? (ps.untilDate ? this.idService.gen(ps.untilDate!) : null),
-				sinceId: ps.sinceId ?? (ps.sinceDate ? this.idService.gen(ps.sinceDate!) : null),
+				sinceId: ps.sinceId ?? (ps.sinceDate ? this.idService.gen(ps.sinceDate!) : forcedSinceId),
 				limit: ps.limit,
 				allowPartial: false, // 必ず完全な結果を使用
 				me,
-				useDbFallback: true,
+				useDbFallback: true, // DBフォールバックを常に有効化
 				redisTimelines: redisTimelines,
 				noteFilter: note => {
 					// クライアントサイドでの追加フィルタリング (Redis結果用)
 					if (!note.isNoteInYamiMode) return false;
 
-					// 自分がやみモードでない場合は自分の投稿だけ表示（重要な修正点）
+					// 投稿が自分のものかどうか判定
+					const isMyNote = note.userId === me.id;
+
+					// 自分がやみモードでない場合は自分の投稿だけ表示
 					if (!me.isInYamiMode) {
-						return note.userId === me.id;
+						return isMyNote;
 					}
 
-					// フォロー状態に基づくフィルタリング
-					const isFollowing = this.userFollowingService.isFollowing(me.id, note.userId);
-
 					// 自分の投稿は常に表示
-					if (note.userId === me.id) return true;
+					if (isMyNote) return true;
 
 					// ダイレクト投稿で自分が含まれていれば表示
 					if (note.visibility === 'specified' && note.visibleUserIds.includes(me.id)) return true;
 
-					// フォローしているユーザーの投稿
-					if (isFollowing) {
-						if (!ps.showYamiFollowingNotes) return false;
-					} else if (note.visibility === 'public') { // フォローしていないユーザーのパブリック投稿
+					// フォロー状態を確認 - この行を追加
+					const isFollowing = this.userFollowingService.isFollowing(me.id, note.userId);
+
+					// フォローしていないユーザーのパブリック投稿
+					if (!isFollowing && note.visibility === 'public') {
 						return ps.showYamiNonFollowingPublicNotes;
 					}
+
+					// フォローしているユーザーの投稿
+					if (isFollowing) {
+						return ps.showYamiFollowingNotes;
+					}
+
 					return false;
 				},
 				excludePureRenotes: !ps.withRenotes,
@@ -206,13 +224,24 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 									.andWhere(':meId = ANY(note."visibleUserIds")', { meId: me.id });
 							}));
 
-							// 条件3: パブリックやみノート（ローカルのみ） - showYamiNonFollowingPublicNotes が true の場合のみ
+							// 条件3: パブリックやみノート - showYamiNonFollowingPublicNotes が true の場合のみ
 							if (ps.showYamiNonFollowingPublicNotes) {
 								qb.orWhere(new Brackets(qb3 => {
-									qb3.where('note.visibility = :public AND note.userHost IS NULL', { public: 'public' })
-										// フォローしているユーザーのノートは条件2で既に処理されているため除外
-										.andWhere('note.userId NOT IN (:...followingIds)',
-											{ followingIds: followingIds.length > 0 ? followingIds : [me.id] });
+									// パブリック投稿の基本条件
+									qb3.where('note.visibility = :public', { public: 'public' });
+
+									// localOnlyパラメータがtrueの場合のみローカルに限定
+									if (ps.localOnly) {
+										qb3.andWhere('note.userHost IS NULL');
+									}
+
+									// フォローしているユーザーのノートは条件2で既に処理されているため除外
+									if (followingIds.length > 0) {
+										qb3.andWhere('note.userId NOT IN (:...followingIds)', { followingIds });
+									} else {
+										// フォローがない場合は自分自身のIDのみ除外
+										qb3.andWhere('note.userId != :meId', { meId: me.id });
+									}
 								}));
 							}
 						}));
