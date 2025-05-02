@@ -5335,6 +5335,7 @@ export type components = {
       gtlAvailable: boolean;
       ltlAvailable: boolean;
       yamiTlAvailable: boolean;
+      canYamiNote: boolean;
       canPublicNote: boolean;
       mentionLimit: number;
       canInvite: boolean;
@@ -5362,10 +5363,6 @@ export type components = {
       userEachUserListsLimit: number;
       rateLimitFactor: number;
       avatarDecorationLimit: number;
-      canUseQuoteNotification: boolean;
-      canUseUnFollowNotification: boolean;
-      canUseBlockedNotification: boolean;
-      canUseUnBlockedNotification: boolean;
       canFollow: boolean;
       canFollowed: boolean;
       canImportAntennas: boolean;
@@ -5376,6 +5373,10 @@ export type components = {
       scheduleNoteMax: number;
       /** @enum {string} */
       chatAvailability: 'available' | 'readonly' | 'unavailable';
+      canUseQuoteNotification: boolean;
+      canUseUnFollowNotification: boolean;
+      canUseBlockedNotification: boolean;
+      canUseUnBlockedNotification: boolean;
     };
     ReversiGameLite: {
       /** Format: id */
@@ -5542,6 +5543,11 @@ export type components = {
        */
       noteSearchableScope: 'local' | 'global';
       reversiVersion: string;
+      /** @default false */
+      yamiNoteFederationEnabled: boolean;
+      /** @default [] */
+      yamiNoteFederationTrustedInstances: string[];
+      yamiModeVersion: string;
       maxFileSize: number;
       /** @enum {string} */
       federation: 'all' | 'specified' | 'none';
@@ -8963,6 +8969,8 @@ export type operations = {
             /** @enum {string} */
             federation: 'all' | 'specified' | 'none';
             federationHosts: string[];
+            yamiNoteFederationEnabled: boolean;
+            yamiNoteFederationTrustedInstances: string[];
           };
         };
       };
@@ -11649,6 +11657,8 @@ export type operations = {
           /** @enum {string} */
           federation?: 'all' | 'none' | 'specified';
           federationHosts?: string[];
+          yamiNoteFederationEnabled?: boolean;
+          yamiNoteFederationTrustedInstances?: string[];
         };
       };
     };
@@ -24803,6 +24813,8 @@ export type operations = {
           cw?: string | null;
           /** @default false */
           localOnly?: boolean;
+          /** @default false */
+          isNoteInYamiMode?: boolean;
           /**
            * @default null
            * @enum {string|null}
@@ -26027,8 +26039,10 @@ export type operations = {
                 text?: string;
                 cw?: string | null;
                 fileIds: string[];
+                isNoteInYamiMode?: boolean | null;
                 /** @enum {string} */
                 visibility: 'public' | 'home' | 'followers' | 'specified';
+                localOnly?: boolean | null;
                 visibleUsers: components['schemas']['UserLite'][];
                 user: components['schemas']['User'];
                 /**
@@ -26748,6 +26762,10 @@ export type operations = {
           withRenotes?: boolean;
           /** @default false */
           localOnly?: boolean;
+          /** @default true */
+          showYamiNonFollowingPublicNotes?: boolean;
+          /** @default true */
+          showYamiFollowingNotes?: boolean;
         };
       };
     };
