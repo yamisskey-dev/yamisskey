@@ -1478,6 +1478,15 @@ export class NoteCreateService implements OnApplicationShutdown {
 
 		console.log(`[YamiNote] 信頼済みインスタンス: ${trustedHosts.join(', ')}`);
 
+		// UtilityServiceを流用してホスト名を判定する
+		// 複数の信頼済みホストがあるので、1つずつチェックする最適な方法
+		const isHostTrusted = (host: string | null): boolean => {
+			if (!host) return false;
+
+			// どれか1つの信頼済みホストにマッチするか確認
+			return this.utilityService.isSilencedHost(trustedHosts, host);
+		};
+
 		try {
 			// リモートフォロワーを取得
 			const followers = await this.followingsRepository.find({
@@ -1489,20 +1498,6 @@ export class NoteCreateService implements OnApplicationShutdown {
 			});
 
 			console.log(`[YamiNote] リモートフォロワー数: ${followers.length}`);
-
-			// UtilityServiceを流用してホスト名を判定する
-			// 複数の信頼済みホストがあるので、1つずつチェックする最適な方法
-			const isHostTrusted = (host: string | null): boolean => {
-				if (!host) return false;
-
-				// どれか1つの信頼済みホストにマッチするか確認
-				for (const trustedHost of trustedHosts) {
-					if (this.utilityService.isInstance([trustedHost], host)) {
-						return true;
-					}
-				}
-				return false;
-			};
 
 			// 信頼済みインスタンスのフォロワーのみにフィルタリング
 			const trustedFollowers = followers.filter(following =>
