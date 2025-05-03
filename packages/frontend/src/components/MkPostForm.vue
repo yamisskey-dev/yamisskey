@@ -50,8 +50,26 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<span :class="$style.headerRightButtonText">{{ channel.name }}</span>
 				</button>
 			</template>
-			<button v-tooltip="i18n.ts._visibility.disableFederation" class="_button" :class="[$style.headerRightItem, { [$style.danger]: localOnly }]" :disabled="channel != null || visibility === 'specified'" @click="toggleLocalOnly">
-				<span v-if="!localOnly"><i class="ti ti-rocket"></i></span>
+			<button
+				v-tooltip="$i.policies?.canFederateNote === false
+					? (isNoteInYamiMode
+						? i18n.ts._visibility.yamiNoteFederationDisabled
+						: i18n.ts._visibility.noteFederationDisabled)
+					: (isNoteInYamiMode
+						? (yamiNoteFederationEnabled
+							? (localOnly ? i18n.ts._visibility.disableFederation : i18n.ts._visibility.yamiNoteFederationEnabled)
+							: i18n.ts._visibility.yamiNoteFederationDisabled)
+						: (localOnly ? i18n.ts._visibility.disableFederation : i18n.ts._visibility.enableFederation))"
+				class="_button"
+				:class="[$style.headerRightItem, {
+					[$style.danger]: localOnly,
+					[$style.warning]: isNoteInYamiMode && !localOnly,
+					[$style.disabled]: $i.policies?.canFederateNote === false || (isNoteInYamiMode && !yamiNoteFederationEnabled)
+				}]"
+				:disabled="channel != null || visibility === 'specified' || $i.policies?.canFederateNote === false || (isNoteInYamiMode && !yamiNoteFederationEnabled)"
+				@click="toggleLocalOnly"
+			>
+				<span v-if="!localOnly && $i.policies?.canFederateNote !== false"><i class="ti ti-rocket"></i></span>
 				<span v-else><i class="ti ti-rocket-off"></i></span>
 			</button>
 			<button ref="otherSettingsButton" v-tooltip="i18n.ts.other" class="_button" :class="$style.headerRightItem" @click="showOtherSettings"><i class="ti ti-dots"></i></button>
@@ -230,6 +248,20 @@ const isNoteInYamiMode = ref(
 			? (prefer.s.rememberNoteVisibility ? prefer.s.isNoteInYamiMode : prefer.s.defaultIsNoteInYamiMode)
 			: false),
 );
+
+// yamiNoteFederationEnabled の取得方法を修正
+const yamiNoteFederationEnabled = computed(() => {
+	// 明示的にブール値として評価
+	return instance.yamiNoteFederationEnabled === true;
+});
+
+// isNoteInYamiMode を監視し、やみノートモードの時に自動的に連合を制御
+watch(isNoteInYamiMode, (newValue) => {
+	// やみノートモードがオンで連合が無効な場合、強制的にローカルオンリーに
+	if (newValue && !yamiNoteFederationEnabled.value) {
+		localOnly.value = true;
+	}
+}, { immediate: true });
 
 // 固定フォーム（埋め込み）の場合のみ、isInYamiTimelineプロップに基づいてやみノートモードを設定
 watch(
@@ -661,6 +693,7 @@ function setVisibility() {
 	});
 }
 
+// ローカルオンリー切り替え関数を修正
 async function toggleLocalOnly() {
 	if (props.channel) {
 		visibility.value = 'public';
@@ -668,6 +701,13 @@ async function toggleLocalOnly() {
 		return;
 	}
 
+	// やみノートモードがオンで連合が無効な場合、ローカルオンリーを解除できないようにする
+	if (isNoteInYamiMode.value && !yamiNoteFederationEnabled.value) {
+		localOnly.value = true;
+		return;
+	}
+
+	// 既存の処理
 	const neverShowInfo = miLocalStorage.getItem('neverShowLocalOnlyInfo');
 
 	if (!localOnly.value && neverShowInfo !== 'true') {
@@ -1496,6 +1536,10 @@ defineExpose({
 
 	&.danger {
 		color: #ff2a2a;
+	}
+
+	&.warning {
+		color: var(--MI_THEME-warn);
 	}
 }
 

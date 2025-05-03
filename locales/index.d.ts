@@ -5857,6 +5857,10 @@ export interface Locale extends ILocale {
          * デバイス間でインストールしたテーマを同期
          */
         "enableSyncThemesBetweenDevices": string;
+        /**
+         * やみノート連合
+         */
+        "yamiNoteFederation": string;
         "_chat": {
             /**
              * 送信者の名前を表示
@@ -7685,6 +7689,10 @@ export interface Locale extends ILocale {
              * パブリック投稿の許可
              */
             "canPublicNote": string;
+            /**
+             * 連合投稿の許可
+             */
+            "canFederateNote": string;
             /**
              * ノート内の最大メンション数
              */
@@ -9711,6 +9719,14 @@ export interface Locale extends ILocale {
          */
         "specifiedDescription": string;
         /**
+         * ノートの連合は管理者により無効化されています
+         */
+        "noteFederationDisabled": string;
+        /**
+         * 連合あり
+         */
+        "enableFederation": string;
+        /**
          * 連合なし
          */
         "disableFederation": string;
@@ -9718,6 +9734,22 @@ export interface Locale extends ILocale {
          * 他サーバーへの配信を行いません
          */
         "disableFederationDescription": string;
+        /**
+         * やみノートの連合は管理者により無効化されています
+         */
+        "yamiNoteFederationDisabled": string;
+        /**
+         * やみノートの連合は管理者が許可したサーバーにのみ配信されます
+         */
+        "yamiNoteFederationEnabled": string;
+        /**
+         * やみノートを信頼済みサーバーに配信しますか？（管理者設定の範囲内でのみ配信されます）
+         */
+        "yamiNoteEnableFederationConfirm": string;
+        /**
+         * やみノートの配信をローカルのみに制限しますか？
+         */
+        "yamiNoteDisableFederationConfirm": string;
     };
     "_postForm": {
         /**
@@ -11939,6 +11971,22 @@ export interface Locale extends ILocale {
          * フォローしているユーザーのやみノートを表示
          */
         "showYamiFollowingNotes": string;
+        /**
+         * やみノート連合を有効にする
+         */
+        "yamiNoteFederationEnabled": string;
+        /**
+         * 信頼済みやみモード対応インスタンス
+         */
+        "yamiNoteFederationTrustedInstances": string;
+        /**
+         * やみノートを配信するインスタンスのホスト名を改行で区切って入力します。
+         */
+        "yamiNoteFederationTrustedInstancesDescription": string;
+        /**
+         * 警告: やみノートは信頼済みインスタンスにのみ配信されますが、リモートインスタンスの実装状況によっては適切に処理されない可能性があります。信頼できるインスタンスのみを追加してください。
+         */
+        "yamiNoteFederationWarning": string;
         "_yamiModeSwitcher": {
             /**
              * やみモードに切り替えますか？やみモードにすると、他人のやみノートを閲覧できるようになります

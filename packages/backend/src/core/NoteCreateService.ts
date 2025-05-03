@@ -5,7 +5,7 @@
 
 import { setImmediate } from 'node:timers/promises';
 import * as mfm from 'mfm-js';
-import { In, DataSource, IsNull, LessThan } from 'typeorm';
+import { In, DataSource, IsNull, LessThan, Not } from 'typeorm';
 import * as Redis from 'ioredis';
 import { Inject, Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { Data } from 'ws';
@@ -58,6 +58,7 @@ import { IdentifiableError } from '@/misc/identifiable-error.js';
 import { CollapsedQueue } from '@/misc/collapsed-queue.js';
 import { CacheService } from '@/core/CacheService.js';
 import { prefer } from '@/preferences.js';
+import { MetaService } from '@/core/MetaService.js';
 
 type NotificationType = 'reply' | 'renote' | 'quote' | 'mention';
 
@@ -221,6 +222,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 		private utilityService: UtilityService,
 		private userBlockingService: UserBlockingService,
 		private cacheService: CacheService,
+		private metaService: MetaService,
 	) {
 		this.updateNotesCountQueue = new CollapsedQueue(process.env.NODE_ENV !== 'test' ? 60 * 1000 * 5 : 0, this.collapseNotesCount, this.performUpdateNotesCount);
 	}
@@ -276,6 +278,14 @@ export class NoteCreateService implements OnApplicationShutdown {
 		if (data.channel != null) data.visibility = 'public';
 		if (data.channel != null) data.visibleUsers = [];
 		if (data.channel != null) data.localOnly = true;
+
+		// 連合権限のチェック - ローカルオンリーでない場合に権限を確認
+		if (data.localOnly === false) {
+			const policies = await this.roleService.getUserPolicies(user.id);
+			if (policies.canFederateNote === false) {
+				data.localOnly = true; // 連合権限がない場合は強制的にローカルオンリーに
+			}
+		}
 
 		if (data.visibility === 'public' && data.channel == null) {
 			const sensitiveWords = this.meta.sensitiveWords;
@@ -460,6 +470,14 @@ export class NoteCreateService implements OnApplicationShutdown {
 		if (data.channel != null) data.visibility = 'public';
 		if (data.channel != null) data.visibleUsers = [];
 		if (data.channel != null) data.localOnly = true;
+
+		// 連合権限のチェック - ローカルオンリーでない場合に権限を確認
+		if (data.localOnly === false) {
+			const policies = await this.roleService.getUserPolicies(user.id);
+			if (policies.canFederateNote === false) {
+				data.localOnly = true; // 連合権限がない場合は強制的にローカルオンリーに
+			}
+		}
 
 		const meta = await this.metaService.fetch();
 
@@ -870,6 +888,13 @@ export class NoteCreateService implements OnApplicationShutdown {
 					const noteActivity = await this.renderNoteOrRenoteActivity(data, note);
 					const dm = this.apDeliverManagerService.createDeliverManager(user, noteActivity);
 
+					// やみノートの場合は配送先制限処理
+					if (note.isNoteInYamiMode) {
+						await this.deliverYamiNote(note, user, dm);
+						return; // やみノート処理完了後は他の配送をしない
+					}
+
+					// 以下、通常ノートの配送処理
 					// メンションされたリモートユーザーに配送
 					for (const u of mentionedUsers.filter(u => this.userEntityService.isRemoteUser(u))) {
 						dm.addDirectRecipe(u as MiRemoteUser);
@@ -1478,6 +1503,78 @@ export class NoteCreateService implements OnApplicationShutdown {
 	@bindThis
 	private async performUpdateNotesCount(id: MiNote['id'], incrBy: number) {
 		await this.instancesRepository.increment({ id: id }, 'notesCount', incrBy);
+	}
+
+	@bindThis
+	private async deliverYamiNote(note: MiNote, user: { id: MiUser['id'] }, dm: any): Promise<void> {
+		const meta = await this.metaService.fetch();
+
+		// やみノート連合が無効の場合は配送しない
+		if (!meta.yamiNoteFederationEnabled) {
+			console.log('[YamiNote] 連合機能が無効のため配信せず');
+			note.localOnly = true;
+			return;
+		}
+
+		// 信頼済みインスタンスリスト
+		const trustedHosts = meta.yamiNoteFederationTrustedInstances || [];
+
+		// 信頼済みインスタンスがなければ配送しない
+		if (trustedHosts.length === 0) {
+			console.log('[YamiNote] 信頼済みインスタンスが設定されていないため配信せず');
+			return;
+		}
+
+		console.log(`[YamiNote] 信頼済みインスタンス: ${trustedHosts.join(', ')}`);
+
+		// UtilityServiceを流用してホスト名を判定する
+		// 複数の信頼済みホストがあるので、1つずつチェックする最適な方法
+		const isHostTrusted = (host: string | null): boolean => {
+			if (!host) return false;
+
+			// どれか1つの信頼済みホストにマッチするか確認
+			return this.utilityService.isSilencedHost(trustedHosts, host);
+		};
+
+		try {
+			// リモートフォロワーを取得
+			const followers = await this.followingsRepository.find({
+				where: {
+					followeeId: user.id,
+					followerHost: Not(IsNull()), // リモートユーザーのみ
+				},
+				relations: ['follower'],
+			});
+
+			console.log(`[YamiNote] リモートフォロワー数: ${followers.length}`);
+
+			// 信頼済みインスタンスのフォロワーのみにフィルタリング
+			const trustedFollowers = followers.filter(following =>
+				following.follower && isHostTrusted(following.follower.host),
+			);
+
+			console.log(`[YamiNote] 信頼済みインスタンスのフォロワー数: ${trustedFollowers.length}`);
+
+			// DeliverManagerのレシピシステムを活用して配信
+			if (trustedFollowers.length > 0) {
+				// フィルタリングしたフォロワーにのみ配送
+				for (const following of trustedFollowers) {
+					if (!following.follower) continue;
+					console.log(`[YamiNote] "${following.follower.host}" へ配信`);
+					// DeliverManagerの標準APIを使用
+					dm.addDirectRecipe(following.follower as MiRemoteUser);
+				}
+
+				// 配信を実行するためにdm.execute()を呼び出す
+				await dm.execute();
+
+				console.log(`[YamiNote] 配信処理完了 (${trustedFollowers.length}件)`);
+			} else {
+				console.log('[YamiNote] 配信対象のフォロワーが見つかりませんでした');
+			}
+		} catch (err) {
+			console.error(`[YamiNote] 配信処理中にエラーが発生しました: ${err}`);
+		}
 	}
 
 	@bindThis
