@@ -5337,6 +5337,7 @@ export type components = {
       yamiTlAvailable: boolean;
       canYamiNote: boolean;
       canPublicNote: boolean;
+			canFederateNote: boolean;
       mentionLimit: number;
       canInvite: boolean;
       canImportNotes: boolean;
