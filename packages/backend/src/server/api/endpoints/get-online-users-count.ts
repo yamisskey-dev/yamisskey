@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { MoreThan } from 'typeorm';
+import { MoreThan, In } from 'typeorm';
 import { Inject, Injectable } from '@nestjs/common';
 import { USER_ONLINE_THRESHOLD } from '@/const.js';
 import type { UsersRepository } from '@/models/_.js';
@@ -22,7 +22,45 @@ export const meta = {
 		properties: {
 			count: {
 				type: 'number',
-				nullable: false,
+				optional: false, nullable: false,
+			},
+			details: {
+				type: 'array',
+				optional: false, nullable: false,
+				items: {
+					type: 'object',
+					optional: false, nullable: false,
+					properties: {
+						id: {
+							type: 'string',
+							optional: false, nullable: false,
+						},
+						username: {
+							type: 'string',
+							optional: false, nullable: false,
+						},
+						name: {
+							type: 'string',
+							optional: true, nullable: true,
+						},
+						avatarUrl: {
+							type: 'string',
+							optional: true, nullable: true,
+						},
+						avatarBlurhash: {
+							type: 'string',
+							optional: true, nullable: true,
+						},
+						host: {
+							type: 'string',
+							optional: true, nullable: true,
+						},
+						lastActiveDate: {
+							type: 'string',
+							optional: false, nullable: false,
+						},
+					},
+				},
 			},
 		},
 	},
@@ -45,8 +83,31 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				lastActiveDate: MoreThan(new Date(Date.now() - USER_ONLINE_THRESHOLD)),
 			});
 
+			// クエリを実行して詳細を取得
+			const details = await this.usersRepository.find({
+				select: {
+					id: true,
+					username: true,
+					name: true,
+					avatarUrl: true,
+					avatarBlurhash: true,
+					host: true,
+					isSuspended: true,
+					isLocked: true,
+					lastActiveDate: true,
+				},
+				where: {
+					lastActiveDate: MoreThan(new Date(Date.now() - USER_ONLINE_THRESHOLD)),
+					showActiveStatus: true,
+				},
+				order: {
+					lastActiveDate: 'DESC',
+				},
+			});
+
 			return {
 				count,
+				details,
 			};
 		});
 	}
