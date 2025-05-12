@@ -12,7 +12,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</template>
 
 	<div :class="$style.content">
-		<div v-if="activeUsers?.length > 0" :class="$style.users">
+		<MkResult v-if="error" type="error" :text="error" :class="$style.error"/>
+
+		<div v-else-if="activeUsers?.length > 0" :class="$style.users">
 			<div v-for="user in activeUsers" :key="user.id || user.username" :class="$style.row">
 				<div :class="$style.avatarContainer">
 					<MkAvatar :user="user" :class="$style.avatar" link preview/>
@@ -28,15 +30,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 			</div>
 		</div>
-		<MkResult v-else type="empty" :text="i18n.ts.noActiveUsers" :class="$style.result"/>
+		<MkResult v-else type="empty" :text="!$i ? i18n.ts.signinRequired : i18n.noMutualFollowers" :class="$style.result"/>
 	</div>
 </MkContainer>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useInterval } from '@@/js/use-interval.js';
-import { useWidgetPropsManager, WidgetComponentEmits, WidgetComponentExpose, WidgetComponentProps } from './widget';
+import { useWidgetPropsManager } from './widget.js';
+import type { WidgetComponentProps, WidgetComponentEmits, WidgetComponentExpose } from './widget.js';
 import type { GetFormResultType } from '@/utility/form.js';
 import MkContainer from '@/components/MkContainer.vue';
 import MkAvatar from '@/components/global/MkAvatar.vue';
@@ -45,6 +48,7 @@ import MkResult from '@/components/global/MkResult.vue';
 import MkTime from '@/components/global/MkTime.vue';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n';
+import { $i } from '@/i.js';
 
 const name = i18n.ts._widgets.activeUsers;
 
@@ -75,20 +79,30 @@ const { widgetProps, configure } = useWidgetPropsManager(name,
 	emit,
 );
 
+const error = ref<string | null>(null);
 const activeUsers = ref([]);
 
+const isLoggedIn = computed(() => $i != null);
+
 const getUserDisplayName = (user) => {
-	// nameがあればそれを使用、なければusernameを使用
 	return user.name || user.username;
 };
 
 const tick = () => {
+	if (!isLoggedIn.value) {
+		error.value = null;
+		activeUsers.value = [];
+		return;
+	}
+
+	error.value = null;
+
 	misskeyApi('get-online-users-count').then(res => {
-		// デバッグ用にレスポンスをログ出力
-		console.log('Received users:', res.details);
 		activeUsers.value = res.details;
 	}).catch(err => {
-		console.error('Failed to fetch online users:', err);
+		console.error('Failed to fetch mutual followers:', err);
+		error.value = i18n.ts.somethingHappened;
+		activeUsers.value = [];
 	});
 };
 
@@ -182,5 +196,10 @@ defineExpose<WidgetComponentExpose>({
     :global(.time) {
         color: inherit;
     }
+}
+
+// エラー表示のスタイルを維持
+.error {
+  margin-bottom: 8px;
 }
 </style>

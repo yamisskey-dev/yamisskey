@@ -107,9 +107,9 @@ export interface Locale extends ILocale {
      */
     "noNotifications": string;
     /**
-     * アクティブユーザーはいません
+     * 相互フォロワーはいません
      */
-    "noActiveUsers": string;
+    "noMutualFollowers": string;
     /**
      * サーバー
      */
@@ -3479,7 +3479,7 @@ export interface Locale extends ILocale {
      */
     "showActiveStatus": string;
     /**
-     * アクティブ状態を「アクティブユーザー」ウィジットで表示します。
+     * アクティブ状態を相互フォロワーの「アクティブユーザー」ウィジットで表示します。
      */
     "showActiveStatusDescription": string;
     /**
