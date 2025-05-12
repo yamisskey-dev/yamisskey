@@ -14,9 +14,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div :class="$style.content">
 		<div v-if="activeUsers?.length > 0" :class="$style.users">
 			<div v-for="user in activeUsers" :key="user.id || user.username" :class="$style.row">
-				<div :class="$style.avatarContainer">
-					<MkAvatar :user="user" :class="$style.avatar" link preview/>
-				</div>
+				<MkAvatar :user="user" :class="$style.avatar" indicator link preview/>
 				<div :class="$style.userInfo">
 					<div :class="$style.name">
 						<MkA :to="'/@' + user.username">{{ getUserDisplayName(user) }}</MkA>
@@ -207,21 +205,9 @@ defineExpose<WidgetComponentExpose>({
     }
 }
 
-.avatarContainer {
-    position: relative;
+.avatar {
     width: 40px;
     height: 40px;
-    flex-shrink: 0;
-
-    &::after {
-        content: '';
-        display: block;
-    }
-}
-
-.avatar {
-    width: 100%;
-    height: 100%;
     object-fit: cover;
     border-radius: 5px;
 }
