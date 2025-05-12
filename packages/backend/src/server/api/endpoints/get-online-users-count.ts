@@ -6,11 +6,12 @@
 import { MoreThan, In } from 'typeorm';
 import { Inject, Injectable } from '@nestjs/common';
 import { USER_ONLINE_THRESHOLD } from '@/const.js';
-import type { UsersRepository } from '@/models/_.js';
+import type { UsersRepository, MutingsRepository } from '@/models/_.js';
 import type { MiUser } from '@/models/User.js'; // MiUser型をインポート
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { DI } from '@/di-symbols.js';
 import { UserFollowingService } from '@/core/UserFollowingService.js';
+import { UserMutingService } from '@/core/UserMutingService.js';
 
 export const meta = {
 	tags: ['meta'],
@@ -80,13 +81,25 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		@Inject(DI.usersRepository)
 		private usersRepository: UsersRepository,
 
+		@Inject(DI.mutingsRepository)
+		private mutingsRepository: MutingsRepository,
+
 		private userFollowingService: UserFollowingService,
+		private userMutingService: UserMutingService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			// オンラインユーザー総数の取得
 			const count = await this.usersRepository.countBy({
 				lastActiveDate: MoreThan(new Date(Date.now() - USER_ONLINE_THRESHOLD)),
 			});
+
+			// ミュートしているユーザーのIDリストを取得
+			const mutingIds = await this.mutingsRepository.find({
+				where: {
+					muterId: me.id,
+				},
+				select: ['muteeId'],
+			}).then(mutings => mutings.map(m => m.muteeId));
 
 			// 最近アクティブなすべてのユーザーを取得（showActiveStatusを含む）
 			const activeUsers = await this.usersRepository.find({
@@ -97,8 +110,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				select: ['id', 'showActiveStatus'],
 			});
 
-			// アクティブかつshowActiveStatus=trueのユーザーのIDのみの配列
-			const activeUserIds = activeUsers.map(user => user.id);
+			// アクティブかつshowActiveStatus=trueのユーザーのIDのみの配列（ミュートしているユーザーを除外）
+			const activeUserIds = activeUsers
+				.map(user => user.id)
+				.filter(id => !mutingIds.includes(id));
 
 			// 1. 相互フォロー関係のユーザーIDを抽出 (showActiveStatus=trueのユーザーのみ)
 			const mutualFollowingIds: string[] = [];
@@ -146,7 +161,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				},
 			});
 
-			 // userパラメータに型を指定
+			// userパラメータに型を指定
 			const details = usersData.map((user: Pick<MiUser, 'id' | 'username' | 'name' | 'avatarUrl' | 'avatarBlurhash' | 'host' | 'lastActiveDate'>) => ({
 				...user,
 				lastActiveDate: user.lastActiveDate?.toISOString() ?? new Date().toISOString(),
