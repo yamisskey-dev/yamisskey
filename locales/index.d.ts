@@ -5609,6 +5609,10 @@ export interface Locale extends ILocale {
      * スクロールして閉じる
      */
     "scrollToClose": string;
+    /**
+     * ListenBrainz
+     */
+    "listenBrainz": string;
     "_chat": {
         /**
          * まだメッセージはありません
@@ -9645,7 +9649,7 @@ export interface Locale extends ILocale {
          */
         "birthdayFollowings": string;
         /**
-         * なうぷれ
+         * listenBrainz
          */
         "listenBrainz": string;
         /**
@@ -9936,6 +9940,10 @@ export interface Locale extends ILocale {
          * フォローを承認制にしている場合、フォローリクエストを許可した時に表示されます。
          */
         "followedMessageDescriptionForLockedAccount": string;
+        /**
+         * ListenBrainz username
+         */
+        "listenbrainz": string;
     };
     "_exportOrImport": {
         /**
