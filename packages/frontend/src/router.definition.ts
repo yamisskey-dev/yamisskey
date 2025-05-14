@@ -28,6 +28,7 @@ export const ROUTE_DEF = [{
 }, {
 	path: '/timeline',
 	component: PageTimeline,
+	loginRequired: true,
 }, {
 	path: '/@:username/pages/:pageName(*)',
 	component: page(() => import('@/pages/page.vue')),
@@ -246,9 +247,11 @@ export const ROUTE_DEF = [{
 }, {
 	path: '/roles/:roleId',
 	component: page(() => import('@/pages/role.vue')),
+	loginRequired: true,
 }, {
 	path: '/user-tags/:tag',
 	component: page(() => import('@/pages/user-tag.vue')),
+	loginRequired: true,
 }, {
 	path: '/explore',
 	component: page(() => import('@/pages/explore.vue')),
@@ -313,6 +316,7 @@ export const ROUTE_DEF = [{
 }, {
 	path: '/tags/:tag',
 	component: page(() => import('@/pages/tag.vue')),
+	loginRequired: true,
 }, {
 	path: '/pages/new',
 	component: page(() => import('@/pages/page-editor/page-editor.vue')),
@@ -324,6 +328,7 @@ export const ROUTE_DEF = [{
 }, {
 	path: '/pages',
 	component: page(() => import('@/pages/pages.vue')),
+	loginRequired: true,
 }, {
 	path: '/play/:id/edit',
 	component: page(() => import('@/pages/flash/flash-edit.vue')),
@@ -380,6 +385,7 @@ export const ROUTE_DEF = [{
 	path: '/avatar-decorations',
 	name: 'avatarDecorations',
 	component: page(() => import('@/pages/avatar-decorations.vue')),
+	loginRequired: true,
 }, {
 	path: '/registry/keys/:domain/:path(*)?',
 	component: page(() => import('@/pages/registry.keys.vue')),
@@ -609,7 +615,7 @@ export const ROUTE_DEF = [{
 }, {
 	path: '/games',
 	component: page(() => import('@/pages/games.vue')),
-	loginRequired: false,
+	loginRequired: true,
 }, {
 	path: '/bubble-game',
 	component: page(() => import('@/pages/drop-and-fusion.vue')),
@@ -617,11 +623,11 @@ export const ROUTE_DEF = [{
 }, {
 	path: '/reversi',
 	component: page(() => import('@/pages/reversi/index.vue')),
-	loginRequired: false,
+	loginRequired: true,
 }, {
 	path: '/reversi/g/:gameId',
 	component: page(() => import('@/pages/reversi/game.vue')),
-	loginRequired: false,
+	loginRequired: true,
 }, {
 	path: '/timeline',
 	component: page(() => import('@/pages/timeline.vue')),
