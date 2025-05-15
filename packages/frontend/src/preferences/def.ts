@@ -50,10 +50,10 @@ export const PREF_DEF = {
 	widgets: {
 		accountDependent: true,
 		default: [{
-			name: 'calendar',
+			name: 'notifications',
 			id: 'a', place: 'right', data: {},
 		}, {
-			name: 'notifications',
+			name: 'onlineUsers',
 			id: 'b', place: 'right', data: {},
 		}, {
 			name: 'activeUsers',
@@ -133,18 +133,18 @@ export const PREF_DEF = {
 	},
 	menu: {
 		default: [
-			'mode',
 			'notifications',
 			'drive',
 			'followRequests',
-			'-',
 			'chat',
-			'channels',
 			'-',
 			'floater',
 			'explore',
-			'search',
 			'announcements',
+			'channels',
+			'search',
+			'-',
+			'mode',
 		],
 	},
 	statusbars: {

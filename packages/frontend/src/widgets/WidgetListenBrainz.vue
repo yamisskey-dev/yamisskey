@@ -14,10 +14,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 	<div :class="$style.root">
 		<MkLoading v-if="fetching"/>
-		<div v-else-if="!playingNow" style="text-align: center">
-			<img :src="instance.infoImageUrl ?? undefined" :class="$style.ghostImage"/>
-			<div>{{ i18n.ts.nothing }}</div>
-		</div>
+		<MkResult v-else-if="!playingNow" type="empty" :text="i18n.ts.noListeningMusic" :class="$style.result"/>
 		<div v-else class="_gaps_s" style="display: flex; flex-direction: column; justify-content: center; align-items: center">
 			<MkMfm :text="formattedNote"/>
 			<MkButton primary @click="postNote">{{ i18n.ts.note }}</MkButton>
@@ -34,8 +31,8 @@ import type { GetFormResultType } from '@/utility/form.js';
 import MkContainer from '@/components/MkContainer.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkLoading from '@/components/global/MkLoading.vue';
+import MkResult from '@/components/global/MkResult.vue';
 import { i18n } from '@/i18n.js';
-import { instance } from '@/instance.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import MkMfm from '@/components/global/MkMfm.js';
 
@@ -63,6 +60,10 @@ const widgetPropsDef = {
 			{ label: 'Home', value: 'home' },
 			{ label: 'Followers', value: 'followers' },
 		],
+	},
+	localOnly: {
+		type: 'boolean' as const,
+		default: false,
 	},
 	refreshIntervalSec: {
 		type: 'number' as const,
@@ -133,6 +134,7 @@ const postNote = async () => {
 	misskeyApi('notes/create', {
 		text: note,
 		visibility: widgetProps.visibility,
+		localOnly: widgetProps.localOnly,
 	});
 };
 
@@ -176,8 +178,7 @@ defineExpose<WidgetComponentExpose>({
   padding: 16px;
 }
 
-.ghostImage {
-  max-width: 100%;
-  max-height: 100px;
+.result {
+  text-align: center;
 }
 </style>
