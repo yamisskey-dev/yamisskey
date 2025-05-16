@@ -248,11 +248,30 @@ export class NoteCreateService implements OnApplicationShutdown {
 
 		// やみノート投稿時のチェック
 		if (data.isNoteInYamiMode) {
-			const policies = await this.roleService.getUserPolicies(user.id);
+			// 重要: やみノートの場合、サーバー設定を確認して連合を強制的に制御
+			const yamiMeta = await this.metaService.fetch();
+			if (!yamiMeta.yamiNoteFederationEnabled) {
+				// 連合が無効な場合は強制的にローカルオンリーに
+				data.localOnly = true;
+			}
 
-			// canYamiNote 権限のみでチェックする
-			if (!policies.canYamiNote) {
-				throw new Error('You do not have permission to post yami notes.');
+			// リモートユーザーとローカルユーザーで分岐
+			if (user.host !== null) {
+				// リモートユーザーの場合: 信頼済みインスタンスのみチェック
+				const trustedHosts = yamiMeta.yamiNoteFederationTrustedInstances || [];
+				const isTrusted = trustedHosts.some(trusted =>
+					user.host === trusted || user.host?.endsWith(`.${trusted}`),
+				);
+
+				if (!isTrusted) {
+					throw new Error('You do not have permission to post yami notes: Remote user from untrusted instance');
+				}
+			} else {
+				// ローカルユーザーの場合: ロール権限をチェック
+				const policies = await this.roleService.getUserPolicies(user.id);
+				if (!policies.canYamiNote) {
+					throw new Error('You do not have permission to post yami notes: Local user without necessary role permission');
+				}
 			}
 
 			// 重要: やみノートの場合、サーバー設定を確認して連合を強制的に制御
@@ -764,7 +783,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 		// Increment notes count (user)
 		this.incNotesCountOfUser(user);
 
-		// やみモード投稿とそれ以外で分岐処理
+		// やみノートもしくは通常ノートのタイムライン処理
 		if (!silent) {
 			// タイムラインへのファンアウト
 			this.pushToTl(note, user);
@@ -1210,7 +1229,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 			});
 
 			// パブリックなやみノートの場合の処理を修正
-			if (note.visibility === 'public' && note.userHost == null) {
+			if (note.visibility === 'public') {
 				this.fanoutTimelineService.push('yamiPublicNotes', note.id, 1000, r);
 				if (note.fileIds.length > 0) {
 					this.fanoutTimelineService.push('yamiPublicNotesWithFiles', note.id, 500, r);
