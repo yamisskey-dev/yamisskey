@@ -5613,6 +5613,18 @@ export interface Locale extends ILocale {
      * ListenBrainz
      */
     "listenBrainz": string;
+    /**
+     * コミュニティロール
+     */
+    "communityRole": string;
+    /**
+     * 割り当てられたロール
+     */
+    "assignedRoles": string;
+    /**
+     * 割り当てられるロール
+     */
+    "assignableRoles": string;
     "_chat": {
         /**
          * まだメッセージはありません
