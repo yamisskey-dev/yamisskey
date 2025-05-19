@@ -7933,6 +7933,10 @@ export interface Locale extends ILocale {
              * インスタンス統計を閲覧
              */
             "canViewCharts": string;
+            /**
+             * コミュニティーロールの追加
+             */
+            "canAddRoles": string;
         };
         "_condition": {
             /**
@@ -9422,6 +9426,26 @@ export interface Locale extends ILocale {
          * チャットを閲覧する
          */
         "read:chat": string;
+        /**
+         * 実績を見る
+         */
+        "read:achievements": string;
+        /**
+         * お知らせを見る
+         */
+        "read:announcements": string;
+        /**
+         * 統計情報を見る
+         */
+        "read:stats": string;
+        /**
+         * クリップを見る
+         */
+        "read:clip": string;
+        /**
+         * コミュニティーロールを操作する
+         */
+        "write:community-role": string;
     };
     "_auth": {
         /**
