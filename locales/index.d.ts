@@ -1871,6 +1871,10 @@ export interface Locale extends ILocale {
      */
     "administrator": string;
     /**
+     * コミュニティ
+     */
+    "community": string;
+    /**
      * 確認コード
      */
     "token": string;
