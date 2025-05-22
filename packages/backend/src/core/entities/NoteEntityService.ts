@@ -429,7 +429,7 @@ export class NoteEntityService implements OnModuleInit {
 		const host = note.userHost;
 
 		const bufferedReactions = opts._hint_?.bufferedReactions != null
-			? (opts._hint_?.bufferedReactions.get(note.id) ?? { deltas: {}, pairs: [] })
+			? (opts._hint_.bufferedReactions.get(note.id) ?? { deltas: {}, pairs: [] })
 			: this.meta.enableReactionsBuffering
 				? await this.reactionsBufferingService.get(note.id)
 				: { deltas: {}, pairs: [] };
@@ -486,7 +486,6 @@ export class NoteEntityService implements OnModuleInit {
 				isSensitive: channel.isSensitive,
 				allowRenoteToExternal: channel.allowRenoteToExternal,
 				userId: channel.userId,
-				propagateToTimelines: channel.propagateToTimelines,
 			} : undefined,
 			mentions: note.mentions.length > 0 ? note.mentions : undefined,
 			uri: note.uri ?? undefined,

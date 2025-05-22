@@ -240,11 +240,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 							if (followeeIds.length > 0) {
 								qb3.orWhere('note.userId IN (:...followeeIds)', { followeeIds });
 							}
-						}))
-						// propagateToTimelinesがtrueか、自分の投稿
-						.andWhere(new Brackets(qb4 => {
-							qb4.where('channel.propagateToTimelines = TRUE')
-								.orWhere('note.userId = :meId', { meId: me.id });
 						}));
 				}));
 			}));

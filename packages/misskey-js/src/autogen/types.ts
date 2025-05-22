@@ -4553,7 +4553,6 @@ export type components = {
         isSensitive: boolean;
         allowRenoteToExternal: boolean;
         userId: string | null;
-        propagateToTimelines: boolean;
       }) | null;
       localOnly?: boolean;
       isNoteInYamiMode?: boolean;
@@ -5055,7 +5054,6 @@ export type components = {
       notesCount: number;
       isSensitive: boolean;
       allowRenoteToExternal: boolean;
-      propagateToTimelines: boolean;
       isFollowing?: boolean;
       isFavorited?: boolean;
       pinnedNotes?: components['schemas']['Note'][];
@@ -13067,8 +13065,6 @@ export type operations = {
           color?: string;
           isSensitive?: boolean | null;
           allowRenoteToExternal?: boolean | null;
-          /** @default false */
-          propagateToTimelines?: boolean;
         };
       };
     };
@@ -13736,7 +13732,6 @@ export type operations = {
           color?: string;
           isSensitive?: boolean | null;
           allowRenoteToExternal?: boolean | null;
-          propagateToTimelines?: boolean | null;
         };
       };
     };

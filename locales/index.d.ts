@@ -547,14 +547,6 @@ export interface Locale extends ILocale {
      */
     "renoteToOtherChannel": string;
     /**
-     * チャンネル投稿をフォロワーのタイムラインに流す
-     */
-    "propagateToTimelines": string;
-    /**
-     * オフにするとチャンネルをフォローしていても、フォロワーのタイムラインにチャンネル投稿が流れなくなります
-     */
-    "propagateToTimelinesDescription": string;
-    /**
      * ピン留めされたノート
      */
     "pinnedNote": string;

@@ -200,10 +200,6 @@ export const packedNoteSchema = {
 					type: 'string',
 					optional: false, nullable: true,
 				},
-				propagateToTimelines: {
-					type: 'boolean',
-					optional: false, nullable: false,
-				},
 			},
 		},
 		localOnly: {
