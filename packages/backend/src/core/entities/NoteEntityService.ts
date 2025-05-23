@@ -429,7 +429,7 @@ export class NoteEntityService implements OnModuleInit {
 		const host = note.userHost;
 
 		const bufferedReactions = opts._hint_?.bufferedReactions != null
-			? (opts._hint_.bufferedReactions.get(note.id) ?? { deltas: {}, pairs: [] })
+			? (opts._hint_?.bufferedReactions.get(note.id) ?? { deltas: {}, pairs: [] })
 			: this.meta.enableReactionsBuffering
 				? await this.reactionsBufferingService.get(note.id)
 				: { deltas: {}, pairs: [] };

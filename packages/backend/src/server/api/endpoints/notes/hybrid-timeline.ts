@@ -222,26 +222,14 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			.leftJoinAndSelect('note.reply', 'reply')
 			.leftJoinAndSelect('note.renote', 'renote')
 			.leftJoinAndSelect('reply.user', 'replyUser')
-			.leftJoinAndSelect('renote.user', 'renoteUser')
-			.leftJoinAndSelect('note.channel', 'channel');
+			.leftJoinAndSelect('renote.user', 'renoteUser');
 
 		if (followingChannels.length > 0) {
 			const followingChannelIds = followingChannels.map(x => x.followeeId);
-			const followeeIds = followees.length > 0 ? followees.map(f => f.followeeId) : [];
 
 			query.andWhere(new Brackets(qb => {
-				qb.where('note.channelId IS NULL'); // チャンネル投稿ではない
-				qb.orWhere(new Brackets(qb2 => {
-					qb2.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds })
-						.andWhere(new Brackets(qb3 => {
-							qb3.where('note.userId = :meId', { meId: me.id }); // 自分の投稿
-
-							// フォローしているユーザーがいる場合、その投稿も表示
-							if (followeeIds.length > 0) {
-								qb3.orWhere('note.userId IN (:...followeeIds)', { followeeIds });
-							}
-						}));
-				}));
+				qb.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds });
+				qb.orWhere('note.channelId IS NULL');
 			}));
 		} else {
 			query.andWhere('note.channelId IS NULL');
