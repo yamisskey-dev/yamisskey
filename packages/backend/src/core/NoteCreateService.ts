@@ -5,7 +5,7 @@
 
 import { setImmediate } from 'node:timers/promises';
 import * as mfm from 'mfm-js';
-import { In, DataSource, IsNull, LessThan } from 'typeorm';
+import { In, DataSource, IsNull, LessThan, Not } from 'typeorm';
 import * as Redis from 'ioredis';
 import { Inject, Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { Data } from 'ws';
@@ -57,6 +57,8 @@ import { trackPromise } from '@/misc/promise-tracker.js';
 import { IdentifiableError } from '@/misc/identifiable-error.js';
 import { CollapsedQueue } from '@/misc/collapsed-queue.js';
 import { CacheService } from '@/core/CacheService.js';
+import { prefer } from '@/preferences.js';
+import { MetaService } from '@/core/MetaService.js';
 
 type NotificationType = 'reply' | 'renote' | 'quote' | 'mention';
 
@@ -220,6 +222,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 		private utilityService: UtilityService,
 		private userBlockingService: UserBlockingService,
 		private cacheService: CacheService,
+		private metaService: MetaService,
 	) {
 		this.updateNotesCountQueue = new CollapsedQueue(process.env.NODE_ENV !== 'test' ? 60 * 1000 * 5 : 0, this.collapseNotesCount, this.performUpdateNotesCount);
 	}
@@ -231,17 +234,51 @@ export class NoteCreateService implements OnApplicationShutdown {
 		host: MiUser['host'];
 		isBot: MiUser['isBot'];
 		isCat: MiUser['isCat'];
-		isInYamiMode: MiUser['isInYamiMode'];
 	}, data: Option, silent = false): Promise<MiNote> {
-		// ノートのisNoteInYamiMode属性は投稿時のユーザーの属性に基本的に依存する
 		if (data.isNoteInYamiMode == null) {
 			// リプライ先またはリノート元がやみノートの場合は強制的にやみノート
 			if ((data.reply && data.reply.isNoteInYamiMode) ||
 				(data.renote && data.renote.isNoteInYamiMode)) {
 				data.isNoteInYamiMode = true;
 			} else {
-				// それ以外の場合は従来通りユーザーのやみモードに合わせる
-				data.isNoteInYamiMode = user.isInYamiMode;
+				// publicityと同様に扱う - 明示的に指定がなければデフォルトは非やみノート
+				data.isNoteInYamiMode = false;
+			}
+		}
+
+		// やみノート投稿時のチェック
+		if (data.isNoteInYamiMode) {
+			// 重要: やみノートの場合、サーバー設定を確認して連合を強制的に制御
+			const yamiMeta = await this.metaService.fetch();
+			if (!yamiMeta.yamiNoteFederationEnabled) {
+				// 連合が無効な場合は強制的にローカルオンリーに
+				data.localOnly = true;
+			}
+
+			// リモートユーザーとローカルユーザーで分岐
+			if (user.host !== null) {
+				// リモートユーザーの場合: 信頼済みインスタンスのみチェック
+				const trustedHosts = yamiMeta.yamiNoteFederationTrustedInstances || [];
+				const isTrusted = trustedHosts.some(trusted =>
+					user.host === trusted || user.host?.endsWith(`.${trusted}`),
+				);
+
+				if (!isTrusted) {
+					throw new Error('You do not have permission to post yami notes: Remote user from untrusted instance');
+				}
+			} else {
+				// ローカルユーザーの場合: ロール権限をチェック
+				const policies = await this.roleService.getUserPolicies(user.id);
+				if (!policies.canYamiNote) {
+					throw new Error('You do not have permission to post yami notes: Local user without necessary role permission');
+				}
+			}
+
+			// 重要: やみノートの場合、サーバー設定を確認して連合を強制的に制御
+			const meta = await this.metaService.fetch();
+			if (!meta.yamiNoteFederationEnabled) {
+				// 連合が無効な場合は強制的にローカルオンリーに
+				data.localOnly = true;
 			}
 		}
 
@@ -267,6 +304,14 @@ export class NoteCreateService implements OnApplicationShutdown {
 		if (data.channel != null) data.visibility = 'public';
 		if (data.channel != null) data.visibleUsers = [];
 		if (data.channel != null) data.localOnly = true;
+
+		// 連合権限のチェック - ローカルオンリーでない場合に権限を確認
+		if (data.localOnly === false) {
+			const policies = await this.roleService.getUserPolicies(user.id);
+			if (policies.canFederateNote === false) {
+				data.localOnly = true; // 連合権限がない場合は強制的にローカルオンリーに
+			}
+		}
 
 		if (data.visibility === 'public' && data.channel == null) {
 			const sensitiveWords = this.meta.sensitiveWords;
@@ -451,6 +496,14 @@ export class NoteCreateService implements OnApplicationShutdown {
 		if (data.channel != null) data.visibility = 'public';
 		if (data.channel != null) data.visibleUsers = [];
 		if (data.channel != null) data.localOnly = true;
+
+		// 連合権限のチェック - ローカルオンリーでない場合に権限を確認
+		if (data.localOnly === false) {
+			const policies = await this.roleService.getUserPolicies(user.id);
+			if (policies.canFederateNote === false) {
+				data.localOnly = true; // 連合権限がない場合は強制的にローカルオンリーに
+			}
+		}
 
 		const meta = await this.metaService.fetch();
 
@@ -730,7 +783,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 		// Increment notes count (user)
 		this.incNotesCountOfUser(user);
 
-		// やみモード投稿とそれ以外で分岐処理
+		// やみノートもしくは通常ノートのタイムライン処理
 		if (!silent) {
 			// タイムラインへのファンアウト
 			this.pushToTl(note, user);
@@ -781,7 +834,14 @@ export class NoteCreateService implements OnApplicationShutdown {
 				noteId: note.id,
 			}, {
 				delay,
-				removeOnComplete: true,
+				removeOnComplete: {
+					age: 3600 * 24 * 7, // keep up to 7 days
+					count: 30,
+				},
+				removeOnFail: {
+					age: 3600 * 24 * 7, // keep up to 7 days
+					count: 100,
+				},
 			});
 		}
 
@@ -854,6 +914,13 @@ export class NoteCreateService implements OnApplicationShutdown {
 					const noteActivity = await this.renderNoteOrRenoteActivity(data, note);
 					const dm = this.apDeliverManagerService.createDeliverManager(user, noteActivity);
 
+					// やみノートの場合は配送先制限処理
+					if (note.isNoteInYamiMode) {
+						await this.deliverYamiNote(note, user, dm);
+						return; // やみノート処理完了後は他の配送をしない
+					}
+
+					// 以下、通常ノートの配送処理
 					// メンションされたリモートユーザーに配送
 					for (const u of mentionedUsers.filter(u => this.userEntityService.isRemoteUser(u))) {
 						dm.addDirectRecipe(u as MiRemoteUser);
@@ -1127,19 +1194,12 @@ export class NoteCreateService implements OnApplicationShutdown {
 	}
 
 	@bindThis
-	private async pushToTl(note: MiNote, user: { id: MiUser['id']; host: MiUser['host']; }) {
+	private async pushToTl(note: MiNote, user: { id: MiUser['id']; host: MiUser['host']; }, notToPush?: FanoutTimelineNamePrefix[]) {
 		if (!this.meta.enableFanoutTimeline) return;
 
-		// やみモード投稿とそれ以外で分岐
+		// やみモード投稿はやみタイムラインのみに流す
 		if (note.isNoteInYamiMode) {
-			// やみモード投稿はやみタイムラインのみに流す
 			const r = this.redisForTimelines.pipeline();
-
-			// グローバルやみタイムラインにも追加
-			this.fanoutTimelineService.push('yamiTimeline', note.id, 1000, r);
-			if (note.fileIds.length > 0) {
-				this.fanoutTimelineService.push('yamiTimelineWithFiles', note.id, 500, r);
-			}
 
 			// 自分自身のやみタイムラインに追加
 			this.fanoutTimelineService.push(`yamiTimeline:${user.id}`, note.id, 300, r);
@@ -1169,202 +1229,243 @@ export class NoteCreateService implements OnApplicationShutdown {
 			});
 
 			// パブリックなやみノートの場合の処理を修正
-			if (note.visibility === 'public' && note.userHost == null) {
-				// フォロー状態に基づいて適切なストリームに配信
-				this.fanoutTimelineService.push('yamiNonFollowingPublicNotes', note.id, 1000, r);
+			if (note.visibility === 'public') {
+				this.fanoutTimelineService.push('yamiPublicNotes', note.id, 1000, r);
 				if (note.fileIds.length > 0) {
-					this.fanoutTimelineService.push('yamiNonFollowingPublicNotesWithFiles', note.id, 500, r);
+					this.fanoutTimelineService.push('yamiPublicNotesWithFiles', note.id, 500, r);
 				}
 			}
 
 			// 自分自身のプロフィールタイムラインにも追加
-			this.fanoutTimelineService.push(`userTimeline:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
+			// (これは他のタイムラインとは別の表示用なので残す)
+			this.fanoutTimelineService.push(`userTimeline:${user.id}`, note.id,
+				user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
 			if (note.fileIds.length > 0) {
-				this.fanoutTimelineService.push(`userTimelineWithFiles:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax / 2 : this.meta.perRemoteUserUserTimelineCacheMax / 2, r);
+				this.fanoutTimelineService.push(`userTimelineWithFiles:${user.id}`, note.id,
+					user.host == null ? this.meta.perLocalUserUserTimelineCacheMax / 2 : this.meta.perRemoteUserUserTimelineCacheMax / 2, r);
 			}
 
 			// 返信の場合は返信タイムラインにも追加
 			if (isReply(note)) {
-				this.fanoutTimelineService.push(`userTimelineWithReplies:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
+				this.fanoutTimelineService.push(`userTimelineWithReplies:${user.id}`, note.id,
+					user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
+
+				// 特定ユーザーへの返信の場合
+				if (note.replyUserId) {
+					this.fanoutTimelineService.push(`yamiTimelineWithReplyTo:${note.replyUserId}`, note.id, 300, r);
+				}
 			}
 
 			// パイプライン実行
 			r.exec().catch(err => this.logger.error(err));
-		} else {
-			// 通常の投稿 - 元々の完全な処理を復元
-			// チャンネル投稿の場合
-			if (note.channelId) {
-				// チャンネル情報を取得
-				const channel = await this.channelsRepository.findOneBy({ id: note.channelId });
+			return;
+		}
 
-				// チャンネルタイムラインとホームタイムラインにパイプライン処理を準備
-				const r = this.redisForTimelines.pipeline();
+		// 以下、通常の投稿処理（やみモードでない場合）
+		const notToPushSet = notToPush ? new Set(notToPush) : null;
+		const shouldPush = (prefix: FanoutTimelineNamePrefix): boolean => {
+			return !notToPushSet || !notToPushSet.has(prefix);
+		};
 
-				// チャンネルタイムラインには常に配信（チャンネル自体のタイムラインなので）
+		// チャンネル投稿の場合 - 元の実装を維持
+		if (note.channelId) {
+			// チャンネル情報を取得
+			const channel = await this.channelsRepository.findOneBy({ id: note.channelId });
+
+			// チャンネルタイムラインとホームタイムラインにパイプライン処理を準備
+			const r = this.redisForTimelines.pipeline();
+
+			// チャンネルタイムラインには常に配信（チャンネル自体のタイムラインなので）
+			if (shouldPush('channelTimeline')) {
 				this.fanoutTimelineService.push(`channelTimeline:${note.channelId}`, note.id, this.config.perChannelMaxNoteCacheCount, r);
+			}
 
-				// 投稿者自身のuserTimelineには常に配信する
+			// 投稿者自身のuserTimelineには常に配信する
+			if (shouldPush('userTimeline')) {
 				this.fanoutTimelineService.push(`userTimeline:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
 				if (note.fileIds.length > 0) {
 					this.fanoutTimelineService.push(`userTimelineWithFiles:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax / 2 : this.meta.perRemoteUserUserTimelineCacheMax / 2, r);
 				}
+			}
 
-				// チャンネルをフォローしている人のタイムラインへの配信ロジック
-				const channelFollowings = await this.channelFollowingsRepository.find({
-					where: { followeeId: note.channelId },
-					select: ['followerId'],
-				});
+			// チャンネルをフォローしている人のタイムラインへの配信ロジック
+			const channelFollowings = await this.channelFollowingsRepository.find({
+				where: { followeeId: note.channelId },
+				select: ['followerId'],
+			});
 
-				// 投稿者をフォローしているユーザーを取得
-				const userFollowings = await this.followingsRepository.find({
-					where: { followeeId: note.userId },
-					select: ['followerId'],
-				});
+			// 投稿者をフォローしているユーザーを取得
+			const userFollowings = await this.followingsRepository.find({
+				where: { followeeId: note.userId },
+				select: ['followerId'],
+			});
 
-				// 投稿者自身のIDも含める
-				const userFollowerIds = new Set([...userFollowings.map(f => f.followerId), note.userId]);
+			// 投稿者自身のIDも含める
+			const userFollowerIds = new Set([...userFollowings.map(f => f.followerId), note.userId]);
 
-				for (const following of channelFollowings) {
-					// 自分自身のホームタイムラインには常に表示
-					if (following.followerId === note.userId) {
+			for (const following of channelFollowings) {
+				// 自分自身のホームタイムラインには常に表示
+				if (following.followerId === note.userId) {
+					if (shouldPush('homeTimeline')) {
 						this.fanoutTimelineService.push(`homeTimeline:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax, r);
 						if (note.fileIds.length > 0) {
 							this.fanoutTimelineService.push(`homeTimelineWithFiles:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
 						}
 					}
-					// チャンネル設定がtrueの場合、投稿者をフォローしているユーザーにも配信
-					else if (channel && channel.propagateToTimelines && userFollowerIds.has(following.followerId)) {
+				}
+				// チャンネル設定がtrueの場合、投稿者をフォローしているユーザーにも配信
+				else if (channel && userFollowerIds.has(following.followerId)) {
+					if (shouldPush('homeTimeline')) {
 						this.fanoutTimelineService.push(`homeTimeline:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax, r);
 						if (note.fileIds.length > 0) {
 							this.fanoutTimelineService.push(`homeTimelineWithFiles:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
 						}
 					}
 				}
+			}
 
-				// パイプラインを実行
-				r.exec().catch(err => this.logger.error(err));
-			} else {
-				// 通常の投稿の処理 (チャンネル以外)
-				const r = this.redisForTimelines.pipeline();
+			// パイプラインを実行
+			r.exec().catch(err => this.logger.error(err));
+			return;
+		}
 
-				// TODO: キャッシュ？
-				// eslint-disable-next-line prefer-const
-				let [followings, userListMemberships] = await Promise.all([
-					this.followingsRepository.find({
-						where: {
-							followeeId: user.id,
-							followerHost: IsNull(), // リモートユーザーのフォローは除外
-							isFollowerHibernated: false,
-						},
-						select: ['followerId', 'withReplies'],
-					}),
-					this.userListMembershipsRepository.find({
-						where: {
-							userId: user.id,
-						},
-						select: ['userListId', 'userListUserId', 'withReplies'],
-					}),
-				]);
+		// 通常の投稿の処理（チャンネル以外）
+		const r = this.redisForTimelines.pipeline();
 
-				if (note.visibility === 'followers') {
-					userListMemberships = userListMemberships.filter(x => x.userListUserId === user.id || followings.some(f => f.followerId === x.userListUserId));
+		// TODO: キャッシュ？
+		// eslint-disable-next-line prefer-const
+		let [followings, userListMemberships] = await Promise.all([
+			this.followingsRepository.find({
+				where: {
+					followeeId: user.id,
+					followerHost: IsNull(), // リモートユーザーのフォローは除外
+					isFollowerHibernated: false,
+				},
+				select: ['followerId', 'withReplies'],
+			}),
+			this.userListMembershipsRepository.find({
+				where: {
+					userId: user.id,
+				},
+				select: ['userListId', 'userListUserId', 'withReplies'],
+			}),
+		]);
+
+		if (note.visibility === 'followers') {
+			userListMemberships = userListMemberships.filter(x => x.userListUserId === user.id || followings.some(f => f.followerId === x.userListUserId));
+		}
+
+		// フォロワーのホームタイムラインに配信（重要！）
+		for (const following of followings) {
+			// 基本的にvisibleUserIdsには自身のidが含まれている前提であること
+			if (note.visibility === 'specified' && !note.visibleUserIds.some(v => v === following.followerId)) continue;
+
+			// 「自分自身への返信 or そのフォロワーへの返信」のどちらでもない場合
+			if (isReply(note, following.followerId)) {
+				if (!following.withReplies) continue;
+			}
+
+			if (shouldPush('homeTimeline')) {
+				this.fanoutTimelineService.push(`homeTimeline:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax, r);
+				if (note.fileIds.length > 0) {
+					this.fanoutTimelineService.push(`homeTimelineWithFiles:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
 				}
-
-				// フォロワーのホームタイムラインに配信（重要！）
-				for (const following of followings) {
-					// 基本的にvisibleUserIdsには自身のidが含まれている前提であること
-					if (note.visibility === 'specified' && !note.visibleUserIds.some(v => v === following.followerId)) continue;
-
-					// 「自分自身への返信 or そのフォロワーへの返信」のどちらでもない場合
-					if (isReply(note, following.followerId)) {
-						if (!following.withReplies) continue;
-					}
-
-					this.fanoutTimelineService.push(`homeTimeline:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax, r);
-					if (note.fileIds.length > 0) {
-						this.fanoutTimelineService.push(`homeTimelineWithFiles:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
-					}
-				}
-
-				// ユーザーリストへの配信
-				for (const userListMembership of userListMemberships) {
-					// ダイレクトのとき、そのリストが対象外のユーザーの場合
-					if (note.visibility === 'specified' &&
-						note.userId !== userListMembership.userListUserId &&
-						!note.visibleUserIds.some(v => v === userListMembership.userListUserId)) continue;
-
-					if (isReply(note, userListMembership.userListUserId)) {
-						if (!userListMembership.withReplies) continue;
-					}
-
-					this.fanoutTimelineService.push(`userListTimeline:${userListMembership.userListId}`, note.id, this.meta.perUserListTimelineCacheMax, r);
-					if (note.fileIds.length > 0) {
-						this.fanoutTimelineService.push(`userListTimelineWithFiles:${userListMembership.userListId}`, note.id, this.meta.perUserListTimelineCacheMax / 2, r);
-					}
-				}
-
-				// 自分自身のHTL
-				if (note.userHost == null) {
-					if (note.visibility !== 'specified' || !note.visibleUserIds.some(v => v === user.id)) {
-						this.fanoutTimelineService.push(`homeTimeline:${user.id}`, note.id, this.meta.perUserHomeTimelineCacheMax, r);
-						if (note.fileIds.length > 0) {
-							this.fanoutTimelineService.push(`homeTimelineWithFiles:${user.id}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
-						}
-					}
-				}
-
-				// 自分自身以外への返信
-				if (isReply(note)) {
-					this.fanoutTimelineService.push(`userTimelineWithReplies:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
-
-					if (note.visibility === 'public' && note.userHost == null) {
-						this.fanoutTimelineService.push('localTimelineWithReplies', note.id, 300, r);
-						if (note.replyUserHost == null) {
-							this.fanoutTimelineService.push(`localTimelineWithReplyTo:${note.replyUserId}`, note.id, 300 / 10, r);
-						}
-					}
-				} else {
-					this.fanoutTimelineService.push(`userTimeline:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
-					if (note.fileIds.length > 0) {
-						this.fanoutTimelineService.push(`userTimelineWithFiles:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax / 2 : this.meta.perRemoteUserUserTimelineCacheMax / 2, r);
-					}
-				}
-
-				// LOCAL
-				if (note.visibility === 'public' && note.userHost == null) {
-					this.fanoutTimelineService.push('localTimeline', note.id, 1000, r);
-					if (note.fileIds.length > 0) {
-						this.fanoutTimelineService.push('localTimelineWithFiles', note.id, 500, r);
-					}
-				}
-
-				// HYBRID (ソーシャル)
-				if (note.visibility === 'public') {
-					this.fanoutTimelineService.push('hybridTimeline', note.id, 1000, r);
-					if (note.fileIds.length > 0) {
-						this.fanoutTimelineService.push('hybridTimelineWithFiles', note.id, 500, r);
-					}
-				}
-
-				// GLOBAL
-				if (note.visibility === 'public') {
-					this.fanoutTimelineService.push('globalTimeline', note.id, 1000, r);
-					if (note.fileIds.length > 0) {
-						this.fanoutTimelineService.push('globalTimelineWithFiles', note.id, 500, r);
-					}
-				}
-
-				// ヒベルネーションチェック（重要）
-				if (Math.random() < 0.1) {
-					process.nextTick(() => {
-						this.checkHibernation(followings);
-					});
-				}
-
-				// パイプラインを実行
-				r.exec().catch(err => this.logger.error(err));
 			}
 		}
+
+		// ユーザーリストへの配信
+		for (const userListMembership of userListMemberships) {
+			// ダイレクトのとき、そのリストが対象外のユーザーの場合
+			if (note.visibility === 'specified' &&
+                note.userId !== userListMembership.userListUserId &&
+                !note.visibleUserIds.some(v => v === userListMembership.userListUserId)) continue;
+
+			if (isReply(note, userListMembership.userListUserId)) {
+				if (!userListMembership.withReplies) continue;
+			}
+
+			if (shouldPush('userListTimeline')) {
+				this.fanoutTimelineService.push(`userListTimeline:${userListMembership.userListId}`, note.id, this.meta.perUserListTimelineCacheMax, r);
+				if (note.fileIds.length > 0) {
+					this.fanoutTimelineService.push(`userListTimelineWithFiles:${userListMembership.userListId}`, note.id, this.meta.perUserListTimelineCacheMax / 2, r);
+				}
+			}
+		}
+
+		// 自分自身のHTL
+		if (note.userHost == null) {
+			if (note.visibility !== 'specified' || !note.visibleUserIds.some(v => v === user.id)) {
+				if (shouldPush('homeTimeline')) {
+					this.fanoutTimelineService.push(`homeTimeline:${user.id}`, note.id, this.meta.perUserHomeTimelineCacheMax, r);
+					if (note.fileIds.length > 0) {
+						this.fanoutTimelineService.push(`homeTimelineWithFiles:${user.id}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
+					}
+				}
+			}
+		}
+
+		// 自分自身以外への返信
+		if (isReply(note)) {
+			if (shouldPush('userTimeline')) {
+				this.fanoutTimelineService.push(`userTimelineWithReplies:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
+			}
+
+			if (note.visibility === 'public' && note.userHost == null) {
+				if (shouldPush('localTimeline')) {
+					this.fanoutTimelineService.push('localTimelineWithReplies', note.id, 300, r);
+					if (note.replyUserHost == null) {
+						this.fanoutTimelineService.push(`localTimelineWithReplyTo:${note.replyUserId}`, note.id, 300 / 10, r);
+					}
+				}
+			}
+		} else {
+			if (shouldPush('userTimeline')) {
+				this.fanoutTimelineService.push(`userTimeline:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
+				if (note.fileIds.length > 0) {
+					this.fanoutTimelineService.push(`userTimelineWithFiles:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax / 2 : this.meta.perRemoteUserUserTimelineCacheMax / 2, r);
+				}
+			}
+		}
+
+		// LOCAL
+		if (note.visibility === 'public' && note.userHost == null) {
+			if (shouldPush('localTimeline')) {
+				this.fanoutTimelineService.push('localTimeline', note.id, 1000, r);
+				if (note.fileIds.length > 0) {
+					this.fanoutTimelineService.push('localTimelineWithFiles', note.id, 500, r);
+				}
+			}
+		}
+
+		// HYBRID (ソーシャル)
+		if (note.visibility === 'public') {
+			if (shouldPush('hybridTimeline')) {
+				this.fanoutTimelineService.push('hybridTimeline', note.id, 1000, r);
+				if (note.fileIds.length > 0) {
+					this.fanoutTimelineService.push('hybridTimelineWithFiles', note.id, 500, r);
+				}
+			}
+		}
+
+		// GLOBAL
+		if (note.visibility === 'public') {
+			if (shouldPush('globalTimeline')) {
+				this.fanoutTimelineService.push('globalTimeline', note.id, 1000, r);
+				if (note.fileIds.length > 0) {
+					this.fanoutTimelineService.push('globalTimelineWithFiles', note.id, 500, r);
+				}
+			}
+		}
+
+		// ヒベルネーションチェック（重要）
+		if (Math.random() < 0.1) {
+			process.nextTick(() => {
+				this.checkHibernation(followings);
+			});
+		}
+
+		// パイプラインを実行
+		r.exec().catch(err => this.logger.error(err));
 	}
 
 	@bindThis
@@ -1428,6 +1529,47 @@ export class NoteCreateService implements OnApplicationShutdown {
 	@bindThis
 	private async performUpdateNotesCount(id: MiNote['id'], incrBy: number) {
 		await this.instancesRepository.increment({ id: id }, 'notesCount', incrBy);
+	}
+
+	@bindThis
+	private async deliverYamiNote(note: MiNote, user: { id: MiUser['id'] }, dm: any): Promise<void> {
+		const meta = await this.metaService.fetch();
+
+		// 連合が無効なら配送しない
+		if (!meta.yamiNoteFederationEnabled) {
+			await this.notesRepository.update(note.id, { localOnly: true });
+			return;
+		}
+
+		// 信頼済みホストリスト
+		const trustedHosts = meta.yamiNoteFederationTrustedInstances || [];
+		if (trustedHosts.length === 0) return;
+
+		try {
+			// リモートフォロワーを取得して、信頼済みホストのみフィルタリング
+			const followers = await this.followingsRepository.find({
+				where: {
+					followeeId: user.id,
+					followerHost: Not(IsNull()),
+				},
+				relations: ['follower'],
+			});
+
+			// 信頼済みフォロワーにのみ配送
+			const trustedFollowers = followers.filter(following =>
+				following.follower && this.utilityService.isTrustedHost(following.follower.host, trustedHosts),
+			);
+
+			for (const following of trustedFollowers) {
+				if (!following.follower) continue;
+				dm.addDirectRecipe(following.follower as MiRemoteUser);
+			}
+
+			// 配信実行
+			await dm.execute();
+		} catch (err) {
+			console.error(`[YamiNote] 配信エラー: ${err}`);
+		}
 	}
 
 	@bindThis

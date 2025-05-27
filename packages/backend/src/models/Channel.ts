@@ -99,9 +99,9 @@ export class MiChannel {
 	})
 	public allowRenoteToExternal: boolean;
 
-	@Column('boolean', {
-		default: false,
-		comment: 'Whether to propagate channel posts to followers timelines',
+	@Column('varchar', {
+		length: 32,
+		default: 'public',
 	})
-	public propagateToTimelines: boolean;
+	public followersVisibility: 'public' | 'followers' | 'private';
 }

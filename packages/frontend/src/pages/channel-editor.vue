@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <PageWithHeader :actions="headerActions" :tabs="headerTabs">
-	<MkSpacer :contentMax="700">
+	<div class="_spacer" style="--MI_SPACER-w: 700px;">
 		<div v-if="channelId == null || channel != null" class="_gaps_m">
 			<MkInput v-model="name">
 				<template #label>{{ i18n.ts.name }}</template>
@@ -27,10 +27,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<template #label>{{ i18n.ts._channel.allowRenoteToExternal }}</template>
 			</MkSwitch>
 
-			<MkSwitch v-model="propagateToTimelines">
-				<template #label>{{ i18n.ts.propagateToTimelines }}</template>
-				<template #caption>{{ i18n.ts.propagateToTimelinesDescription }}</template>
-			</MkSwitch>
+			<MkSelect v-model="followersVisibility" @update:modelValue="save()">
+				<template #label>{{ i18n.ts.followersVisibility }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+				<option value="public">{{ i18n.ts._ffVisibility.public }}</option>
+				<option value="followers">{{ i18n.ts._ffVisibility.followers }}</option>
+				<option value="private">{{ i18n.ts._ffVisibility.private }}</option>
+			</MkSelect>
 
 			<div>
 				<MkButton v-if="bannerId == null" @click="setBannerImage"><i class="ti ti-plus"></i> {{ i18n.ts._channel.setBanner }}</MkButton>
@@ -68,7 +70,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<MkButton v-if="channelId" danger @click="archive()"><i class="ti ti-trash"></i> {{ i18n.ts.archive }}</MkButton>
 			</div>
 		</div>
-	</MkSpacer>
+	</div>
 </PageWithHeader>
 </template>
 
@@ -85,6 +87,7 @@ import { definePage } from '@/page.js';
 import { i18n } from '@/i18n.js';
 import MkFolder from '@/components/MkFolder.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
+import MkSelect from '@/components/MkSelect.vue';
 import MkTextarea from '@/components/MkTextarea.vue';
 import { useRouter } from '@/router.js';
 
@@ -104,8 +107,8 @@ const bannerId = ref<string | null>(null);
 const color = ref('#000');
 const isSensitive = ref(false);
 const allowRenoteToExternal = ref(true);
-const propagateToTimelines = ref(false);
 const pinnedNotes = ref<{ id: Misskey.entities.Note['id'] }[]>([]);
+const followersVisibility = ref('public');
 
 watch(() => bannerId.value, async () => {
 	if (bannerId.value == null) {
@@ -134,7 +137,7 @@ async function fetchChannel() {
 	}));
 	color.value = channel.value.color;
 	allowRenoteToExternal.value = channel.value.allowRenoteToExternal;
-	propagateToTimelines.value = channel.value.propagateToTimelines;
+	followersVisibility.value = channel.value.followersVisibility;
 }
 
 fetchChannel();
@@ -165,7 +168,7 @@ function save() {
 		color: color.value,
 		isSensitive: isSensitive.value,
 		allowRenoteToExternal: allowRenoteToExternal.value,
-		propagateToTimelines: propagateToTimelines.value,
+		followersVisibility: followersVisibility.value,
 	};
 
 	if (props.channelId) {

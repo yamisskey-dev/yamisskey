@@ -119,12 +119,29 @@ export class NoteEntityService implements OnModuleInit {
 
 	@bindThis
 	private async hideNote(packedNote: Packed<'Note'>, meId: MiUser['id'] | null): Promise<void> {
+		// 自分のノートは常に表示
 		if (meId === packedNote.userId) return;
 
-		// TODO: isVisibleForMe を使うようにしても良さそう(型違うけど)
 		let hide = false;
 
-		if (packedNote.user.requireSigninToViewContents && meId == null) {
+		// やみノートの処理を追加
+		if (packedNote.isNoteInYamiMode) {
+			// 未ログインならやみノートは常に非表示
+			if (meId == null) {
+				hide = true;
+			} else {
+				// 自分がやみモードでない場合は非表示
+				const hasYamiMode = await this.usersRepository.findOneBy({ id: meId })
+					.then(u => u?.isInYamiMode ?? false);
+
+				if (!hasYamiMode) {
+					hide = true;
+				}
+			}
+		}
+
+		// 既存の表示条件チェック
+		if (!hide && packedNote.user.requireSigninToViewContents && meId == null) {
 			hide = true;
 		}
 
@@ -281,6 +298,37 @@ export class NoteEntityService implements OnModuleInit {
 
 	@bindThis
 	public async isVisibleForMe(note: MiNote, meId: MiUser['id'] | null): Promise<boolean> {
+		// やみノートの場合の特別な処理
+		if (note.isNoteInYamiMode) {
+			if (meId == null) return false;
+
+			// 自分の投稿は常に見える
+			if (meId === note.userId) return true;
+
+			// 自分がやみモードでない場合は見えない
+			const viewer = await this.usersRepository.findOneBy({ id: meId });
+			if (!viewer || !viewer.isInYamiMode) return false;
+
+			// ダイレクトメッセージは対象者のみ
+			if (note.visibility === 'specified') {
+				return note.visibleUserIds.includes(meId);
+			}
+
+			// それ以外の場合はフォロー状態などに基づいて判断
+			// フォロワーだけに表示の場合
+			if (note.visibility === 'followers') {
+				const following = await this.followingsRepository.count({
+					where: {
+						followeeId: note.userId,
+						followerId: meId,
+					},
+					take: 1,
+				});
+				return following > 0;
+			}
+		}
+
+		// 通常の可視性チェック (既存のコード)
 		// This code must always be synchronized with the checks in generateVisibilityQuery.
 		// visibility が specified かつ自分が指定されていなかったら非表示
 		if (note.visibility === 'specified') {
@@ -377,10 +425,11 @@ export class NoteEntityService implements OnModuleInit {
 
 		const meId = me ? me.id : null;
 		const note = typeof src === 'object' ? src : await this.noteLoader.load(src);
+
 		const host = note.userHost;
 
 		const bufferedReactions = opts._hint_?.bufferedReactions != null
-			? (opts._hint_.bufferedReactions.get(note.id) ?? { deltas: {}, pairs: [] })
+			? (opts._hint_?.bufferedReactions.get(note.id) ?? { deltas: {}, pairs: [] })
 			: this.meta.enableReactionsBuffering
 				? await this.reactionsBufferingService.get(note.id)
 				: { deltas: {}, pairs: [] };
@@ -436,8 +485,8 @@ export class NoteEntityService implements OnModuleInit {
 				color: channel.color,
 				isSensitive: channel.isSensitive,
 				allowRenoteToExternal: channel.allowRenoteToExternal,
+				followersVisibility: channel.followersVisibility,
 				userId: channel.userId,
-				propagateToTimelines: channel.propagateToTimelines,
 			} : undefined,
 			mentions: note.mentions.length > 0 ? note.mentions : undefined,
 			uri: note.uri ?? undefined,

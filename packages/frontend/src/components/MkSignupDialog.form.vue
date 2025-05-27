@@ -8,7 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div :class="$style.banner">
 		<i class="ti ti-user-edit"></i>
 	</div>
-	<MkSpacer :marginMin="20" :marginMax="32">
+	<div class="_spacer" style="--MI_SPACER-min: 20px; --MI_SPACER-max: 32px;">
 		<form class="_gaps_m" autocomplete="new-password" @submit.prevent="onSubmit">
 			<MkInput v-if="instance.disableRegistration" v-model="invitationCode" type="text" :spellcheck="false" required>
 				<template #label>{{ i18n.ts.invitationCode }}</template>
@@ -53,11 +53,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</template>
 			</MkInput>
 			<MkInput
-				v-if="instance.emailRequiredForSignup" v-model="email" :debounce="true" type="email"
-				:spellcheck="false" required data-cy-signup-email @update:modelValue="onChangeEmail"
+				v-if="instance.emailInquiredForSignup" v-model="email" :debounce="true" type="email"
+				:spellcheck="false" :required="instance.emailRequiredForSignup" data-cy-signup-email @update:modelValue="onChangeEmail"
 			>
 				<template #label>
-					{{ i18n.ts.emailAddress }} <div
+					{{ i18n.ts.emailAddress }} <span v-if="!instance.emailRequiredForSignup">({{ i18n.ts.optional }})</span> <div
 						v-tooltip:dialog="i18n.ts._signup.emailAddressInfo"
 						class="_button _help"
 					>
@@ -175,7 +175,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<template v-else>{{ i18n.ts.start }}</template>
 			</MkButton>
 		</form>
-	</MkSpacer>
+	</div>
 </div>
 </template>
 

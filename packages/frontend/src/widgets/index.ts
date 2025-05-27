@@ -26,6 +26,7 @@ export default function(app: App) {
 	app.component('WidgetSlideshow', defineAsyncComponent(() => import('./WidgetSlideshow.vue')));
 	app.component('WidgetServerMetric', defineAsyncComponent(() => import('./server-metric/index.vue')));
 	app.component('WidgetOnlineUsers', defineAsyncComponent(() => import('./WidgetOnlineUsers.vue')));
+	app.component('WidgetActiveUsers', defineAsyncComponent(() => import('./WidgetActiveUsers.vue')));
 	app.component('WidgetJobQueue', defineAsyncComponent(() => import('./WidgetJobQueue.vue')));
 	app.component('WidgetInstanceCloud', defineAsyncComponent(() => import('./WidgetInstanceCloud.vue')));
 	app.component('WidgetButton', defineAsyncComponent(() => import('./WidgetButton.vue')));
@@ -36,6 +37,8 @@ export default function(app: App) {
 	app.component('WidgetClicker', defineAsyncComponent(() => import('./WidgetClicker.vue')));
 	app.component('WidgetBirthdayFollowings', defineAsyncComponent(() => import('./WidgetBirthdayFollowings.vue')));
 	app.component('WidgetListenBrainz', defineAsyncComponent(() => import('./WidgetListenBrainz.vue')));
+	app.component('WidgetChat', defineAsyncComponent(() => import('./WidgetChat.vue')));
+	app.component('WidgetJitsiMeet', defineAsyncComponent(() => import('./WidgetJitsiMeet.vue')));
 }
 
 export const federationWidgets = [
@@ -74,4 +77,7 @@ export const widgets = [
 	'clicker',
 	'birthdayFollowings',
 	'listenBrainz',
+	'chat',
+	'activeUsers',
+	'jitsiMeet',
 ];

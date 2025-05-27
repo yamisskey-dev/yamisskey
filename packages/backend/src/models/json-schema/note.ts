@@ -196,13 +196,14 @@ export const packedNoteSchema = {
 					type: 'boolean',
 					optional: false, nullable: false,
 				},
+				followersVisibility: {
+					type: 'string',
+					optional: false, nullable: false,
+					enum: ['public', 'followers', 'private'],
+				},
 				userId: {
 					type: 'string',
 					optional: false, nullable: true,
-				},
-				propagateToTimelines: {
-					type: 'boolean',
-					optional: false, nullable: false,
 				},
 			},
 		},

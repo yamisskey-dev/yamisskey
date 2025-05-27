@@ -6,10 +6,12 @@
 import { URL, domainToASCII } from 'node:url';
 import { Inject, Injectable } from '@nestjs/common';
 import RE2 from 're2';
+import semver from 'semver';
 import { DI } from '@/di-symbols.js';
 import type { Config } from '@/config.js';
 import { bindThis } from '@/decorators.js';
-import { MiMeta } from '@/models/Meta.js';
+import { MiMeta, SoftwareSuspension } from '@/models/Meta.js';
+import { MiInstance } from '@/models/Instance.js';
 
 @Injectable()
 export class UtilityService {
@@ -142,5 +144,42 @@ export class UtilityService {
 	public isFederationAllowedUri(uri: string): boolean {
 		const host = this.extractDbHost(uri);
 		return this.isFederationAllowedHost(host);
+	}
+
+	@bindThis
+	public isDeliverSuspendedSoftware(software: Pick<MiInstance, 'softwareName' | 'softwareVersion'>): SoftwareSuspension | undefined {
+		if (software.softwareName == null) return undefined;
+		if (software.softwareVersion == null) {
+			// software version is null; suspend iff versionRange is *
+			return this.meta.deliverSuspendedSoftware.find(x =>
+				x.software === software.softwareName
+				&& x.versionRange.trim() === '*');
+		} else {
+			const softwareVersion = software.softwareVersion;
+			return this.meta.deliverSuspendedSoftware.find(x =>
+				x.software === software.softwareName
+				&& semver.satisfies(softwareVersion, x.versionRange, { includePrerelease: true }));
+		}
+	}
+
+	/**
+	 * ホストが信頼済みリストに含まれているか確認（サブドメイン対応）
+	 * @param host 検証するホスト名
+	 * @param trustedHosts 信頼済みホストのリスト
+	 */
+	@bindThis
+	public isTrustedHost(
+		host: string | null | undefined,
+		trustedHosts: string[],
+	): boolean {
+		// 既存のtoPunyNullableメソッドを使用して正規化
+		const normalizedHost = this.toPunyNullable(host);
+		if (!normalizedHost) return false;
+
+		// isBlockedHostと同様のロジックを使用
+		return trustedHosts.some(trusted => {
+			const normalizedTrusted = this.toPuny(trusted);
+			return `.${normalizedHost}`.endsWith(`.${normalizedTrusted}`);
+		});
 	}
 }

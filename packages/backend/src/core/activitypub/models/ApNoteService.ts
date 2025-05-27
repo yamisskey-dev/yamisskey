@@ -23,6 +23,7 @@ import { UtilityService } from '@/core/UtilityService.js';
 import { bindThis } from '@/decorators.js';
 import { checkHttps } from '@/misc/check-https.js';
 import { IdentifiableError } from '@/misc/identifiable-error.js';
+import { MetaService } from '@/core/MetaService.js';
 import { getOneApId, getApId, getOneApHrefNullable, validPost, isEmoji, getApType } from '../type.js';
 import { ApLoggerService } from '../ApLoggerService.js';
 import { ApMfmService } from '../ApMfmService.js';
@@ -57,6 +58,7 @@ export class ApNoteService {
 		private idService: IdService,
 		private apMfmService: ApMfmService,
 		private apResolverService: ApResolverService,
+		private metaService: MetaService,
 
 		// 循環参照のため / for circular dependency
 		@Inject(forwardRef(() => ApPersonService))
@@ -117,6 +119,29 @@ export class ApNoteService {
 	@bindThis
 	public async fetchNote(object: string | IObject): Promise<MiNote | null> {
 		return await this.apDbResolverService.getNoteFromApId(object);
+	}
+
+	/**
+	 * ActivityPubオブジェクトがやみノートかどうかを判定し、信頼済みホストからのものか確認する
+	 */
+	@bindThis
+	private async isNoteYamiModeFromTrustedHost(note: IObject): Promise<boolean> {
+		// やみノートフラグがない場合は早期リターン
+		if (note._misskey_isNoteInYamiMode !== true) return false;
+
+		// 送信元ホストの信頼確認
+		const host = this.utilityService.extractDbHost(note.id);
+		if (!host) return false;
+
+		// 信頼済みホストリストを取得
+		const meta = await this.metaService.fetch();
+		const trustedHosts = meta.yamiNoteFederationTrustedInstances || [];
+
+		// 空の信頼リストの場合はやみノートとして認識しない
+		if (trustedHosts.length === 0) return false;
+
+		// サブドメイン対応で信頼済みホストチェック
+		return this.utilityService.isTrustedHost(host, trustedHosts);
 	}
 
 	/**
@@ -308,6 +333,9 @@ export class ApNoteService {
 
 		const apEmojis = emojis.map(emoji => emoji.name);
 
+		// やみノート判定 - 名前を変更して意図を明確に
+		const isNoteInYamiMode = await this.isNoteYamiModeFromTrustedHost(note);
+
 		try {
 			return await this.noteCreateService.create(actor, {
 				createdAt: note.published ? new Date(note.published) : null,
@@ -318,7 +346,7 @@ export class ApNoteService {
 				cw,
 				text,
 				localOnly: false,
-				isNoteInYamiMode: false,
+				isNoteInYamiMode, // 判定結果を使用
 				visibility,
 				visibleUsers,
 				apMentions,
@@ -371,7 +399,19 @@ export class ApNoteService {
 			// ここでuriの代わりに添付されてきたNote Objectが指定されていると、サーバーフェッチを経ずにノートが生成されるが
 			// 添付されてきたNote Objectは偽装されている可能性があるため、常にuriを指定してサーバーフェッチを行う。
 			const createFrom = options.sentFrom?.origin === new URL(uri).origin ? value : uri;
-			return await this.createNote(createFrom, undefined, options.resolver, true);
+
+			// やみノートかどうかを判定
+			let silent = true; // デフォルトはsilent=true
+
+			// オブジェクト形式の場合、直接やみモードフラグをチェック
+			if (typeof createFrom === 'object' && createFrom._misskey_isNoteInYamiMode === true) {
+				// やみノートの場合はsilent=falseに設定
+				this.logger.info(`Remote yami note detected, setting silent=false: ${createFrom.id}`);
+				silent = false;
+			}
+
+			// やみノート判定に基づいてsilentフラグを設定
+			return await this.createNote(createFrom, undefined, options.resolver, silent);
 		} finally {
 			unlock();
 		}
@@ -410,7 +450,7 @@ export class ApNoteService {
 						publicUrl: tag.icon.url,
 						updatedAt: new Date(),
 						// _misskey_license が存在しなければ `null`
-						license: (tag._misskey_license?.freeText ?? null)
+						license: (tag._misskey_license?.freeText ?? null),
 					});
 
 					const emoji = await this.emojisRepository.findOneBy({ host, name });
@@ -433,7 +473,7 @@ export class ApNoteService {
 				updatedAt: new Date(),
 				aliases: [],
 				// _misskey_license が存在しなければ `null`
-				license: (tag._misskey_license?.freeText ?? null)
+				license: (tag._misskey_license?.freeText ?? null),
 			});
 		}));
 	}

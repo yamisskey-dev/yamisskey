@@ -222,31 +222,14 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			.leftJoinAndSelect('note.reply', 'reply')
 			.leftJoinAndSelect('note.renote', 'renote')
 			.leftJoinAndSelect('reply.user', 'replyUser')
-			.leftJoinAndSelect('renote.user', 'renoteUser')
-			.leftJoinAndSelect('note.channel', 'channel');
+			.leftJoinAndSelect('renote.user', 'renoteUser');
 
 		if (followingChannels.length > 0) {
 			const followingChannelIds = followingChannels.map(x => x.followeeId);
-			const followeeIds = followees.length > 0 ? followees.map(f => f.followeeId) : [];
 
 			query.andWhere(new Brackets(qb => {
-				qb.where('note.channelId IS NULL'); // チャンネル投稿ではない
-				qb.orWhere(new Brackets(qb2 => {
-					qb2.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds })
-						.andWhere(new Brackets(qb3 => {
-							qb3.where('note.userId = :meId', { meId: me.id }); // 自分の投稿
-
-							// フォローしているユーザーがいる場合、その投稿も表示
-							if (followeeIds.length > 0) {
-								qb3.orWhere('note.userId IN (:...followeeIds)', { followeeIds });
-							}
-						}))
-						// propagateToTimelinesがtrueか、自分の投稿
-						.andWhere(new Brackets(qb4 => {
-							qb4.where('channel.propagateToTimelines = TRUE')
-								.orWhere('note.userId = :meId', { meId: me.id });
-						}));
-				}));
+				qb.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds });
+				qb.orWhere('note.channelId IS NULL');
 			}));
 		} else {
 			query.andWhere('note.channelId IS NULL');
@@ -265,6 +248,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		}
 
 		this.queryService.generateVisibilityQuery(query, me);
+		this.queryService.generateBlockedHostQueryForNote(query);
+		this.queryService.generateSuspendedUserQueryForNote(query);
 		this.queryService.generateMutedUserQueryForNotes(query, me);
 		this.queryService.generateBlockedUserQueryForNotes(query, me);
 		this.queryService.generateMutedUserRenotesQueryForNotes(query, me);

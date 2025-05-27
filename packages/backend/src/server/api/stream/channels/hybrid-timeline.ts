@@ -21,13 +21,12 @@ class HybridTimelineChannel extends Channel {
 	private withRenotes: boolean;
 	private withReplies: boolean;
 	private withFiles: boolean;
-	private following: Record<string, { id: string; withReplies: boolean }> = {};
-	private followingChannels: Set<string> = new Set();
 
 	constructor(
 		private metaService: MetaService,
 		private roleService: RoleService,
 		private noteEntityService: NoteEntityService,
+
 		id: string,
 		connection: Channel['connection'],
 	) {
@@ -43,6 +42,8 @@ class HybridTimelineChannel extends Channel {
 		this.withRenotes = !!(params.withRenotes ?? true);
 		this.withReplies = !!(params.withReplies ?? false);
 		this.withFiles = !!(params.withFiles ?? false);
+
+		// Subscribe events
 		this.subscriber.on('notesStream', this.onNote);
 	}
 
@@ -63,11 +64,7 @@ class HybridTimelineChannel extends Channel {
 			(note.channelId == null && isMe) ||
 			(note.channelId == null && Object.hasOwn(this.following, note.userId)) ||
 			(note.channelId == null && (note.user.host == null && note.visibility === 'public')) ||
-			// チャンネル投稿の場合、条件を追加
-			(note.channelId != null &&
-				this.followingChannels.has(note.channelId) && // チャンネルをフォローしている
-				(note.channel && note.channel.propagateToTimelines) && // propagateToTimelinesがtrue
-				(isMe || Object.hasOwn(this.following, note.userId))) // 自分の投稿か、フォローしている人の投稿
+			(note.channelId != null && this.followingChannels.has(note.channelId))
 		)) return;
 
 		if (note.visibility === 'followers') {
@@ -85,7 +82,7 @@ class HybridTimelineChannel extends Channel {
 
 		if (note.reply) {
 			const reply = note.reply;
-			if ((this.following[note.userId].withReplies ?? false) || this.withReplies) {
+			if ((this.following[note.userId]?.withReplies ?? false) || this.withReplies) {
 				// 自分のフォローしていないユーザーの visibility: followers な投稿への返信は弾く
 				if (reply.visibility === 'followers' && !Object.hasOwn(this.following, reply.userId) && reply.userId !== this.user!.id) return;
 			} else {

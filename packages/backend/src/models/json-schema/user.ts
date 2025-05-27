@@ -281,6 +281,12 @@ export const packedUserDetailedNotMeOnlySchema = {
 			nullable: true, optional: false,
 			example: '2018-03-12',
 		},
+		listenbrainz: {
+			type: 'string',
+			nullable: true,
+			optional: false,
+			example: 'Steve',
+		},
 		lang: {
 			type: 'string',
 			nullable: true, optional: false,
@@ -546,6 +552,39 @@ export const packedMeDetailedOnlySchema = {
 			type: 'boolean',
 			nullable: false, optional: false,
 		},
+		activeStatusVisibility: {
+			type: 'object',
+			nullable: false, optional: false,
+			oneOf: [
+				{
+					type: 'object',
+					properties: {
+						type: {
+							type: 'string',
+							enum: ['all', 'following', 'followers', 'mutualFollow', 'followingOrFollower', 'never'],
+							nullable: false,
+						},
+					},
+					required: ['type'],
+				},
+				{
+					type: 'object',
+					properties: {
+						type: {
+							type: 'string',
+							enum: ['list'],
+							nullable: false,
+						},
+						userListId: {
+							type: 'string',
+							format: 'misskey:id',
+							nullable: false,
+						},
+					},
+					required: ['type', 'userListId'],
+				},
+			],
+		},
 		hideSearchResult: {
 			type: 'boolean',
 			nullable: false, optional: false,
@@ -662,18 +701,7 @@ export const packedMeDetailedOnlySchema = {
 			type: 'array',
 			nullable: false, optional: false,
 			items: {
-				type: 'object',
-				nullable: false, optional: false,
-				properties: {
-					name: {
-						type: 'string',
-						nullable: false, optional: false,
-					},
-					unlockedAt: {
-						type: 'number',
-						nullable: false, optional: false,
-					},
-				},
+				ref: 'Achievement',
 			},
 		},
 		loggedInDays: {
@@ -761,7 +789,7 @@ export const packedMeDetailedSchema = {
 		},
 		{
 			type: 'object',
-			ref: 'UserDetailedNotMeOnly',
+			ref: 'UserDetailedNotMe',
 		},
 		{
 			type: 'object',

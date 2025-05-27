@@ -18,11 +18,10 @@ class HomeTimelineChannel extends Channel {
 	public static kind = 'read:account';
 	private withRenotes: boolean;
 	private withFiles: boolean;
-	private following: Record<string, { id: string; withReplies: boolean }> = {};
-	private followingChannels: Set<string> = new Set();
 
 	constructor(
 		private noteEntityService: NoteEntityService,
+
 		id: string,
 		connection: Channel['connection'],
 	) {
@@ -34,6 +33,7 @@ class HomeTimelineChannel extends Channel {
 	public async init(params: JsonObject) {
 		this.withRenotes = !!(params.withRenotes ?? true);
 		this.withFiles = !!(params.withFiles ?? false);
+
 		this.subscriber.on('notesStream', this.onNote);
 	}
 
@@ -46,22 +46,13 @@ class HomeTimelineChannel extends Channel {
 
 		if (this.withFiles && (note.fileIds == null || note.fileIds.length === 0)) return;
 
-		// チャンネル投稿の場合
 		if (note.channelId) {
-			// チャンネルをフォローしていなければ表示しない
 			if (!this.followingChannels.has(note.channelId)) return;
-
-			// propagateToTimelinesがfalseで、自分の投稿でもない場合は表示しない
-			if (note.channel && !note.channel.propagateToTimelines && !isMe) return;
-
-			// 自分の投稿でなく、かつ投稿者をフォローしていない場合は表示しない
-			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
 		} else {
-			// チャンネル投稿でない場合は、投稿者をフォローしているか自分かどうか
+			// その投稿のユーザーをフォローしていなかったら弾く
 			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
 		}
 
-		// その他の条件は既存のまま...
 		if (note.visibility === 'followers') {
 			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
 		} else if (note.visibility === 'specified') {
@@ -70,7 +61,7 @@ class HomeTimelineChannel extends Channel {
 
 		if (note.reply) {
 			const reply = note.reply;
-			if (this.following[note.userId].withReplies) {
+			if (this.following[note.userId]?.withReplies) {
 				// 自分のフォローしていないユーザーの visibility: followers な投稿への返信は弾く
 				if (reply.visibility === 'followers' && !Object.hasOwn(this.following, reply.userId) && reply.userId !== this.user!.id) return;
 			} else {

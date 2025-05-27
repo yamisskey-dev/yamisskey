@@ -107,6 +107,14 @@ export interface Locale extends ILocale {
      */
     "noNotifications": string;
     /**
+     * アクティブユーザーはいません
+     */
+    "noActiveUsers": string;
+    /**
+     * 再生中の音楽はありません
+     */
+    "noListeningMusic": string;
+    /**
      * サーバー
      */
     "instance": string;
@@ -539,14 +547,6 @@ export interface Locale extends ILocale {
      */
     "renoteToOtherChannel": string;
     /**
-     * チャンネル投稿をフォロワーのタイムラインに流す
-     */
-    "propagateToTimelines": string;
-    /**
-     * オフにするとチャンネルをフォローしていても、フォロワーのタイムラインにチャンネル投稿が流れなくなります
-     */
-    "propagateToTimelinesDescription": string;
-    /**
      * ピン留めされたノート
      */
     "pinnedNote": string;
@@ -946,6 +946,10 @@ export interface Locale extends ILocale {
      * ソフトウェア
      */
     "software": string;
+    /**
+     * ソフトウェア名
+     */
+    "softwareName": string;
     /**
      * バージョン
      */
@@ -1858,6 +1862,10 @@ export interface Locale extends ILocale {
      * 管理者
      */
     "administrator": string;
+    /**
+     * コミュニティ
+     */
+    "community": string;
     /**
      * 確認コード
      */
@@ -3467,6 +3475,10 @@ export interface Locale extends ILocale {
      */
     "hideOnlineStatusDescription": string;
     /**
+     * アクティブ状態の公開範囲
+     */
+    "activeStatusVisibility": string;
+    /**
      * 自分のノートを他人の検索結果から隠す
      */
     "hideSearchResult": string;
@@ -3739,9 +3751,25 @@ export interface Locale extends ILocale {
      */
     "off": string;
     /**
-     * アカウント登録にメールアドレスを必須にする
+     * メールアドレスをサインアップ時に入力欄を表示する
+     */
+    "emailInquiredForSignup": string;
+    /**
+     * 有効にすると、ユーザー登録フォームにメールアドレス入力欄が表示されますが、入力は任意です。「メールアドレスを必須にする」設定を有効にするには、この設定も有効にする必要があります。
+     */
+    "emailInquiredForSignupDescription": string;
+    /**
+     * メールアドレスをサインアップ時に必須にする
      */
     "emailRequiredForSignup": string;
+    /**
+     * 有効にすると、ユーザー登録時にメールアドレスの入力が必須になります。
+     */
+    "emailRequiredForSignupDescription": string;
+    /**
+     * アカウント登録にメールアドレスを任意にする
+     */
+    "emailOptionalForSignup": string;
     /**
      * アカウント登録を承認制にする
      */
@@ -4042,6 +4070,10 @@ export interface Locale extends ILocale {
      * ログアウトしますか？
      */
     "logoutConfirm": string;
+    /**
+     * ログアウトするとクライアントの設定情報がブラウザから消去されます。再ログイン時に設定情報を復元できるようにするためには、設定の自動バックアップを有効にしてください。
+     */
+    "logoutWillClearClientData": string;
     /**
      * 最終利用日時
      */
@@ -4390,6 +4422,10 @@ export interface Locale extends ILocale {
      * 他のサーバーを探す
      */
     "exploreOtherServers": string;
+    /**
+     * 他のサービスを探す
+     */
+    "exploreOtherServices": string;
     /**
      * タイムラインを見てみる
      */
@@ -5554,6 +5590,53 @@ export interface Locale extends ILocale {
      * デッキへ戻る
      */
     "goToDeck": string;
+    /**
+     * 連合ジョブ
+     */
+    "federationJobs": string;
+    /**
+     * ドライブでは、過去にアップロードしたファイルの一覧が表示されます。<br>
+     * ノートに添付する際に再利用したり、あとで投稿するファイルを予めアップロードしておくこともできます。<br>
+     * <b>ファイルを削除すると、今までそのファイルを使用した全ての場所(ノート、ページ、アバター、バナー等)からも見えなくなるので注意してください。</b><br>
+     * フォルダを作って整理することもできます。
+     */
+    "driveAboutTip": string;
+    /**
+     * スクロールして閉じる
+     */
+    "scrollToClose": string;
+    /**
+     * ListenBrainz
+     */
+    "listenBrainz": string;
+    /**
+     * コミュニティロール
+     */
+    "communityRole": string;
+    /**
+     * 割り当てられたロール
+     */
+    "assignedRoles": string;
+    /**
+     * 割り当てられるロール
+     */
+    "assignableRoles": string;
+    /**
+     * 進行中ミーティングはありません
+     */
+    "noActiveMeeting": string;
+    /**
+     * ミーティングを開始
+     */
+    "startMeeting": string;
+    /**
+     * ミーティングが進行中です
+     */
+    "meetingInProgress": string;
+    /**
+     * ミーティングを終了
+     */
+    "endMeeting": string;
     "_chat": {
         /**
          * まだメッセージはありません
@@ -5850,6 +5933,18 @@ export interface Locale extends ILocale {
          * デバイス間でインストールしたテーマを同期
          */
         "enableSyncThemesBetweenDevices": string;
+        /**
+         * やみノート連合
+         */
+        "yamiNoteFederation": string;
+        /**
+         * ひっぱって更新
+         */
+        "enablePullToRefresh": string;
+        /**
+         * マウスでは、ホイールを押し込みながらドラッグします。
+         */
+        "enablePullToRefresh_description": string;
         "_chat": {
             /**
              * 送信者の名前を表示
@@ -5874,6 +5969,10 @@ export interface Locale extends ILocale {
          * 例: 「メインPC」、「スマホ」など
          */
         "profileNameDescription2": string;
+        /**
+         * プロファイルの管理
+         */
+        "manageProfiles": string;
     };
     "_preferencesBackup": {
         /**
@@ -6016,6 +6115,10 @@ export interface Locale extends ILocale {
              * サーバー応答なしのため停止中
              */
             "autoSuspendedForNotResponding": string;
+            /**
+             * 配信停止中のソフトウェアであるため停止中
+             */
+            "softwareSuspended": string;
         };
     };
     /**
@@ -6577,6 +6680,14 @@ export interface Locale extends ILocale {
          * 一定期間モデレーターのアクティビティが検出されなかった場合、スパム防止のためこの設定は自動でオフになります。
          */
         "thisSettingWillAutomaticallyOffWhenModeratorsInactive": string;
+        /**
+         * 配信停止中のソフトウェア
+         */
+        "deliverSuspendedSoftware": string;
+        /**
+         * 脆弱性などの理由で、サーバーのソフトウェアの名前及びバージョンの範囲を指定して配信を停止できます。このバージョン情報はサーバーが提供したものであり、信頼性は保証されません。バージョン指定には semver の範囲指定が使用できますが、>= 2024.3.1 と指定すると 2024.3.1-custom.0 のようなカスタムバージョンが含まれないため、>= 2024.3.1-0 のように prerelease の指定を行うことを推奨します。
+         */
+        "deliverSuspendedSoftwareDescription": string;
     };
     "_accountMigration": {
         /**
@@ -7671,9 +7782,17 @@ export interface Locale extends ILocale {
              */
             "yamiTlAvailable": string;
             /**
+             * やみ投稿の許可
+             */
+            "canYamiNote": string;
+            /**
              * パブリック投稿の許可
              */
             "canPublicNote": string;
+            /**
+             * 連合投稿の許可
+             */
+            "canFederateNote": string;
             /**
              * ノート内の最大メンション数
              */
@@ -7710,6 +7829,10 @@ export interface Locale extends ILocale {
              * ドライブ容量
              */
             "driveCapacity": string;
+            /**
+             * アップロード可能な最大ファイルサイズ
+             */
+            "maxFileSize": string;
             /**
              * ファイルにNSFWを常に付与
              */
@@ -7830,6 +7953,14 @@ export interface Locale extends ILocale {
              * チャットを許可
              */
             "chatAvailability": string;
+            /**
+             * インスタンス統計を閲覧
+             */
+            "canViewCharts": string;
+            /**
+             * コミュニティーロールの追加
+             */
+            "canAddRoles": string;
         };
         "_condition": {
             /**
@@ -9319,6 +9450,26 @@ export interface Locale extends ILocale {
          * チャットを閲覧する
          */
         "read:chat": string;
+        /**
+         * 実績を見る
+         */
+        "read:achievements": string;
+        /**
+         * お知らせを見る
+         */
+        "read:announcements": string;
+        /**
+         * 統計情報を見る
+         */
+        "read:stats": string;
+        /**
+         * クリップを見る
+         */
+        "read:clip": string;
+        /**
+         * コミュニティーロールを操作する
+         */
+        "write:community-role": string;
     };
     "_auth": {
         /**
@@ -9504,6 +9655,10 @@ export interface Locale extends ILocale {
          */
         "onlineUsers": string;
         /**
+         * アクティブユーザー
+         */
+        "activeUsers": string;
+        /**
          * ジョブキュー
          */
         "jobQueue": string;
@@ -9542,9 +9697,17 @@ export interface Locale extends ILocale {
          */
         "birthdayFollowings": string;
         /**
-         * なうぷれ
+         * listenBrainz
          */
         "listenBrainz": string;
+        /**
+         * チャット
+         */
+        "chat": string;
+        /**
+         * Jitsi Meet
+         */
+        "jitsiMeet": string;
     };
     "_cw": {
         /**
@@ -9692,6 +9855,14 @@ export interface Locale extends ILocale {
          */
         "specifiedDescription": string;
         /**
+         * ノートの連合は管理者により無効化されています
+         */
+        "noteFederationDisabled": string;
+        /**
+         * 連合あり
+         */
+        "enableFederation": string;
+        /**
          * 連合なし
          */
         "disableFederation": string;
@@ -9699,6 +9870,22 @@ export interface Locale extends ILocale {
          * 他サーバーへの配信を行いません
          */
         "disableFederationDescription": string;
+        /**
+         * やみノートの連合は管理者により無効化されています
+         */
+        "yamiNoteFederationDisabled": string;
+        /**
+         * やみノートの連合は管理者が許可したサーバーにのみ配信されます
+         */
+        "yamiNoteFederationEnabled": string;
+        /**
+         * やみノートを信頼済みサーバーに配信しますか？（管理者設定の範囲内でのみ配信されます）
+         */
+        "yamiNoteEnableFederationConfirm": string;
+        /**
+         * やみノートの配信をローカルのみに制限しますか？
+         */
+        "yamiNoteDisableFederationConfirm": string;
     };
     "_postForm": {
         /**
@@ -9805,6 +9992,10 @@ export interface Locale extends ILocale {
          * フォローを承認制にしている場合、フォローリクエストを許可した時に表示されます。
          */
         "followedMessageDescriptionForLockedAccount": string;
+        /**
+         * ListenBrainz username
+         */
+        "listenbrainz": string;
     };
     "_exportOrImport": {
         /**
@@ -10628,6 +10819,10 @@ export interface Locale extends ILocale {
              * ロールタイムライン
              */
             "roleTimeline": string;
+            /**
+             * チャット
+             */
+            "chat": string;
         };
     };
     "_dialog": {
@@ -11873,6 +12068,14 @@ export interface Locale extends ILocale {
          */
         "yamiNote": string;
         /**
+         * やみタイムライン内の投稿（変更不可）
+         */
+        "fixedYamiNote": string;
+        /**
+         * 通常タイムライン内の投稿（変更不可）
+         */
+        "fixedNormalNote": string;
+        /**
          * 親やみノートを継承
          */
         "parentIsYamiNote": string;
@@ -11889,11 +12092,11 @@ export interface Locale extends ILocale {
          */
         "enableYamiNoteOk": string;
         /**
-         * やみモード時にデフォルトでやみノートで投稿する
+         * やみノートが投稿できる時にデフォルトでやみノートで投稿する
          */
         "defaultUseYamiNote": string;
         /**
-         * オフにすると、やみモードでも通常の投稿が初期状態になります。
+         * オフにすると、やみノートが投稿できる時でも通常の投稿が初期状態になります。
          */
         "defaultUseYamiNoteDescription": string;
         /**
@@ -11908,13 +12111,29 @@ export interface Locale extends ILocale {
          * フォローしているユーザーのやみノートを表示
          */
         "showYamiFollowingNotes": string;
+        /**
+         * やみノート連合を有効にする
+         */
+        "yamiNoteFederationEnabled": string;
+        /**
+         * 信頼済みやみモード対応インスタンス
+         */
+        "yamiNoteFederationTrustedInstances": string;
+        /**
+         * やみノートを配信・閲覧するインスタンスのホスト名を改行で区切って入力します。
+         */
+        "yamiNoteFederationTrustedInstancesDescription": string;
+        /**
+         * 警告: やみノートは信頼済みインスタンスにのみ配信されますが、リモートインスタンスの実装状況によっては適切に処理されない可能性があります。信頼できるインスタンスのみを追加してください。
+         */
+        "yamiNoteFederationWarning": string;
         "_yamiModeSwitcher": {
             /**
-             * やみモードに切り替えますか？やみモードにすると、やみノートを閲覧・投稿できるようになります
+             * やみモードに切り替えますか？やみモードにすると、他人のやみノートを閲覧できるようになります
              */
             "enterYamiModeConfirm": string;
             /**
-             * 通常モードに戻りますか？通常モードにすると、やみノートを閲覧・投稿できなくなります
+             * 通常モードに戻りますか？通常モードにすると、他人のやみノートを閲覧できなくなります
              */
             "exitYamiModeConfirm": string;
             /**
@@ -11922,29 +12141,9 @@ export interface Locale extends ILocale {
              */
             "normal": string;
             /**
-             * 他人のやみノートを表示しません
-             */
-            "normal1": string;
-            /**
-             * やみノートを投稿できません
-             */
-            "normal2": string;
-            /**
              * やみモード
              */
             "yami": string;
-            /**
-             * 他人のやみノートを表示します
-             */
-            "yami1": string;
-            /**
-             * やみノートを投稿できます
-             */
-            "yami2": string;
-            /**
-             * モードを切り替えると、やみノートを表示するか変わります
-             */
-            "saveConfirmDescription": string;
         };
     };
     "_remoteLookupErrors": {

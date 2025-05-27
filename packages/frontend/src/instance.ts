@@ -7,7 +7,6 @@ import { computed, reactive } from 'vue';
 import * as Misskey from 'misskey-js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { miLocalStorage } from '@/local-storage.js';
-import { DEFAULT_INFO_IMAGE_URL, DEFAULT_NOT_FOUND_IMAGE_URL, DEFAULT_SERVER_ERROR_IMAGE_URL } from '@@/js/const.js';
 
 // TODO: 他のタブと永続化されたstateを同期
 
@@ -30,12 +29,6 @@ if (providedAt > cachedAt) {
 
 export const instance: Misskey.entities.MetaDetailed = reactive(cachedMeta ?? {});
 
-export const serverErrorImageUrl = computed(() => instance.serverErrorImageUrl ?? DEFAULT_SERVER_ERROR_IMAGE_URL);
-
-export const infoImageUrl = computed(() => instance.infoImageUrl ?? DEFAULT_INFO_IMAGE_URL);
-
-export const notFoundImageUrl = computed(() => instance.notFoundImageUrl ?? DEFAULT_NOT_FOUND_IMAGE_URL);
-
 export const isEnabledUrlPreview = computed(() => instance.enableUrlPreview ?? true);
 
 export async function fetchInstance(force = false): Promise<Misskey.entities.MetaDetailed> {
@@ -51,9 +44,24 @@ export async function fetchInstance(force = false): Promise<Misskey.entities.Met
 		detail: true,
 	});
 
+	// デバッグログ - 受信したメタデータを確認
+	console.log('Meta API response keys:', Object.keys(meta));
+	console.log('yamiNoteFederationEnabled in API response:', meta.yamiNoteFederationEnabled);
+
+	// 既存のコード: メタデータをインスタンスオブジェクトに適用
 	for (const [k, v] of Object.entries(meta)) {
 		instance[k] = v;
 	}
+
+	// 明示的に yamiNoteFederationEnabled をセット
+	if (meta.yamiNoteFederationEnabled !== undefined) {
+		instance.yamiNoteFederationEnabled = meta.yamiNoteFederationEnabled;
+	} else {
+		console.warn('yamiNoteFederationEnabled is undefined in API response');
+	}
+
+	// デバッグログ - 適用後のインスタンス状態を確認
+	console.log('Instance after update - yamiNoteFederationEnabled:', instance.yamiNoteFederationEnabled);
 
 	miLocalStorage.setItem('instance', JSON.stringify(instance));
 	miLocalStorage.setItem('instanceCachedAt', Date.now().toString());

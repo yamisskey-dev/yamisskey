@@ -32,10 +32,11 @@ export type SoundStore = {
 // NOTE: デフォルト値は他の設定の状態に依存してはならない(依存していた場合、ユーザーがその設定項目単体で「初期値にリセット」した場合不具合の原因になる)
 
 export const PREF_DEF = {
-	// TODO: 持つのはホストやユーザーID、ユーザー名など最低限にしといて、その他のプロフィール情報はpreferences外で管理した方が綺麗そう
-	// 現状だと、updateCurrentAccount/updateCurrentAccountPartialが呼ばれるたびに「設定」へのcommitが行われて不自然(明らかに設定の更新とは捉えにくい)だし
 	accounts: {
-		default: [] as [host: string, user: Misskey.entities.User][],
+		default: [] as [host: string, user: {
+			id: string;
+			username: string;
+		}][],
 	},
 
 	pinnedUserLists: {
@@ -49,14 +50,17 @@ export const PREF_DEF = {
 	widgets: {
 		accountDependent: true,
 		default: [{
-			name: 'calendar',
+			name: 'notifications',
 			id: 'a', place: 'right', data: {},
 		}, {
-			name: 'notifications',
+			name: 'onlineUsers',
 			id: 'b', place: 'right', data: {},
 		}, {
-			name: 'trends',
+			name: 'activeUsers',
 			id: 'c', place: 'right', data: {},
+		}, {
+			name: 'listenBrainz',
+			id: 'd', place: 'right', data: {},
 		}] as {
 			name: string;
 			id: string;
@@ -78,7 +82,7 @@ export const PREF_DEF = {
 		default: [{
 			id: 'a',
 			name: '',
-			emojis: ['👍', '❤️', '😆', '🤔', '😮', '🎉', '💢', '😥', '😇', '🍮'],
+			emojis: ['👍', '💙', '💜', '🥺', '😇', '😢', '😭', '🤔', '😮', '🍮'],
 		}] as {
 			id: string;
 			name: string;
@@ -113,7 +117,7 @@ export const PREF_DEF = {
 		default: 'public' as (typeof Misskey.noteVisibilities)[number],
 	},
 	defaultNoteLocalOnly: {
-		default: false,
+		default: true,
 	},
 	keepCw: {
 		default: true,
@@ -130,17 +134,16 @@ export const PREF_DEF = {
 	menu: {
 		default: [
 			'notifications',
-			'clips',
 			'drive',
 			'followRequests',
 			'chat',
 			'-',
+			'floater',
 			'explore',
 			'announcements',
 			'channels',
 			'search',
 			'-',
-			'ui',
 			'mode',
 		],
 	},
@@ -155,13 +158,13 @@ export const PREF_DEF = {
 		}[],
 	},
 	serverDisconnectedBehavior: {
-		default: 'quiet' as 'quiet' | 'reload' | 'dialog',
+		default: 'dialog' as 'quiet' | 'reload' | 'dialog',
 	},
 	nsfw: {
 		default: 'respect' as 'respect' | 'force' | 'ignore',
 	},
 	highlightSensitiveMedia: {
-		default: false,
+		default: true,
 	},
 	animation: {
 		default: !window.matchMedia('(prefers-reduced-motion)').matches,
@@ -221,13 +224,13 @@ export const PREF_DEF = {
 		default: 'remote' as 'none' | 'remote' | 'always',
 	},
 	emojiPickerScale: {
-		default: 2,
+		default: 3,
 	},
 	emojiPickerWidth: {
-		default: 2,
+		default: 5,
 	},
 	emojiPickerHeight: {
-		default: 3,
+		default: 4,
 	},
 	emojiPickerStyle: {
 		default: 'auto' as 'auto' | 'popup' | 'drawer',
@@ -298,6 +301,9 @@ export const PREF_DEF = {
 		default: false,
 	},
 	enableHorizontalSwipe: {
+		default: false,
+	},
+	enablePullToRefresh: {
 		default: true,
 	},
 	useNativeUiForVideoAudioPlayer: {
@@ -310,7 +316,7 @@ export const PREF_DEF = {
 		default: true,
 	},
 	confirmWhenRevealingSensitiveMedia: {
-		default: false,
+		default: true,
 	},
 	contextMenu: {
 		default: 'app' as 'app' | 'appWithShift' | 'native',
@@ -332,6 +338,9 @@ export const PREF_DEF = {
 	},
 	showNavbarSubButtons: {
 		default: true,
+	},
+	showTitlebar: {
+		default: false,
 	},
 	plugins: {
 		default: [] as Plugin[],
@@ -437,7 +446,7 @@ export const PREF_DEF = {
 		default: false,
 	},
 	hideReactionCount: {
-		default: 'none' as 'none' | 'self' | 'others' | 'all',
+		default: 'self' as 'none' | 'self' | 'others' | 'all',
 	},
 	customFont: {
 		default: null as null | string,
@@ -448,17 +457,29 @@ export const PREF_DEF = {
 	reactionChecksMuting: {
 		default: true,
 	},
+	publicReactions: {
+		default: false,
+	},
+	hideActivity: {
+		default: true,
+	},
+	hideProfileFiles: {
+		default: true,
+	},
+	autoRejectFollowRequest: {
+		default: false,
+	},
 	isNoteInYamiMode: {
-		default: false, // 記憶用の変数
+		default: false,
 	},
 	defaultIsNoteInYamiMode: {
-		default: false, // やみモードユーザー向けのデフォルト設定（初期値は無効）
+		default: false,
 	},
 	showYamiNonFollowingPublicNotes: {
-		default: true, // パブリックやみノートを表示にするかどうか
+		default: false,
 	},
 	showYamiFollowingNotes: {
-		default: true, // フォロー中のやみノートを表示にするかどうか
+		default: true,
 	},
 	searchEngine: {
 		default: 'https://search.yami.ski/search?',
@@ -477,5 +498,14 @@ export const PREF_DEF = {
 	},
 	showPreferencesAutoCloudBackupSuggestion: {
 		default: true,
+	},
+	'activeStatusVisibility': {
+		default: { type: 'mutualFollow' } as {
+			type: 'all' | 'following' | 'followers' | 'mutualFollow' | 'followingOrFollower' | 'never' | 'list';
+			userListId?: string;
+		},
+	},
+	hideOnlineStatus: {
+		default: false,
 	},
 } satisfies PreferencesDefinition;

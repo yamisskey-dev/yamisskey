@@ -183,7 +183,15 @@ export const packedRolePoliciesSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
+		canYamiNote: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
 		canPublicNote: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
+		canFederateNote: {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
@@ -236,6 +244,10 @@ export const packedRolePoliciesSchema = {
 			optional: false, nullable: false,
 		},
 		driveCapacityMb: {
+			type: 'integer',
+			optional: false, nullable: false,
+		},
+		maxFileSizeMb: {
 			type: 'integer',
 			optional: false, nullable: false,
 		},
@@ -337,6 +349,10 @@ export const packedRolePoliciesSchema = {
 			optional: false, nullable: false,
 		},
 		canUseUnBlockedNotification: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
+		canViewCharts: {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},

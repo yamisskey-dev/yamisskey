@@ -42,6 +42,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</SearchMarker>
 
 						<div class="_gaps_s">
+							<SearchMarker :keywords="['titlebar', 'show']">
+								<MkPreferenceContainer k="showTitlebar">
+									<MkSwitch v-model="showTitlebar">
+										<template #label><SearchLabel>{{ i18n.ts.showTitlebar }}</SearchLabel></template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
+
 							<SearchMarker :keywords="['avatar', 'icon', 'decoration', 'show']">
 								<MkPreferenceContainer k="showAvatarDecorations">
 									<MkSwitch v-model="showAvatarDecorations">
@@ -367,7 +375,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 								<MkDisableSection :disabled="rememberNoteVisibility">
 									<MkFolder>
 										<div class="_gaps_m">
-											<template v-if="$i.isInYamiMode">
+											<template v-if="$i.policies.canYamiNote">
 												<MkPreferenceContainer k="defaultIsNoteInYamiMode">
 													<MkSwitch v-model="defaultIsNoteInYamiMode">
 														<template #label>{{ i18n.ts._yami.defaultUseYamiNote }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
@@ -577,6 +585,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 								<MkPreferenceContainer k="enableHorizontalSwipe">
 									<MkSwitch v-model="enableHorizontalSwipe">
 										<template #label><SearchLabel>{{ i18n.ts.enableHorizontalSwipe }}</SearchLabel></template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
+
+							<SearchMarker :keywords="['swipe', 'pull', 'refresh']">
+								<MkPreferenceContainer k="enablePullToRefresh">
+									<MkSwitch v-model="enablePullToRefresh">
+										<template #label><SearchLabel>{{ i18n.ts._settings.enablePullToRefresh }}</SearchLabel></template>
+										<template #caption><SearchKeyword>{{ i18n.ts._settings.enablePullToRefresh_description }}</SearchKeyword></template>
 									</MkSwitch>
 								</MkPreferenceContainer>
 							</SearchMarker>
@@ -923,6 +940,7 @@ const lang = ref(miLocalStorage.getItem('lang'));
 const dataSaver = ref(prefer.s.dataSaver);
 
 const overridedDeviceKind = prefer.model('overridedDeviceKind');
+const showTitlebar = prefer.model('showTitlebar');
 const keepCw = prefer.model('keepCw');
 const serverDisconnectedBehavior = prefer.model('serverDisconnectedBehavior');
 const hemisphere = prefer.model('hemisphere');
@@ -973,6 +991,7 @@ const animatedMfm = prefer.model('animatedMfm');
 const disableShowingAnimatedImages = prefer.model('disableShowingAnimatedImages');
 const keepScreenOn = prefer.model('keepScreenOn');
 const enableHorizontalSwipe = prefer.model('enableHorizontalSwipe');
+const enablePullToRefresh = prefer.model('enablePullToRefresh');
 const useNativeUiForVideoAudioPlayer = prefer.model('useNativeUiForVideoAudioPlayer');
 const contextMenu = prefer.model('contextMenu');
 const menuStyle = prefer.model('menuStyle');
@@ -1064,6 +1083,8 @@ watch([
 	hideReactionUsers,
 	hideReactionCount,
 	reactionChecksMuting,
+	enableHorizontalSwipe,
+	enablePullToRefresh,
 ], async () => {
 	await reloadAsk({ reason: i18n.ts.reloadToApplySetting, unison: true });
 });

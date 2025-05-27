@@ -79,6 +79,10 @@ export const packedMetaLiteSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
+		emailInquiredForSignup: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
 		approvalRequiredForSignup: {
 			type: 'boolean',
 			optional: false, default: false,
@@ -301,6 +305,20 @@ export const packedMetaLiteSchema = {
 			type: 'string',
 			optional: false, nullable: false,
 		},
+		yamiNoteFederationEnabled: {
+			type: 'boolean',
+			optional: false, nullable: false,
+			default: false,
+		},
+		yamiNoteFederationTrustedInstances: {
+			type: 'array',
+			optional: false, nullable: false,
+			default: [],
+			items: {
+				type: 'string',
+				optional: false, nullable: false,
+			},
+		},
 		maxFileSize: {
 			type: 'number',
 			optional: false, nullable: false,
@@ -326,6 +344,10 @@ export const packedMetaDetailedOnlySchema = {
 					optional: false, nullable: false,
 				},
 				emailRequiredForSignup: {
+					type: 'boolean',
+					optional: false, nullable: false,
+				},
+				emailInquiredForSignup: {
 					type: 'boolean',
 					optional: false, nullable: false,
 				},

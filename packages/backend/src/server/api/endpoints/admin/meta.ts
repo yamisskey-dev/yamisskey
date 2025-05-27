@@ -34,6 +34,10 @@ export const meta = {
 				type: 'boolean',
 				optional: false, nullable: false,
 			},
+			emailInquiredForSignup: {
+				type: 'boolean',
+				optional: false, nullable: false,
+			},
 			approvalRequiredForSignup: {
 				type: 'boolean',
 				optional: false, nullable: false,
@@ -532,6 +536,36 @@ export const meta = {
 					optional: false, nullable: false,
 				},
 			},
+			yamiNoteFederationEnabled: {
+				type: 'boolean',
+				optional: false, nullable: false,
+			},
+			yamiNoteFederationTrustedInstances: {
+				type: 'array',
+				optional: false, nullable: false,
+				items: {
+					type: 'string',
+					optional: false, nullable: false,
+				},
+			},
+			deliverSuspendedSoftware: {
+				type: 'array',
+				optional: false, nullable: false,
+				items: {
+					type: 'object',
+					optional: false, nullable: false,
+					properties: {
+						software: {
+							type: 'string',
+							optional: false, nullable: false,
+						},
+						versionRange: {
+							type: 'string',
+							optional: false, nullable: false,
+						},
+					},
+				},
+			},
 		},
 	},
 } as const;
@@ -573,6 +607,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				privacyPolicyUrl: instance.privacyPolicyUrl,
 				inquiryUrl: instance.inquiryUrl,
 				disableRegistration: instance.disableRegistration,
+				emailInquiredForSignup: instance.emailInquiredForSignup,
 				emailRequiredForSignup: instance.emailRequiredForSignup,
 				approvalRequiredForSignup: instance.approvalRequiredForSignup,
 				enableHcaptcha: instance.enableHcaptcha,
@@ -677,6 +712,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				urlPreviewSummaryProxyUrl: instance.urlPreviewSummaryProxyUrl,
 				federation: instance.federation,
 				federationHosts: instance.federationHosts,
+				yamiNoteFederationEnabled: instance.yamiNoteFederationEnabled,
+				yamiNoteFederationTrustedInstances: instance.yamiNoteFederationTrustedInstances,
+				deliverSuspendedSoftware: instance.deliverSuspendedSoftware,
 			};
 		});
 	}

@@ -20,14 +20,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 		<div :class="$style.headerRight">
 			<template v-if="!(channel != null && fixed)">
-				<!-- やみノート切り替えボタン - やみモードユーザーにのみ表示 -->
+				<!-- やみノート切り替えボタン - canYamiNote権限がある場合に表示 -->
 				<button
-					v-if="$i.isInYamiMode"
+					v-if="$i.policies?.canYamiNote"
 					v-tooltip="parentIsYamiNote
 						? i18n.ts._yami.parentIsYamiNote
-						: (isNoteInYamiMode ? i18n.ts._yami.yamiNote : i18n.ts._yami.normalNote)"
+						: props.fixed
+							? (isNoteInYamiMode ? i18n.ts._yami.fixedYamiNote : i18n.ts._yami.fixedNormalNote)
+							: (isNoteInYamiMode ? i18n.ts._yami.yamiNote : i18n.ts._yami.normalNote)"
 					:class="['_button', $style.headerRightItem, { [$style.headerRightItemActive]: isNoteInYamiMode || parentIsYamiNote }]"
-					:disabled="parentIsYamiNote"
+					:disabled="parentIsYamiNote || props.fixed"
 					@click="toggleYamiMode"
 				>
 					<i class="ti" :class="isNoteInYamiMode || parentIsYamiNote ? 'ti-moon' : 'ti-users-group'"></i>
@@ -48,8 +50,26 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<span :class="$style.headerRightButtonText">{{ channel.name }}</span>
 				</button>
 			</template>
-			<button v-tooltip="i18n.ts._visibility.disableFederation" class="_button" :class="[$style.headerRightItem, { [$style.danger]: localOnly }]" :disabled="channel != null || visibility === 'specified'" @click="toggleLocalOnly">
-				<span v-if="!localOnly"><i class="ti ti-rocket"></i></span>
+			<button
+				v-tooltip="$i.policies?.canFederateNote === false
+					? (isNoteInYamiMode
+						? i18n.ts._visibility.yamiNoteFederationDisabled
+						: i18n.ts._visibility.noteFederationDisabled)
+					: (isNoteInYamiMode
+						? (yamiNoteFederationEnabled
+							? (localOnly ? i18n.ts._visibility.disableFederation : i18n.ts._visibility.yamiNoteFederationEnabled)
+							: i18n.ts._visibility.yamiNoteFederationDisabled)
+						: (localOnly ? i18n.ts._visibility.disableFederation : i18n.ts._visibility.enableFederation))"
+				class="_button"
+				:class="[$style.headerRightItem, {
+					[$style.danger]: localOnly,
+					[$style.warning]: isNoteInYamiMode && !localOnly,
+					[$style.disabled]: $i.policies?.canFederateNote === false || (isNoteInYamiMode && !yamiNoteFederationEnabled)
+				}]"
+				:disabled="channel != null || visibility === 'specified' || $i.policies?.canFederateNote === false || (isNoteInYamiMode && !yamiNoteFederationEnabled)"
+				@click="toggleLocalOnly"
+			>
+				<span v-if="!localOnly && $i.policies?.canFederateNote !== false"><i class="ti ti-rocket"></i></span>
 				<span v-else><i class="ti ti-rocket-off"></i></span>
 			</button>
 			<button ref="otherSettingsButton" v-tooltip="i18n.ts.other" class="_button" :class="$style.headerRightItem" @click="showOtherSettings"><i class="ti ti-dots"></i></button>
@@ -174,11 +194,13 @@ const props = withDefaults(defineProps<PostFormProps & {
 	autofocus?: boolean;
 	freezeAfterPosted?: boolean;
 	mock?: boolean;
+	isInYamiTimeline?: boolean;
 }>(), {
 	initialVisibleUsers: () => [],
 	autofocus: true,
 	mock: false,
 	initialLocalOnly: undefined,
+	isInYamiTimeline: false,
 });
 
 provide(DI.mock, props.mock);
@@ -215,17 +237,54 @@ const getInitialScheduledDelete = () => {
 };
 // 初期化
 const scheduledNoteDelete = ref<DeleteScheduleEditorModelValue | null>(getInitialScheduledDelete());
-// やみノート状態を管理する変数
-// 親投稿がやみノートの場合は強制的にやみノートにする
+
+// まずyamiNoteFederationEnabledを定義
+const yamiNoteFederationEnabled = computed(() => {
+	return instance.yamiNoteFederationEnabled === true;
+});
+// 次にisNoteInYamiModeを定義
 const isNoteInYamiMode = ref(
-	// 親投稿がやみノートの場合は必ずtrue
 	(props.reply?.isNoteInYamiMode || props.renote?.isNoteInYamiMode)
 		? true
-	// それ以外は既存のロジック
-		: ($i.isInYamiMode
+		: ($i.policies.canYamiNote
 			? (prefer.s.rememberNoteVisibility ? prefer.s.isNoteInYamiMode : prefer.s.defaultIsNoteInYamiMode)
 			: false),
 );
+// そしてshouldLocalOnlyを定義
+const shouldLocalOnly = computed<boolean>(() => {
+	return isNoteInYamiMode.value && !yamiNoteFederationEnabled.value;
+});
+// 最後にlocalOnlyを定義
+const localOnly = ref(
+	shouldLocalOnly.value
+		? true
+		: (props.initialLocalOnly ?? (prefer.s.rememberNoteVisibility ? store.s.localOnly : prefer.s.defaultNoteLocalOnly)),
+);
+
+// 固定フォームの場合はタイムラインタイプを監視して即時反映
+watch(
+	() => props.isInYamiTimeline,
+	(isInYamiTimeline) => {
+		if (props.fixed) {
+			isNoteInYamiMode.value = !!isInYamiTimeline;
+		}
+	},
+	{ immediate: true },
+);
+
+// 管理者がやみノート連合を無効にしている場合は、やみノートを連合なし投稿に強制
+watch(() => yamiNoteFederationEnabled.value, () => {
+	if (shouldLocalOnly.value) {
+		localOnly.value = true;
+	}
+}, { immediate: true });
+
+// やみノートモードの変更も監視して連合設定を強制
+watch(() => isNoteInYamiMode.value, () => {
+	if (shouldLocalOnly.value) {
+		localOnly.value = true;
+	}
+}, { immediate: true });
 
 // 親投稿がやみノートかどうかの判定を計算プロパティに
 const parentIsYamiNote = computed(() => {
@@ -245,7 +304,6 @@ watch(showPreview, () => store.set('showPreview', showPreview.value));
 const showAddMfmFunction = ref(prefer.s.enableQuickAddMfmFunction);
 watch(showAddMfmFunction, () => prefer.commit('enableQuickAddMfmFunction', showAddMfmFunction.value));
 const cw = ref<string | null>(props.initialCw ?? null);
-const localOnly = ref(props.initialLocalOnly ?? (prefer.s.rememberNoteVisibility ? store.s.localOnly : prefer.s.defaultNoteLocalOnly));
 const visibility = ref(props.initialVisibility ?? (prefer.s.rememberNoteVisibility ? store.s.visibility : prefer.s.defaultNoteVisibility));
 const visibleUsers = ref<Misskey.entities.UserDetailed[]>([]);
 if (props.initialVisibleUsers) {
@@ -642,6 +700,7 @@ function setVisibility() {
 	});
 }
 
+// ローカルオンリー切り替え関数を修正
 async function toggleLocalOnly() {
 	if (props.channel) {
 		visibility.value = 'public';
@@ -649,6 +708,13 @@ async function toggleLocalOnly() {
 		return;
 	}
 
+	// 管理者がやみノート連合を無効にしている場合は、やみノートを連合なし投稿に強制
+	if (shouldLocalOnly.value) {
+		localOnly.value = true;
+		return;
+	}
+
+	// 既存の処理
 	const neverShowInfo = miLocalStorage.getItem('neverShowLocalOnlyInfo');
 
 	if (!localOnly.value && neverShowInfo !== 'true') {
@@ -1035,7 +1101,7 @@ async function post(ev?: MouseEvent) {
 
 	if (postAccount.value) {
 		const storedAccounts = await getAccounts();
-		token = storedAccounts.find(x => x.user.id === postAccount.value?.id)?.token;
+		token = storedAccounts.find(x => x.id === postAccount.value?.id)?.token;
 	}
 
 	posting.value = true;
@@ -1205,8 +1271,8 @@ function toggleScheduleNote() {
 
 // やみノートモードの切り替え関数
 async function toggleYamiMode() {
-	// 通常モードユーザーの場合は切り替え不可
-	if (!$i.isInYamiMode) return;
+	// canYamiNote権限がない場合は切り替え不可
+	if (!$i.policies.canYamiNote) return;
 
 	// 親がやみノートの場合は切り替え不可
 	if (parentIsYamiNote.value) return;
@@ -1255,32 +1321,6 @@ async function toggleYamiMode() {
 	}
 }
 
-// function showOtherMenu(ev: MouseEvent) {
-// 	const menuItems: MenuItem[] = [];
-
-// 	if ($i.policies.scheduleNoteMax > 0) {
-// 		menuItems.push({
-// 			type: 'button',
-// 			text: i18n.ts.schedulePost,
-// 			icon: 'ti ti-calendar-time',
-// 			action: toggleScheduleNote,
-// 		}, {
-// 			type: 'button',
-// 			text: i18n.ts.schedulePostList,
-// 			icon: 'ti ti-calendar-event',
-// 			action: () => {
-// 				const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkSchedulePostListDialog.vue')), {}, {
-// 					closed: () => {
-// 						dispose();
-// 					},
-// 				});
-// 			},
-// 		});
-// 	}
-
-// 	os.popupMenu(menuItems, ev.currentTarget ?? ev.target);
-// }
-
 onMounted(() => {
 	if (props.autofocus) {
 		focus();
@@ -1304,7 +1344,9 @@ onMounted(() => {
 				useCw.value = draft.data.useCw;
 				cw.value = draft.data.cw;
 				visibility.value = draft.data.visibility;
-				localOnly.value = draft.data.localOnly;
+				localOnly.value = shouldLocalOnly.value
+					? true
+					: (draft.data.localOnly ?? false);
 				files.value = (draft.data.files || []).filter(draftFile => draftFile);
 				if (draft.data.poll) {
 					poll.value = draft.data.poll;
@@ -1319,11 +1361,13 @@ onMounted(() => {
 				if (draft.data.scheduledNoteDelete) {
 					scheduledNoteDelete.value = draft.data.scheduledNoteDelete;
 				}
-				// やみノート状態を復元 - 通常モードユーザーは常にfalseに
-				isNoteInYamiMode.value = $i.isInYamiMode ?
-					(draft.data.isNoteInYamiMode ??
-					 (prefer.s.rememberNoteVisibility ? prefer.s.isNoteInYamiMode : $i.isInYamiMode)) :
-					false;
+				// 通常フォームの場合のみドラフトから復元（固定フォームは上のwatchで処理済み）
+				if (!props.fixed && !parentIsYamiNote.value) {
+					isNoteInYamiMode.value = $i.policies.canYamiNote
+						? (draft.data.isNoteInYamiMode ??
+						  (prefer.s.rememberNoteVisibility ? prefer.s.isNoteInYamiMode : prefer.s.defaultIsNoteInYamiMode))
+						: false;
+				}
 			}
 		}
 
@@ -1334,7 +1378,9 @@ onMounted(() => {
 			useCw.value = init.cw != null;
 			cw.value = init.cw ?? null;
 			visibility.value = init.visibility;
-			localOnly.value = init.localOnly ?? false;
+			localOnly.value = shouldLocalOnly.value
+				? true
+				: (init.localOnly ?? false);
 			files.value = init.files ?? [];
 			if (init.poll) {
 				poll.value = {
@@ -1363,6 +1409,10 @@ onMounted(() => {
 					scheduledAt: new Date(init.createdAt).getTime(),
 					isValid: true,
 				};
+			}
+			// 通常フォームの場合のみ元の投稿状態を継承（固定フォームは上のwatchで処理済み）
+			if (!props.fixed && !parentIsYamiNote.value) {
+				isNoteInYamiMode.value = init.isNoteInYamiMode ?? false;
 			}
 		}
 
@@ -1504,6 +1554,10 @@ defineExpose({
 
 	&.danger {
 		color: #ff2a2a;
+	}
+
+	&.warning {
+		color: var(--MI_THEME-warn);
 	}
 }
 

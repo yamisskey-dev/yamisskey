@@ -72,9 +72,10 @@ export const packedChannelSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
-		propagateToTimelines: {
-			type: 'boolean',
+		followersVisibility: {
+			type: 'string',
 			optional: false, nullable: false,
+			enum: ['public', 'followers', 'private'],
 		},
 		isFollowing: {
 			type: 'boolean',

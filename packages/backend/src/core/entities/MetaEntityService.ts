@@ -85,6 +85,7 @@ export class MetaEntityService {
 			privacyPolicyUrl: instance.privacyPolicyUrl,
 			inquiryUrl: instance.inquiryUrl,
 			disableRegistration: instance.disableRegistration,
+			emailInquiredForSignup: instance.emailInquiredForSignup,
 			emailRequiredForSignup: instance.emailRequiredForSignup,
 			approvalRequiredForSignup: instance.approvalRequiredForSignup,
 			enableHcaptcha: instance.enableHcaptcha,
@@ -136,6 +137,8 @@ export class MetaEntityService {
 			reversiVersion: NodeinfoServerService.reversiVersion,
 			maxFileSize: this.config.maxFileSize,
 			federation: this.meta.federation,
+			yamiNoteFederationEnabled: instance.yamiNoteFederationEnabled,
+			yamiNoteFederationTrustedInstances: instance.yamiNoteFederationTrustedInstances,
 		};
 
 		return packed;
@@ -164,6 +167,7 @@ export class MetaEntityService {
 				yamiTimeline: instance.policies.yamiTlAvailable,
 				globalTimeline: instance.policies.gtlAvailable,
 				registration: !instance.disableRegistration,
+				emailInquiredForSignup: instance.emailInquiredForSignup,
 				emailRequiredForSignup: instance.emailRequiredForSignup,
 				hcaptcha: instance.enableHcaptcha,
 				recaptcha: instance.enableRecaptcha,

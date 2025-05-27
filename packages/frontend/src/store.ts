@@ -35,6 +35,10 @@ export const store = markRaw(new Pizzax('base', {
 		where: 'account',
 		default: false,
 	},
+	readDriveTip: {
+		where: 'account',
+		default: false,
+	},
 	memo: {
 		where: 'account',
 		default: null,
@@ -108,6 +112,10 @@ export const store = markRaw(new Pizzax('base', {
 		where: 'device',
 		default: {} as Record<string, string>, // host/userId, token
 	},
+	accountInfos: {
+		where: 'device',
+		default: {} as Record<string, Misskey.entities.User>, // host/userId, user
+	},
 
 	enablePreferencesAutoCloudBackup: {
 		where: 'device',
@@ -133,7 +141,19 @@ export const store = markRaw(new Pizzax('base', {
 	},
 	widgets: {
 		where: 'account',
-		default: [] as {
+		default: [{
+			name: 'notifications',
+			id: 'a', place: 'right', data: {},
+		}, {
+			name: 'onlineUsers',
+			id: 'b', place: 'right', data: {},
+		}, {
+			name: 'activeUsers',
+			id: 'c', place: 'right', data: {},
+		}, {
+			name: 'listenBrainz',
+			id: 'd', place: 'right', data: {},
+		}] as {
 			name: string;
 			id: string;
 			place: string | null;
@@ -154,7 +174,7 @@ export const store = markRaw(new Pizzax('base', {
 	},
 	defaultNoteLocalOnly: {
 		where: 'account',
-		default: false,
+		default: true,
 	},
 	keepCw: {
 		where: 'account',
@@ -212,18 +232,18 @@ export const store = markRaw(new Pizzax('base', {
 	menu: {
 		where: 'deviceAccount',
 		default: [
-			'channels',
 			'notifications',
 			'drive',
 			'followRequests',
+			'chat',
 			'-',
 			'floater',
 			'explore',
-			'search',
 			'announcements',
+			'channels',
+			'search',
 			'-',
-			'play',
-			'games',
+			'mode',
 		],
 	},
 	postFormActions: {
@@ -283,7 +303,7 @@ export const store = markRaw(new Pizzax('base', {
 	},
 	showReactionsCount: {
 		where: 'device',
-		default: true,
+		default: false,
 	},
 	enableQuickAddMfmFunction: {
 		where: 'device',

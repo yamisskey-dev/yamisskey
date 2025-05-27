@@ -35,7 +35,9 @@ export type RolePolicies = {
 	gtlAvailable: boolean;
 	ltlAvailable: boolean;
 	yamiTlAvailable: boolean;
+	canYamiNote: boolean;
 	canPublicNote: boolean;
+	canFederateNote: boolean;
 	scheduleNoteMax: number;
 	mentionLimit: number;
 	canInvite: boolean;
@@ -49,6 +51,7 @@ export type RolePolicies = {
 	canUseTranslator: boolean;
 	canHideAds: boolean;
 	driveCapacityMb: number;
+	maxFileSizeMb: number;
 	alwaysMarkNsfw: boolean;
 	canUpdateBioMedia: boolean;
 	pinLimit: number;
@@ -74,13 +77,17 @@ export type RolePolicies = {
 	canUseUnFollowNotification: boolean;
 	canUseBlockedNotification: boolean;
 	canUseUnBlockedNotification: boolean;
+	canViewCharts: boolean;
+	canAddRoles: boolean;
 };
 
 export const DEFAULT_POLICIES: RolePolicies = {
-	gtlAvailable: true,
-	ltlAvailable: true,
-	yamiTlAvailable: true,
-	canPublicNote: true,
+	gtlAvailable: false,
+	ltlAvailable: false,
+	yamiTlAvailable: false,
+	canYamiNote: false,
+	canPublicNote: false,
+	canFederateNote: false,
 	scheduleNoteMax: 15,
 	mentionLimit: 20,
 	canInvite: false,
@@ -94,6 +101,7 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	canUseTranslator: true,
 	canHideAds: false,
 	driveCapacityMb: 100,
+	maxFileSizeMb: 10,
 	alwaysMarkNsfw: false,
 	canUpdateBioMedia: true,
 	pinLimit: 5,
@@ -116,9 +124,11 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	canImportNotes: true,
 	chatAvailability: 'available',
 	canUseQuoteNotification: true,
-	canUseUnFollowNotification: true,
-	canUseBlockedNotification: true,
-	canUseUnBlockedNotification: true,
+	canUseUnFollowNotification: false,
+	canUseBlockedNotification: false,
+	canUseUnBlockedNotification: false,
+	canViewCharts: false,
+	canAddRoles: false,
 };
 
 @Injectable()
@@ -412,7 +422,9 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			gtlAvailable: calc('gtlAvailable', vs => vs.some(v => v === true)),
 			ltlAvailable: calc('ltlAvailable', vs => vs.some(v => v === true)),
 			yamiTlAvailable: calc('yamiTlAvailable', vs => vs.some(v => v === true)),
+			canYamiNote: calc('canYamiNote', vs => vs.some(v => v === true)),
 			canPublicNote: calc('canPublicNote', vs => vs.some(v => v === true)),
+			canFederateNote: calc('canFederateNote', vs => vs.some(v => v === true)),
 			scheduleNoteMax: calc('scheduleNoteMax', vs => Math.max(...vs)),
 			mentionLimit: calc('mentionLimit', vs => Math.max(...vs)),
 			canInvite: calc('canInvite', vs => vs.some(v => v === true)),
@@ -426,6 +438,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			canUseTranslator: calc('canUseTranslator', vs => vs.some(v => v === true)),
 			canHideAds: calc('canHideAds', vs => vs.some(v => v === true)),
 			driveCapacityMb: calc('driveCapacityMb', vs => Math.max(...vs)),
+			maxFileSizeMb: calc('maxFileSizeMb', vs => Math.max(...vs)),
 			alwaysMarkNsfw: calc('alwaysMarkNsfw', vs => vs.some(v => v === true)),
 			canUpdateBioMedia: calc('canUpdateBioMedia', vs => vs.some(v => v === true)),
 			pinLimit: calc('pinLimit', vs => Math.max(...vs)),
@@ -451,19 +464,21 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			canUseUnFollowNotification: calc('canUseUnFollowNotification', vs => vs.some(v => v === true)),
 			canUseBlockedNotification: calc('canUseBlockedNotification', vs => vs.some(v => v === true)),
 			canUseUnBlockedNotification: calc('canUseUnBlockedNotification', vs => vs.some(v => v === true)),
+			canViewCharts: calc('canViewCharts', vs => vs.some(v => v === true)),
+			canAddRoles: calc('canAddRoles', vs => vs.some(v => v === true)),
 		};
 	}
 
 	@bindThis
 	public async isModerator(user: { id: MiUser['id'] } | null): Promise<boolean> {
 		if (user == null) return false;
-		return (this.meta.rootUserId === user.id) || (await this.getUserRoles(user.id)).some(r => r.isModerator || r.isAdministrator);
+		return (this.meta.rootUserId === user.id) || (await this.getUserRoles(user.id)).some(r => r.permissionGroup === 'MainModerator' || r.permissionGroup === 'Admin');
 	}
 
 	@bindThis
 	public async isAdministrator(user: { id: MiUser['id'] } | null): Promise<boolean> {
 		if (user == null) return false;
-		return (this.meta.rootUserId === user.id) || (await this.getUserRoles(user.id)).some(r => r.isAdministrator);
+		return (this.meta.rootUserId === user.id) || (await this.getUserRoles(user.id)).some(r => r.permissionGroup === 'Admin');
 	}
 
 	@bindThis
@@ -493,8 +508,8 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 
 		const roles = await this.rolesCache.fetch(() => this.rolesRepository.findBy({}));
 		const moderatorRoles = includeAdmins
-			? roles.filter(r => r.isModerator || r.isAdministrator)
-			: roles.filter(r => r.isModerator);
+			? roles.filter(r => r.permissionGroup === 'MainModerator' || r.permissionGroup === 'Admin')
+			: roles.filter(r => r.permissionGroup === 'MainModerator');
 
 		const assigns = moderatorRoles.length > 0
 			? await this.roleAssignmentsRepository.findBy({ roleId: In(moderatorRoles.map(r => r.id)) })
@@ -536,7 +551,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 	@bindThis
 	public async getAdministratorIds(): Promise<MiUser['id'][]> {
 		const roles = await this.rolesCache.fetch(() => this.rolesRepository.findBy({}));
-		const administratorRoles = roles.filter(r => r.isAdministrator);
+		const administratorRoles = roles.filter(r => r.permissionGroup === 'Admin');
 		const assigns = administratorRoles.length > 0 ? await this.roleAssignmentsRepository.findBy({
 			roleId: In(administratorRoles.map(r => r.id)),
 		}) : [];
@@ -674,8 +689,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			target: values.target,
 			condFormula: values.condFormula,
 			isPublic: values.isPublic,
-			isAdministrator: values.isAdministrator,
-			isModerator: values.isModerator,
+			permissionGroup: values.permissionGroup,
 			isExplorable: values.isExplorable,
 			asBadge: values.asBadge,
 			preserveAssignmentOnMoveAccount: values.preserveAssignmentOnMoveAccount,

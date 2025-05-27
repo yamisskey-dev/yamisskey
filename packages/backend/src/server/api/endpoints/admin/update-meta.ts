@@ -70,6 +70,7 @@ export const paramDef = {
 		cacheRemoteFiles: { type: 'boolean' },
 		cacheRemoteSensitiveFiles: { type: 'boolean' },
 		emailRequiredForSignup: { type: 'boolean' },
+		emailInquiredForSignup: { type: 'boolean' },
 		approvalRequiredForSignup: { type: 'boolean' },
 		enableHcaptcha: { type: 'boolean' },
 		hcaptchaSiteKey: { type: 'string', nullable: true },
@@ -184,6 +185,22 @@ export const paramDef = {
 			type: 'array',
 			items: {
 				type: 'string',
+			},
+		},
+		yamiNoteFederationEnabled: { type: 'boolean' },
+		yamiNoteFederationTrustedInstances: {
+			type: 'array',
+			items: { type: 'string' },
+		},
+		deliverSuspendedSoftware: {
+			type: 'array',
+			items: {
+				type: 'object',
+				properties: {
+					software: { type: 'string' },
+					versionRange: { type: 'string' },
+				},
+				required: ['software', 'versionRange'],
 			},
 		},
 	},
@@ -314,6 +331,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			if (ps.emailRequiredForSignup !== undefined) {
 				set.emailRequiredForSignup = ps.emailRequiredForSignup;
+			}
+
+			if (ps.emailInquiredForSignup !== undefined) {
+				set.emailInquiredForSignup = ps.emailInquiredForSignup;
 			}
 
 			if (ps.approvalRequiredForSignup !== undefined) {
@@ -676,8 +697,20 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				set.federation = ps.federation;
 			}
 
+			if (ps.deliverSuspendedSoftware !== undefined) {
+				set.deliverSuspendedSoftware = ps.deliverSuspendedSoftware;
+			}
+
 			if (Array.isArray(ps.federationHosts)) {
 				set.federationHosts = ps.federationHosts.filter(Boolean).map(x => x.toLowerCase());
+			}
+
+			if (ps.yamiNoteFederationEnabled !== undefined) {
+				set.yamiNoteFederationEnabled = ps.yamiNoteFederationEnabled;
+			}
+
+			if (ps.yamiNoteFederationTrustedInstances !== undefined) {
+				set.yamiNoteFederationTrustedInstances = ps.yamiNoteFederationTrustedInstances;
 			}
 
 			const before = await this.metaService.fetch(true);

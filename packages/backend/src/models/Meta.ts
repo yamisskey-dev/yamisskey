@@ -190,6 +190,11 @@ export class MiMeta {
 	public emailRequiredForSignup: boolean;
 
 	@Column('boolean', {
+		default: true,
+	})
+	public emailInquiredForSignup: boolean;
+
+	@Column('boolean', {
 		default: false,
 	})
 	public approvalRequiredForSignup: boolean;
@@ -669,4 +674,20 @@ export class MiMeta {
 		nullable: true,
 	})
 	public googleAnalyticsMeasurementId: string | null;
+
+	@Column('boolean', { default: false })
+	public yamiNoteFederationEnabled: boolean;
+
+	@Column('jsonb', { default: [], array: true })
+	public yamiNoteFederationTrustedInstances: string[];
+
+	@Column('jsonb', {
+		default: [],
+	})
+	public deliverSuspendedSoftware: SoftwareSuspension[];
 }
+
+export type SoftwareSuspension = {
+	software: string,
+	versionRange: string,
+};

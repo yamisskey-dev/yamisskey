@@ -19,7 +19,7 @@ import type { MiEmoji } from '@/models/Emoji.js';
 import type { MiPoll } from '@/models/Poll.js';
 import type { MiPollVote } from '@/models/PollVote.js';
 import { UserKeypairService } from '@/core/UserKeypairService.js';
-import { MfmService } from '@/core/MfmService.js';
+import { MfmService, type Appender } from '@/core/MfmService.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { DriveFileEntityService } from '@/core/entities/DriveFileEntityService.js';
 import type { MiUserKeypair } from '@/models/UserKeypair.js';
@@ -430,10 +430,24 @@ export class ApRendererService {
 			poll = await this.pollsRepository.findOneBy({ noteId: note.id });
 		}
 
-		let apAppend = '';
+		const apAppend: Appender[] = [];
 
 		if (quote) {
-			apAppend += `\n\nRE: ${quote}`;
+			// Append quote link as `<br><br><span class="quote-inline">RE: <a href="...">...</a></span>`
+			// the claas name `quote-inline` is used in non-misskey clients for styling quote notes.
+			// For compatibility, the span part should be kept as possible.
+			apAppend.push((doc, body) => {
+				body.appendChild(doc.createElement('br'));
+				body.appendChild(doc.createElement('br'));
+				const span = doc.createElement('span');
+				span.className = 'quote-inline';
+				span.appendChild(doc.createTextNode('RE: '));
+				const link = doc.createElement('a');
+				link.setAttribute('href', quote);
+				link.textContent = quote;
+				span.appendChild(link);
+				body.appendChild(span);
+			});
 		}
 
 		const summary = note.cw === '' ? String.fromCharCode(0x200B) : note.cw;
@@ -462,6 +476,12 @@ export class ApRendererService {
 			})),
 		} as const : {};
 
+		// やみノートの場合は非表示バージョンを作成 - Misskey標準の非表示処理に合わせる
+		if (note.isNoteInYamiMode) {
+			// hideNote相当の処理でActivityPubオブジェクトを生成
+			return this.renderYamiNote(note, attributedTo, to, cc, inReplyTo);
+		}
+
 		return {
 			id: `${this.config.url}/notes/${note.id}`,
 			type: 'Note',
@@ -489,6 +509,85 @@ export class ApRendererService {
 	}
 
 	@bindThis
+	private async renderYamiNote(note: MiNote, attributedTo: string, to: string[], cc: string[], inReplyTo: any): Promise<IPost> {
+		// 基本オブジェクトの作成
+		const baseObject = {
+			'@context': [
+				'https://www.w3.org/ns/activitystreams',
+				{
+					misskey: 'https://misskey-hub.net/ns#',
+					_misskey_isNoteInYamiMode: 'misskey:_misskey_isNoteInYamiMode',
+				},
+			],
+			id: `${this.config.url}/notes/${note.id}`,
+			type: 'Note',
+			attributedTo,
+			_misskey_isNoteInYamiMode: true,
+			published: this.idService.parse(note.id).date.toISOString(),
+			to,
+			cc,
+			inReplyTo,
+			sensitive: true,
+		};
+
+		// 設定から信頼済みホストリストを取得
+		const trustedHosts = this.meta.yamiNoteFederationTrustedInstances || [];
+
+		// 受信者リストから Public を除外
+		const recipients = [...to, ...cc].filter(uri => uri !== 'https://www.w3.org/ns/activitystreams#Public');
+
+		// 信頼済みホストが含まれるか確認
+		const hasTrustedRecipient = this.isRecipientTrusted(recipients, trustedHosts);
+
+		// 信頼済みホストが含まれる場合のみコンテンツを含める
+		if (hasTrustedRecipient) {
+			// ファイルオブジェクトを取得（本家の実装パターンに合わせる）
+			const files = note.fileIds.length > 0
+				? await this.driveFilesRepository.findBy({ id: In(note.fileIds) })
+				: [];
+
+			return {
+				...baseObject,
+				content: note.text,
+				summary: note.cw,
+				attachment: files.map(x => this.renderDocument(x)),
+			};
+		} else {
+			// 非信頼ホストにはコンテンツなしで送信
+			return {
+				...baseObject,
+				content: 'This is a yami note. Content is only visible to trusted instances. Please contact the administrator of the originating instance to request trusted instance status.',
+				summary: 'Yami Note - Content hidden',
+				tag: [
+					// 追跡用のハッシュタグを追加
+					this.renderHashtag('IsNoteInYamiMode'),
+				],
+				attachment: [],
+			};
+		}
+	}
+
+	@bindThis
+	private isRecipientTrusted(recipients: string[], trustedHosts: string[]): boolean {
+		const recipientHosts = recipients
+			.map(uri => {
+				try {
+					if (uri.startsWith('https://') || uri.startsWith('http://')) {
+						return this.utilityService.extractDbHost(uri);
+					}
+					return null;
+				} catch {
+					return null;
+				}
+			})
+			.filter((host): host is string => host != null);
+
+		return recipientHosts.some(host =>
+			this.utilityService.isTrustedHost(host, trustedHosts),
+		);
+	}
+
+	@bindThis
 	public async renderPerson(user: MiLocalUser) {
 		const id = this.userEntityService.genLocalUserUri(user.id);
 		const isSystem = user.username.includes('.');
@@ -509,7 +608,7 @@ export class ApRendererService {
 				const urlPart = match[0];
 				const urlPartParsed = new URL(urlPart);
 				const restPart = maybeUrl.slice(match[0].length);
-				
+
 				return `<a href="${urlPartParsed.href}" rel="me nofollow noopener" target="_blank">${urlPart}</a>${restPart}`;
 			} catch (e) {
 				return maybeUrl;
@@ -579,6 +678,10 @@ export class ApRendererService {
 
 		if (profile.location) {
 			person['vcard:Address'] = profile.location;
+		}
+
+		if (profile.listenbrainz) {
+			person.listenbrainz = profile.listenbrainz;
 		}
 
 		return person;
@@ -801,11 +904,11 @@ export class ApRendererService {
 	public async renderReversiUpdate(local_user:MiUser, remote_user:MiRemoteUser,
 		game_state: {
 			game_session_id: string;
-			type:string;
-			pos?:number;//石配置
-			key?:string;//設定変更
-			value?:any;//設定変更
-			ready?:boolean;//ゲーム開始
+			type: string;
+			pos?: number;//石配置
+			key?: string;//設定変更
+			value?: any;//設定変更
+			ready?: boolean;//ゲーム開始
 		},
 	) {
 		const game:IApReversi = {

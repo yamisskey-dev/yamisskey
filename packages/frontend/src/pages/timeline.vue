@@ -4,41 +4,37 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<div ref="rootEl" class="_pageScrollable">
-	<MkStickyContainer>
-		<template #header><MkPageHeader v-model:tab="src" :displayMyAvatar="true" :actions="headerActions" :tabs="$i ? headerTabs : headerTabsWhenNotLogin"/></template>
-		<MkSpacer :contentMax="800">
-			<MkInfo v-if="isBasicTimeline(src) && !store.r.timelineTutorials.value[src]" style="margin-bottom: var(--MI-margin);" closable @close="closeTutorial()">
-				{{ i18n.ts._timelineDescription[src] }}
-			</MkInfo>
-			<MkPostForm v-if="prefer.r.showFixedPostForm.value" :class="$style.postForm" class="_panel" fixed style="margin-bottom: var(--MI-margin);"/>
-			<div v-if="queue > 0" :class="$style.new"><button class="_buttonPrimary" :class="$style.newButton" @click="top()">{{ i18n.ts.newNoteRecived }}</button></div>
-			<MkTimeline
-				ref="tlComponent"
-				:key="src + withRenotes + withReplies + withHashtags + withFiles + localOnly + remoteOnly + withSensitive"
-				:class="$style.tl"
-				:src="src.split(':')[0]"
-				:list="src.split(':')[1]"
-				:withRenotes="withRenotes"
-				:withReplies="withReplies"
-				:withHashtags="withHashtags"
-				:withSensitive="withSensitive"
-				:withFiles="withFiles"
-				:localOnly="localOnly"
-				:remoteOnly="remoteOnly"
-				:showYamiNonFollowingPublicNotes="showYamiNonFollowingPublicNotes"
-				:showYamiFollowingNotes="showYamiFollowingNotes"
-				:sound="true"
-				@queue="queueUpdated"
-			/>
-		</MkSpacer>
-	</MkStickyContainer>
-</div>
+<PageWithHeader ref="pageComponent" v-model:tab="src" :actions="headerActions" :tabs="$i ? headerTabs : headerTabsWhenNotLogin" :swipable="true" :displayMyAvatar="true">
+	<div class="_spacer" style="--MI_SPACER-w: 800px;">
+		<MkInfo v-if="isBasicTimeline(src) && !store.r.timelineTutorials.value[src]" style="margin-bottom: var(--MI-margin);" closable @close="closeTutorial()">
+			{{ i18n.ts._timelineDescription[src] }}
+		</MkInfo>
+		<MkPostForm v-if="prefer.r.showFixedPostForm.value" :class="$style.postForm" class="_panel" fixed style="margin-bottom: var(--MI-margin);" :isInYamiTimeline="src === 'yami'"/>
+		<div v-if="queue > 0" :class="$style.new"><button class="_buttonPrimary" :class="$style.newButton" @click="top()">{{ i18n.ts.newNoteRecived }}</button></div>
+		<MkTimeline
+			ref="tlComponent"
+			:key="src + withRenotes + withReplies + withHashtags + withFiles + localOnly + remoteOnly + withSensitive"
+			:class="$style.tl"
+			:src="src.split(':')[0]"
+			:list="src.split(':')[1]"
+			:withRenotes="withRenotes"
+			:withReplies="withReplies"
+			:withHashtags="withHashtags"
+			:withSensitive="withSensitive"
+			:withFiles="withFiles"
+			:localOnly="localOnly"
+			:remoteOnly="remoteOnly"
+			:showYamiNonFollowingPublicNotes="showYamiNonFollowingPublicNotes"
+			:showYamiFollowingNotes="showYamiFollowingNotes"
+			:sound="true"
+			@queue="queueUpdated"
+		/>
+	</div>
+</PageWithHeader>
 </template>
 
 <script lang="ts" setup>
 import { computed, watch, provide, useTemplateRef, ref, onMounted, onActivated } from 'vue';
-import { scrollInContainer } from '@@/js/scroll.js';
 import type { Tab } from '@/components/global/MkPageHeader.tabs.vue';
 import type { MenuItem } from '@/types/menu.js';
 import type { BasicTimelineType } from '@/timelines.js';
@@ -56,17 +52,11 @@ import { deepMerge } from '@/utility/merge.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { availableBasicTimelines, hasWithReplies, isAvailableBasicTimeline, isBasicTimeline, basicTimelineIconClass } from '@/timelines.js';
 import { prefer } from '@/preferences.js';
-import { useRouter } from '@/router.js';
 
 provide('shouldOmitHeaderTitle', true);
 
 const tlComponent = useTemplateRef('tlComponent');
-const rootEl = useTemplateRef('rootEl');
-
-const router = useRouter();
-router.useListener('same', () => {
-	top();
-});
+const pageComponent = useTemplateRef('pageComponent');
 
 type TimelinePageSrc = BasicTimelineType | `list:${string}`;
 
@@ -139,14 +129,35 @@ const withSensitive = computed<boolean>({
 	set: (x) => saveTlFilter('withSensitive', x),
 });
 
+// 闇モード関連の設定用の状態変数
 const showYamiNonFollowingPublicNotes = computed<boolean>({
-	get: () => store.r.tl.value.filter.showYamiNonFollowingPublicNotes ?? true,
-	set: (x) => saveTlFilter('showYamiNonFollowingPublicNotes', x),
+	get: () => {
+		// 闇モードでなければ常にfalse
+		if (!$i?.isInYamiMode) {
+			return false;
+		}
+		return store.r.tl.value.filter.showYamiNonFollowingPublicNotes;
+	},
+	set: (x) => {
+		// 闇モードでなければ設定変更を無視
+		if (!$i?.isInYamiMode) return;
+		saveTlFilter('showYamiNonFollowingPublicNotes', x);
+	},
 });
 
 const showYamiFollowingNotes = computed<boolean>({
-	get: () => store.r.tl.value.filter.showYamiFollowingNotes ?? true,
-	set: (x) => saveTlFilter('showYamiFollowingNotes', x),
+	get: () => {
+		// 闇モードでなければ常にfalse
+		if (!$i?.isInYamiMode) {
+			return false;
+		}
+		return store.r.tl.value.filter.showYamiFollowingNotes;
+	},
+	set: (x) => {
+		// 闇モードでなければ設定変更を無視
+		if (!$i?.isInYamiMode) return;
+		saveTlFilter('showYamiFollowingNotes', x);
+	},
 });
 
 watch(src, () => {
@@ -168,7 +179,7 @@ function queueUpdated(q: number): void {
 }
 
 function top(): void {
-	if (rootEl.value) scrollInContainer(rootEl.value, { top: 0, behavior: 'instant' });
+	if (pageComponent.value) pageComponent.value.scrollToTop();
 }
 
 async function chooseList(ev: MouseEvent): Promise<void> {
@@ -362,12 +373,20 @@ const filterItems = computed(() => {
 	} else if (src.value === 'yami') {
 		items.push({
 			type: 'switch',
+			text: i18n.ts.localOnly,
+			ref: localOnly,
+		}, {
+			type: 'switch',
 			text: i18n.ts._yami.showYamiNonFollowingPublicNotes,
 			ref: showYamiNonFollowingPublicNotes,
+			// 闇モードでない場合は視覚的に無効化
+			disabled: !$i?.isInYamiMode,
 		}, {
 			type: 'switch',
 			text: i18n.ts._yami.showYamiFollowingNotes,
 			ref: showYamiFollowingNotes,
+			// 闇モードでない場合は視覚的に無効化
+			disabled: !$i?.isInYamiMode,
 		});
 	}
 
