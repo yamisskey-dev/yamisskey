@@ -38,7 +38,7 @@ class JitsiApiService {
 		});
 	}
 
-	async startMeeting(roomName: string, containerId: string, displayName: string | null, email: string | null): Promise<void> {
+	async startMeeting(roomName: string, containerId: string, displayName: string | null, email: string | null, avatarUrl: string | null | undefined): Promise<void> {
 		await this.loadScript();
 
 		if (!window.JitsiMeetExternalAPI) {
@@ -70,6 +70,7 @@ class JitsiApiService {
 			originalDisplayName: displayName,
 			cleanedDisplayName: cleanedDisplayName,
 			email,
+			avatarUrl,
 		});
 
 		const options = {
@@ -78,8 +79,9 @@ class JitsiApiService {
 			height: '100%',
 			parentNode: container,
 			userInfo: {
-				displayName: cleanedDisplayName || 'Anonymous',
-				email: email || undefined, // Gravatarで使用されるメールアドレス
+				displayName: cleanedDisplayName ?? 'Anonymous',
+				email: email ?? undefined, // Gravatarで使用されるメールアドレス
+				avatarUrl: avatarUrl ?? undefined, // アバターURLがあれば設定
 			},
 			configOverwrite: {
 				startWithAudioMuted: true,
@@ -137,7 +139,6 @@ class JitsiApiService {
 			this.api.addEventListener('displayNameChange', (event: any) => {
 				console.log('Display name changed:', event);
 			});
-
 		} catch (error) {
 			console.error('Failed to create Jitsi meeting:', error);
 			throw error;

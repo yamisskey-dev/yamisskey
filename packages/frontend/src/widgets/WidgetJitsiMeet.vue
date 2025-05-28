@@ -116,15 +116,17 @@ const startMeeting = async () => {
 		await nextTick();
 
 		// 少し待ってからJitsi APIを呼び出す
-		setTimeout(async () => {
+		window.setTimeout(async () => {
 			try {
 				// $iから現在のユーザー情報を取得
-				const displayName = $i?.name || $i?.username || 'Anonymous';
-				const email = $i?.email || null;
+				const displayName = $i?.name ?? $i?.username ?? 'Anonymous';
+				const email = $i?.email ?? null;
+				const avatarUrl = $i?.avatarUrl ?? null;
 
 				console.log('Misskey user info:', {
 					displayName,
 					email,
+					avatarUrl,
 				});
 
 				await jitsiApi.startMeeting(
@@ -132,6 +134,7 @@ const startMeeting = async () => {
 					containerId.value,
 					displayName,
 					email,
+					avatarUrl,
 				);
 			} catch (error) {
 				console.error('Failed to start meeting:', error);
