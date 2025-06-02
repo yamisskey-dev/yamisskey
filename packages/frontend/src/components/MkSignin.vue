@@ -394,12 +394,14 @@ onBeforeUnmount(() => {
 <style lang="scss" module>
 .transition_enterActive,
 .transition_leaveActive {
-	transition: opacity 0.3s cubic-bezier(0,0,.35,1), transform 0.3s cubic-bezier(0,0,.35,1);
+	transition: opacity 0.3s cubic-bezier(0, 0, .35, 1), transform 0.3s cubic-bezier(0, 0, .35, 1);
 }
+
 .transition_enterFrom {
 	opacity: 0;
 	transform: translateX(50px);
 }
+
 .transition_leaveTo {
 	opacity: 0;
 	transform: translateX(-50px);

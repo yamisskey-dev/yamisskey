@@ -19,14 +19,12 @@
 	<template v-else #header>{{ i18n.ts.changes }}</template>
 
 	<div v-if="tab === 'add'">
-		<MkSpacer :marginMin="20" :marginMax="28">
 			<div class="_gaps_m">
 				<div v-if="iconUrl != null" :class="$style.imgs">
 					<div :class="$style.imgContainer">
 						<img :src="iconUrl" :class="$style.img"/>
 					</div>
 				</div>
-				<MkButton rounded style="margin: 0 auto;" @click="changeImage">{{ i18n.ts.selectFile }}</MkButton>
 				<MkInput v-model="name">
 					<template #label>{{ i18n.ts.name }}</template>
 				</MkInput>
@@ -36,35 +34,35 @@
 				<MkColorInput v-model="color">
 					<template #label>{{ i18n.ts.color }}</template>
 				</MkColorInput>
+				<MkInput v-model="iconUrl" type="url">
+					<template #label>{{ i18n.ts._role.iconUrl }}</template>
+				</MkInput>
 				<MkSwitch v-model="asBadge">{{ i18n.ts._role.asBadge }}</MkSwitch>
 				<MkSwitch v-model="isPublic">{{ i18n.ts._role.isPublic }}</MkSwitch>
 				<MkSwitch v-model="isExplorable">{{ i18n.ts._role.isExplorable }}</MkSwitch>
 			</div>
-		</MkSpacer>
 		<div :class="$style.footer">
 			<MkButton primary rounded style="margin: 0 auto;" @click="done"><i class="ti ti-check"></i> {{ props.role ? i18n.ts.update : i18n.ts.create }}</MkButton>
 		</div>
 	</div>
 
 	<div v-else-if="tab === 'manage'">
-		<MkSpacer :marginMin="20" :marginMax="28">
-			<div class="_gaps_m">
-				<div class="_gaps_s">
-					<MkFoldableSection>
-						<template #header>{{ i18n.ts.assignedRoles }}</template>
-						<div class="_gaps_s">
-							<DialogRole v-for="role in rolesAssigned" :key="role.id" :role="role" :isAssigned="true"/>
-						</div>
-					</MkFoldableSection>
-					<MkFoldableSection>
-						<template #header>{{ i18n.ts.assignableRoles }}</template>
-						<div class="_gaps_s">
-							<DialogRole v-for="role in roles" :key="role.id" :role="role" :isAssigned="false"/>
-						</div>
-					</MkFoldableSection>
-				</div>
+		<div class="_gaps_m">
+			<div class="_gaps_s">
+				<MkFoldableSection>
+					<template #header>{{ i18n.ts.assignedRoles }}</template>
+					<div class="_gaps_s">
+						<DialogRole v-for="role in rolesAssigned" :key="role.id" :role="role" :isAssigned="true"/>
+					</div>
+				</MkFoldableSection>
+				<MkFoldableSection>
+					<template #header>{{ i18n.ts.assignableRoles }}</template>
+					<div class="_gaps_s">
+						<DialogRole v-for="role in roles" :key="role.id" :role="role" :isAssigned="false"/>
+					</div>
+				</MkFoldableSection>
 			</div>
-		</MkSpacer>
+		</div>
 	</div>
 </MkModalWindow>
 </template>
@@ -77,7 +75,6 @@ import MkInput from '@/components/MkInput.vue';
 import * as os from '@/os';
 import { i18n } from '@/i18n';
 import MkSwitch from '@/components/MkSwitch.vue';
-import { selectFile } from '@/utility/select-file.js';
 import XTabs from '@/components/global/MkPageHeader.tabs.vue';
 import MkFoldableSection from '@/components/MkFoldableSection.vue';
 import MkColorInput from '@/components/MkColorInput.vue';
@@ -97,9 +94,7 @@ const color = ref(props.role ? props.role.color : '#000000');
 const isExplorable = ref(props.role ? props.role.isExplorable : true);
 const isPublic = ref(props.role ? props.role.isPublic : true);
 const asBadge = ref(props.role ? props.role.asBadge : false);
-
-const iconId = ref(props.role ? props.role.iconId : null);
-const iconUrl = ref(props.role ? props.role.iconUrl : null);
+const iconUrl = ref(props.role ? props.role.iconUrl : null); // iconUrl 変数を追加
 
 let assignedList = [];
 let roleList = [];
@@ -155,22 +150,6 @@ watch(() => canAddRolesPermission.value, (hasPermission) => {
 	}
 }, { immediate: true });
 
-watch(() => iconId.value, async () => {
-	if (iconId.value == null) {
-		iconUrl.value = null;
-	} else {
-		try {
-			const file = await misskeyApi('drive/files/show', {
-				fileId: iconId.value,
-			});
-			iconUrl.value = file.url;
-		} catch (err) {
-			console.error('Failed to fetch file:', err);
-			iconUrl.value = null;
-		}
-	}
-});
-
 onMounted(async () => {
 	assignedList = await misskeyApi('roles/list', {
 		assignedOnly: true,
@@ -184,22 +163,6 @@ const emit = defineEmits<{
 	(ev: 'done', v: { deleted?: boolean; updated?: any; created?: any }): void,
 	(ev: 'closed'): void
 }>();
-
-async function changeImage(ev) {
-	try {
-		const file = await selectFile(ev.currentTarget ?? ev.target, null);
-		if (file != null) {
-			iconId.value = file.id;
-			iconUrl.value = file.url;
-		}
-	} catch (err) {
-		console.error('Failed to select file:', err);
-		os.alert({
-			type: 'error',
-			text: i18n.ts.failedToLoad,
-		});
-	}
-}
 
 async function done() {
 	if (!name.value?.trim()) {
