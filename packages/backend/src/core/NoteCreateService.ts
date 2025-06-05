@@ -235,6 +235,16 @@ export class NoteCreateService implements OnApplicationShutdown {
 		isBot: MiUser['isBot'];
 		isCat: MiUser['isCat'];
 	}, data: Option, silent = false): Promise<MiNote> {
+		// リプライ先がプライベートノートチェーンの場合、自動的にプライベート設定を適用
+		if (data.reply) {
+			const isReplyToPrivateChain = await this.isPrivateNoteInReplyChain(data.reply);
+			if (isReplyToPrivateChain) {
+				data.visibility = 'specified';
+				data.visibleUsers = []; // 自分のみ閲覧可能に設定
+				data.localOnly = true; // 連合なし強制
+			}
+		}
+
 		if (data.isNoteInYamiMode == null) {
 			// リプライ先またはリノート元がやみノートの場合は強制的にやみノート
 			if ((data.reply && data.reply.isNoteInYamiMode) ||
@@ -313,6 +323,10 @@ export class NoteCreateService implements OnApplicationShutdown {
 			}
 		}
 
+		if (data.visibility === 'specified' && (!data.visibleUsers || data.visibleUsers.length === 0)) {
+			data.localOnly = true;
+		}
+
 		if (data.visibility === 'public' && data.channel == null) {
 			const sensitiveWords = this.meta.sensitiveWords;
 			if (this.utilityService.isKeyWordIncluded(data.cw ?? data.text ?? '', sensitiveWords)) {
@@ -339,9 +353,14 @@ export class NoteCreateService implements OnApplicationShutdown {
 		}
 
 		if (data.renote) {
+			// 連合ありやみノートのリノートを禁止
+			if (data.renote.isNoteInYamiMode && !data.renote.localOnly) {
+				throw new Error('Renote of federated yami note is not allowed');
+			}
+
 			switch (data.renote.visibility) {
 				case 'public':
-					// public noteは無条件にrenote可能
+					// public noteは無条件にrenote可能（ただし連合ありやみノートは上でブロック済み）
 					break;
 				case 'home':
 					// home noteはhome以下にrenote可能
@@ -497,6 +516,10 @@ export class NoteCreateService implements OnApplicationShutdown {
 		if (data.channel != null) data.visibleUsers = [];
 		if (data.channel != null) data.localOnly = true;
 
+		if (data.visibility === 'specified' && (!data.visibleUsers || data.visibleUsers.length === 0)) {
+			data.localOnly = true;
+		}
+
 		// 連合権限のチェック - ローカルオンリーでない場合に権限を確認
 		if (data.localOnly === false) {
 			const policies = await this.roleService.getUserPolicies(user.id);
@@ -533,9 +556,14 @@ export class NoteCreateService implements OnApplicationShutdown {
 		}
 
 		if (data.renote) {
+			// 連合ありやみノートのリノートを禁止
+			if (data.renote.isNoteInYamiMode && !data.renote.localOnly) {
+				throw new Error('Renote of federated yami note is not allowed');
+			}
+
 			switch (data.renote.visibility) {
 				case 'public':
-					// public noteは無条件にrenote可能
+					// public noteは無条件にrenote可能（ただし連合ありやみノートは上でブロック済み）
 					break;
 				case 'home':
 					// home noteはhome以下にrenote可能
@@ -1194,6 +1222,36 @@ export class NoteCreateService implements OnApplicationShutdown {
 	}
 
 	@bindThis
+	private async isPrivateNoteInReplyChain(note: MiNote): Promise<boolean> {
+		// 直接のプライベートノート
+		if (note.visibility === 'specified' && (!note.visibleUserIds || note.visibleUserIds.length === 0)) {
+			return true;
+		}
+
+		// 自分のみ宛てのノート
+		if (note.visibility === 'specified' &&
+			note.visibleUserIds &&
+			note.visibleUserIds.length === 1 &&
+			note.visibleUserIds[0] === note.userId) {
+			return true;
+		}
+
+		// リプライチェーンを再帰的にチェック
+		if (note.replyId) {
+			try {
+				const reply = await this.notesRepository.findOneBy({ id: note.replyId });
+				if (!reply) return false;
+				return await this.isPrivateNoteInReplyChain(reply);
+			} catch (err) {
+				this.logger.error(`Error checking private note in reply chain: ${err}`);
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+	@bindThis
 	private async pushToTl(note: MiNote, user: { id: MiUser['id']; host: MiUser['host']; }, notToPush?: FanoutTimelineNamePrefix[]) {
 		if (!this.meta.enableFanoutTimeline) return;
 
@@ -1208,6 +1266,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 			}
 
 			// フォロワーのやみタイムラインに追加
+			// ただしDMの場合は宛先に含まれるユーザーのみに制限
 			this.followingsRepository.find({
 				where: {
 					followeeId: user.id,
@@ -1220,6 +1279,12 @@ export class NoteCreateService implements OnApplicationShutdown {
 
 				const followingsPipeline = this.redisForTimelines.pipeline();
 				for (const following of followings) {
+					// DMの場合は宛先チェック - visibleUserIdsに含まれていない場合はスキップ
+					if (note.visibility === 'specified' &&
+						(!note.visibleUserIds || !note.visibleUserIds.includes(following.followerId))) {
+						continue;
+					}
+
 					this.fanoutTimelineService.push(`yamiTimeline:${following.followerId}`, note.id, 300, followingsPipeline);
 					if (note.fileIds.length > 0) {
 						this.fanoutTimelineService.push(`yamiTimelineWithFiles:${following.followerId}`, note.id, 300, followingsPipeline);
@@ -1228,7 +1293,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 				followingsPipeline.exec().catch(err => this.logger.error(err));
 			});
 
-			// パブリックなやみノートの場合の処理を修正
+			// パブリックなやみノートの場合の処理
 			if (note.visibility === 'public') {
 				this.fanoutTimelineService.push('yamiPublicNotes', note.id, 1000, r);
 				if (note.fileIds.length > 0) {
@@ -1237,7 +1302,6 @@ export class NoteCreateService implements OnApplicationShutdown {
 			}
 
 			// 自分自身のプロフィールタイムラインにも追加
-			// (これは他のタイムラインとは別の表示用なので残す)
 			this.fanoutTimelineService.push(`userTimeline:${user.id}`, note.id,
 				user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
 			if (note.fileIds.length > 0) {
@@ -1377,8 +1441,8 @@ export class NoteCreateService implements OnApplicationShutdown {
 		for (const userListMembership of userListMemberships) {
 			// ダイレクトのとき、そのリストが対象外のユーザーの場合
 			if (note.visibility === 'specified' &&
-                note.userId !== userListMembership.userListUserId &&
-                !note.visibleUserIds.some(v => v === userListMembership.userListUserId)) continue;
+				note.userId !== userListMembership.userListUserId &&
+				!note.visibleUserIds.some(v => v === userListMembership.userListUserId)) continue;
 
 			if (isReply(note, userListMembership.userListUserId)) {
 				if (!userListMembership.withReplies) continue;

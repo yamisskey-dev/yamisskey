@@ -41,6 +41,26 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</MkRadios>
 						</SearchMarker>
 
+						<SearchMarker :keywords="['realtimemode']">
+							<MkSwitch v-model="realtimeMode">
+								<template #label><i class="ti ti-bolt"></i> <SearchLabel>{{ i18n.ts.realtimeMode }}</SearchLabel></template>
+								<template #caption><SearchKeyword>{{ i18n.ts._settings.realtimeMode_description }}</SearchKeyword></template>
+							</MkSwitch>
+						</SearchMarker>
+
+						<MkDisableSection :disabled="realtimeMode">
+							<SearchMarker :keywords="['polling', 'interval']">
+								<MkPreferenceContainer k="pollingInterval">
+									<MkRange v-model="pollingInterval" :min="1" :max="3" :step="1" easing :showTicks="true" :textConverter="(v) => v === 1 ? i18n.ts.low : v === 2 ? i18n.ts.middle : v === 3 ? i18n.ts.high : ''">
+										<template #label><SearchLabel>{{ i18n.ts._settings.contentsUpdateFrequency }}</SearchLabel></template>
+										<template #caption><SearchKeyword>{{ i18n.ts._settings.contentsUpdateFrequency_description }}</SearchKeyword><br><SearchKeyword>{{ i18n.ts._settings.contentsUpdateFrequency_description2 }}</SearchKeyword></template>
+										<template #prefix><i class="ti ti-player-play"></i></template>
+										<template #suffix><i class="ti ti-player-track-next"></i></template>
+									</MkRange>
+								</MkPreferenceContainer>
+							</SearchMarker>
+						</MkDisableSection>
+
 						<div class="_gaps_s">
 							<SearchMarker :keywords="['titlebar', 'show']">
 								<MkPreferenceContainer k="showTitlebar">
@@ -157,22 +177,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 										<template #caption><SearchKeyword>{{ i18n.ts.collapseSelfRenotesDescription }}</SearchKeyword></template>
 									</MkSwitch>
 								</div>
-							</SearchMarker>
-
-							<SearchMarker :keywords="['note', 'timeline', 'gap']">
-								<MkPreferenceContainer k="showGapBetweenNotesInTimeline">
-									<MkSwitch v-model="showGapBetweenNotesInTimeline">
-										<template #label><SearchLabel>{{ i18n.ts.showGapBetweenNotesInTimeline }}</SearchLabel></template>
-									</MkSwitch>
-								</MkPreferenceContainer>
-							</SearchMarker>
-
-							<SearchMarker :keywords="['disable', 'streaming', 'timeline']">
-								<MkPreferenceContainer k="disableStreamingTimeline">
-									<MkSwitch v-model="disableStreamingTimeline">
-										<template #label><SearchLabel>{{ i18n.ts.disableStreamingTimeline }}</SearchLabel></template>
-									</MkSwitch>
-								</MkPreferenceContainer>
 							</SearchMarker>
 
 							<SearchMarker :keywords="['pinned', 'list']">
@@ -386,23 +390,30 @@ SPDX-License-Identifier: AGPL-3.0-only
 										</div>
 
 										<template #label><SearchLabel>{{ i18n.ts.defaultNoteVisibility }}</SearchLabel></template>
-										<template v-if="defaultNoteVisibility === 'public'" #suffix>{{ i18n.ts._visibility.public }}</template>
-										<template v-else-if="defaultNoteVisibility === 'home'" #suffix>{{ i18n.ts._visibility.home }}</template>
-										<template v-else-if="defaultNoteVisibility === 'followers'" #suffix>{{ i18n.ts._visibility.followers }}</template>
-										<template v-else-if="defaultNoteVisibility === 'specified'" #suffix>{{ i18n.ts._visibility.specified }}</template>
+										<template v-if="defaultDisplayVisibility === 'public'" #suffix>{{ i18n.ts._visibility.public }}</template>
+										<template v-else-if="defaultDisplayVisibility === 'home'" #suffix>{{ i18n.ts._visibility.home }}</template>
+										<template v-else-if="defaultDisplayVisibility === 'followers'" #suffix>{{ i18n.ts._visibility.followers }}</template>
+										<template v-else-if="defaultDisplayVisibility === 'specified'" #suffix>{{ i18n.ts._visibility.specified }}</template>
+										<template v-else-if="defaultDisplayVisibility === 'private'" #suffix>{{ i18n.ts._visibility.private }}</template>
 
 										<div class="_gaps_m">
 											<MkPreferenceContainer k="defaultNoteVisibility">
-												<MkSelect v-model="defaultNoteVisibility">
+												<MkSelect v-model="defaultDisplayVisibility">
 													<option value="public">{{ i18n.ts._visibility.public }}</option>
 													<option value="home">{{ i18n.ts._visibility.home }}</option>
 													<option value="followers">{{ i18n.ts._visibility.followers }}</option>
 													<option value="specified">{{ i18n.ts._visibility.specified }}</option>
+													<option value="private">{{ i18n.ts._visibility.private }}</option>
 												</MkSelect>
 											</MkPreferenceContainer>
 
 											<MkPreferenceContainer k="defaultNoteLocalOnly">
-												<MkSwitch v-model="defaultNoteLocalOnly">{{ i18n.ts._visibility.disableFederation }}</MkSwitch>
+												<MkSwitch
+													v-model="defaultNoteLocalOnly"
+													:disabled="defaultDisplayVisibility === 'private' || defaultDisplayVisibility === 'specified'"
+												>
+													{{ i18n.ts._visibility.disableFederation }}
+												</MkSwitch>
 											</MkPreferenceContainer>
 										</div>
 									</MkFolder>
@@ -682,6 +693,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<template #icon><SearchIcon><i class="ti ti-battery-vertical-eco"></i></SearchIcon></template>
 
 					<div class="_gaps_s">
+						<SearchMarker :keywords="['animation', 'motion', 'reduce']">
+							<MkPreferenceContainer k="animation">
+								<MkSwitch :modelValue="!reduceAnimation" @update:modelValue="v => reduceAnimation = !v">
+									<template #label><SearchLabel>{{ i18n.ts._settings.uiAnimations }}</SearchLabel></template>
+									<template #caption><SearchKeyword>{{ i18n.ts.turnOffToImprovePerformance }}</SearchKeyword></template>
+								</MkSwitch>
+							</MkPreferenceContainer>
+						</SearchMarker>
+
 						<SearchMarker :keywords="['blur']">
 							<MkPreferenceContainer k="useBlurEffect">
 								<MkSwitch v-model="useBlurEffect">
@@ -700,6 +720,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</MkPreferenceContainer>
 						</SearchMarker>
 
+						<SearchMarker :keywords="['blurhash', 'image', 'photo', 'picture', 'thumbnail', 'placeholder']">
+							<MkPreferenceContainer k="enableHighQualityImagePlaceholders">
+								<MkSwitch v-model="enableHighQualityImagePlaceholders">
+									<template #label><SearchLabel>{{ i18n.ts._settings.enableHighQualityImagePlaceholders }}</SearchLabel></template>
+									<template #caption><SearchKeyword>{{ i18n.ts.turnOffToImprovePerformance }}</SearchKeyword></template>
+								</MkSwitch>
+							</MkPreferenceContainer>
+						</SearchMarker>
+
 						<SearchMarker :keywords="['sticky']">
 							<MkPreferenceContainer k="useStickyIcons">
 								<MkSwitch v-model="useStickyIcons">
@@ -708,6 +737,24 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkSwitch>
 							</MkPreferenceContainer>
 						</SearchMarker>
+
+						<MkInfo>
+							<div class="_gaps_s">
+								<div>{{ i18n.ts._clientPerformanceIssueTip.title }}:</div>
+								<div>
+									<div><b>{{ i18n.ts._clientPerformanceIssueTip.makeSureDisabledAdBlocker }}</b></div>
+									<div>{{ i18n.ts._clientPerformanceIssueTip.makeSureDisabledAdBlocker_description }}</div>
+								</div>
+								<div>
+									<div><b>{{ i18n.ts._clientPerformanceIssueTip.makeSureDisabledCustomCss }}</b></div>
+									<div>{{ i18n.ts._clientPerformanceIssueTip.makeSureDisabledCustomCss_description }}</div>
+								</div>
+								<div>
+									<div><b>{{ i18n.ts._clientPerformanceIssueTip.makeSureDisabledAddons }}</b></div>
+									<div>{{ i18n.ts._clientPerformanceIssueTip.makeSureDisabledAddons_description }}</div>
+								</div>
+							</div>
+						</MkInfo>
 					</div>
 				</MkFolder>
 			</SearchMarker>
@@ -733,9 +780,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 								{{ i18n.ts._dataSaver._avatar.title }}
 								<template #caption>{{ i18n.ts._dataSaver._avatar.description }}</template>
 							</MkSwitch>
-							<MkSwitch v-model="dataSaver.urlPreview">
-								{{ i18n.ts._dataSaver._urlPreview.title }}
-								<template #caption>{{ i18n.ts._dataSaver._urlPreview.description }}</template>
+							<MkSwitch v-model="dataSaver.disableUrlPreview" :disabled="!instance.enableUrlPreview">
+								{{ i18n.ts._dataSaver._disableUrlPreview.title }}
+								<template #caption>{{ i18n.ts._dataSaver._disableUrlPreview.description }}</template>
+							</MkSwitch>
+							<MkSwitch v-model="dataSaver.urlPreviewThumbnail" :disabled="!instance.enableUrlPreview || dataSaver.disableUrlPreview">
+								{{ i18n.ts._dataSaver._urlPreviewThumbnail.title }}
+								<template #caption>{{ i18n.ts._dataSaver._urlPreviewThumbnail.description }}</template>
 							</MkSwitch>
 							<MkSwitch v-model="dataSaver.code">
 								{{ i18n.ts._dataSaver._code.title }}
@@ -869,7 +920,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { langs } from '@@/js/config.js';
 import * as Misskey from 'misskey-js';
 import Sortable from 'vuedraggable';
@@ -879,7 +930,7 @@ import MkRadios from '@/components/MkRadios.vue';
 import MkRange from '@/components/MkRange.vue';
 import MkFolder from '@/components/MkFolder.vue';
 import MkButton from '@/components/MkButton.vue';
-import FormSection from '@/components/form/section.vue';
+import MkDisableSection from '@/components/MkDisableSection.vue';
 import FormLink from '@/components/form/link.vue';
 import MkLink from '@/components/MkLink.vue';
 import MkInfo from '@/components/MkInfo.vue';
@@ -938,8 +989,10 @@ const $i = ensureSignin();
 
 const lang = ref(miLocalStorage.getItem('lang'));
 const dataSaver = ref(prefer.s.dataSaver);
+const realtimeMode = computed(store.makeGetterSetter('realtimeMode'));
 
 const overridedDeviceKind = prefer.model('overridedDeviceKind');
+const pollingInterval = prefer.model('pollingInterval');
 const showTitlebar = prefer.model('showTitlebar');
 const keepCw = prefer.model('keepCw');
 const serverDisconnectedBehavior = prefer.model('serverDisconnectedBehavior');
@@ -958,7 +1011,6 @@ const showFixedPostFormInChannel = prefer.model('showFixedPostFormInChannel');
 const numberOfPageCache = prefer.model('numberOfPageCache');
 const enableInfiniteScroll = prefer.model('enableInfiniteScroll');
 const useReactionPickerForContextMenu = prefer.model('useReactionPickerForContextMenu');
-const disableStreamingTimeline = prefer.model('disableStreamingTimeline');
 const useGroupedNotifications = prefer.model('useGroupedNotifications');
 const alwaysConfirmFollow = prefer.model('alwaysConfirmFollow');
 const confirmWhenRevealingSensitiveMedia = prefer.model('confirmWhenRevealingSensitiveMedia');
@@ -966,7 +1018,6 @@ const confirmOnReact = prefer.model('confirmOnReact');
 const defaultNoteVisibility = prefer.model('defaultNoteVisibility');
 const defaultNoteLocalOnly = prefer.model('defaultNoteLocalOnly');
 const rememberNoteVisibility = prefer.model('rememberNoteVisibility');
-const showGapBetweenNotesInTimeline = prefer.model('showGapBetweenNotesInTimeline');
 const notificationPosition = prefer.model('notificationPosition');
 const notificationStackAxis = prefer.model('notificationStackAxis');
 const instanceTicker = prefer.model('instanceTicker');
@@ -986,6 +1037,7 @@ const defaultFollowWithReplies = prefer.model('defaultFollowWithReplies');
 const chatShowSenderName = prefer.model('chat.showSenderName');
 const chatSendOnEnter = prefer.model('chat.sendOnEnter');
 const useStickyIcons = prefer.model('useStickyIcons');
+const enableHighQualityImagePlaceholders = prefer.model('enableHighQualityImagePlaceholders');
 const reduceAnimation = prefer.model('animation', v => !v, v => !v);
 const animatedMfm = prefer.model('animatedMfm');
 const disableShowingAnimatedImages = prefer.model('disableShowingAnimatedImages');
@@ -1055,13 +1107,13 @@ watch(customFont, (newValue) => {
 watch([
 	hemisphere,
 	lang,
+	realtimeMode,
+	pollingInterval,
 	enableInfiniteScroll,
 	showNoteActionsOnlyHover,
 	overridedDeviceKind,
-	disableStreamingTimeline,
 	alwaysConfirmFollow,
 	confirmWhenRevealingSensitiveMedia,
-	showGapBetweenNotesInTimeline,
 	mediaListWithOneImageAppearance,
 	reactionsDisplaySize,
 	limitWidthOfReaction,
@@ -1075,6 +1127,7 @@ watch([
 	enableSeasonalScreenEffect,
 	chatShowSenderName,
 	useStickyIcons,
+	enableHighQualityImagePlaceholders,
 	keepScreenOn,
 	contextMenu,
 	fontSize,
@@ -1085,6 +1138,7 @@ watch([
 	reactionChecksMuting,
 	enableHorizontalSwipe,
 	enablePullToRefresh,
+	reduceAnimation,
 ], async () => {
 	await reloadAsk({ reason: i18n.ts.reloadToApplySetting, unison: true });
 });
@@ -1263,6 +1317,46 @@ const headerActions = computed(() => []);
 
 const headerTabs = computed(() => []);
 
+const defaultIsDmIntent = prefer.model('defaultIsDmIntent');
+// 表示用の公開範囲
+const defaultDisplayVisibility = computed({
+	get: () => {
+		// 'specified'の場合はDM意図によって表示を分ける
+		if (defaultNoteVisibility.value === 'specified') {
+			return defaultIsDmIntent.value ? 'specified' : 'private';
+		}
+		// それ以外はそのまま
+		return defaultNoteVisibility.value;
+	},
+	set: (value) => {
+		if (value === 'private') {
+			// privateが選択された場合
+			defaultNoteVisibility.value = 'specified'; // APIには'specified'として保存
+			defaultIsDmIntent.value = false; // DM意図はオフ
+			defaultNoteLocalOnly.value = true; // 連合なし強制
+		} else if (value === 'specified') {
+			// 特定ユーザー宛(DM)の場合
+			defaultNoteVisibility.value = 'specified';
+			defaultIsDmIntent.value = true; // DM意図はオン
+			defaultNoteLocalOnly.value = false; // 連合あり強制
+		} else {
+			// その他の公開範囲はそのまま設定
+			defaultNoteVisibility.value = value;
+			// DM意図をリセット（必要に応じて）
+			defaultIsDmIntent.value = false;
+		}
+	},
+});
+
+// コンポーネント初期化時にdefaultIsDmIntentの初期値を設定
+// (例: mounted フックなどに追加)
+
+onMounted(() => {
+	// デフォルト値が'specified'の場合、初期状態ではDMとして表示
+	if (defaultNoteVisibility.value === 'specified' && defaultIsDmIntent.value === undefined) {
+		defaultIsDmIntent.value = true;
+	}
+});
 definePage(() => ({
 	title: i18n.ts.general,
 	icon: 'ti ti-adjustments',

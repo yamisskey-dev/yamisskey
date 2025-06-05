@@ -36,18 +36,22 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</button>
 
 				<!-- 既存の公開範囲ボタン -->
-				<button v-if="channel == null" ref="visibilityButton" v-tooltip="i18n.ts.visibility" :class="['_button', $style.headerRightItem, $style.visibility]" @click="setVisibility">
-					<span v-if="visibility === 'public'"><i class="ti ti-world"></i></span>
-					<span v-if="visibility === 'home'"><i class="ti ti-home"></i></span>
-					<span v-if="visibility === 'followers'"><i class="ti ti-lock"></i></span>
-					<span v-if="visibility === 'specified'"><i class="ti ti-mail"></i></span>
+				<button
+					v-if="props.channel == null" ref="visibilityButton" v-tooltip="i18n.ts.visibility"
+					:class="['_button', $style.headerRightItem, $style.visibility]" @click="setVisibility"
+				>
+					<span v-if="displayVisibility === 'public'"><i class="ti ti-world"></i></span>
+					<span v-if="displayVisibility === 'home'"><i class="ti ti-home"></i></span>
+					<span v-if="displayVisibility === 'followers'"><i class="ti ti-lock"></i></span>
+					<span v-if="displayVisibility === 'specified'"><i class="ti ti-mail"></i></span>
+					<span v-if="displayVisibility === 'private'"><i class="ti ti-eye-closed"></i></span>
 					<span :class="$style.headerRightButtonText">
-						{{ i18n.ts._visibility[visibility] }}
+						{{ i18n.ts._visibility[displayVisibility] }}
 					</span>
 				</button>
 				<button v-else class="_button" :class="[$style.headerRightItem, $style.visibility]" disabled>
 					<span><i class="ti ti-device-tv"></i></span>
-					<span :class="$style.headerRightButtonText">{{ channel.name }}</span>
+					<span :class="$style.headerRightButtonText">{{ props.channel.name }}</span>
 				</button>
 			</template>
 			<button
@@ -64,10 +68,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 				:class="[$style.headerRightItem, {
 					[$style.danger]: localOnly,
 					[$style.warning]: isNoteInYamiMode && !localOnly,
-					[$style.disabled]: $i.policies?.canFederateNote === false || (isNoteInYamiMode && !yamiNoteFederationEnabled)
-				}]"
-				:disabled="channel != null || visibility === 'specified' || $i.policies?.canFederateNote === false || (isNoteInYamiMode && !yamiNoteFederationEnabled)"
-				@click="toggleLocalOnly"
+					[$style.disabled]: isFederationToggleDisabled
+				}]" :disabled="isFederationToggleDisabled" @click="toggleLocalOnly"
 			>
 				<span v-if="!localOnly && $i.policies?.canFederateNote !== false"><i class="ti ti-rocket"></i></span>
 				<span v-else><i class="ti ti-rocket-off"></i></span>
@@ -86,7 +88,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<MkNoteSimple v-if="reply" :class="$style.targetNote" :note="reply"/>
 	<MkNoteSimple v-if="renote" :class="$style.targetNote" :note="renote"/>
 	<div v-if="quoteId" :class="$style.withQuote"><i class="ti ti-quote"></i> {{ i18n.ts.quoteAttached }}<button @click="quoteId = null"><i class="ti ti-x"></i></button></div>
-	<div v-if="visibility === 'specified'" :class="$style.toSpecified">
+	<!-- DMの宛先表示部分を修正（自分のみ投稿の場合は非表示） -->
+	<div v-if="visibility === 'specified' && (visibleUsers.length > 0 || isDmIntent)" :class="$style.toSpecified">
 		<span style="margin-right: 8px;">{{ i18n.ts.recipient }}</span>
 		<div :class="$style.visibleUsers">
 			<span v-for="u in visibleUsers" :key="u.id" :class="$style.visibleUser">
@@ -107,7 +110,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div v-if="maxTextLength - textLength < 100" :class="['_acrylic', $style.textCount, { [$style.textOver]: textLength > maxTextLength }]">{{ maxTextLength - textLength }}</div>
 	</div>
 	<input v-show="withHashtags" ref="hashtagsInputEl" v-model="hashtags" :class="$style.hashtags" :placeholder="i18n.ts.hashtags" list="hashtags">
-	<XPostFormAttaches v-model="files" @detach="detachFile" @changeSensitive="updateFileSensitive" @changeName="updateFileName" @replaceFile="replaceFile"/>
+	<XPostFormAttaches v-model="files" @detach="detachFile" @changeSensitive="updateFileSensitive" @changeName="updateFileName"/>
 	<MkPollEditor v-if="poll" v-model="poll" @destroyed="poll = null"/>
 	<MkDeleteScheduleEditor v-if="scheduledNoteDelete" v-model="scheduledNoteDelete" @destroyed="scheduledNoteDelete = null"/>
 	<MkScheduleEditor v-if="scheduleNote" v-model="scheduleNote" :scheduledDelete="scheduledNoteDelete" @destroyed="scheduleNote = null"/>
@@ -165,14 +168,13 @@ import { formatTimeString } from '@/utility/format-time-string.js';
 import { Autocomplete } from '@/utility/autocomplete.js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
-import { selectFiles } from '@/utility/select-file.js';
+import { selectFiles } from '@/utility/drive.js';
 import { store } from '@/store.js';
 import MkInfo from '@/components/MkInfo.vue';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
 import { ensureSignin, notesCount, incNotesCount } from '@/i.js';
 import { getAccounts, openAccountMenu as openAccountMenu_ } from '@/accounts.js';
-import { uploadFile } from '@/utility/upload.js';
 import { deepClone } from '@/utility/clone.js';
 import MkRippleEffect from '@/components/MkRippleEffect.vue';
 import { miLocalStorage } from '@/local-storage.js';
@@ -184,6 +186,9 @@ import MkScheduleEditor from '@/components/MkScheduleEditor.vue';
 import { prefer } from '@/preferences.js';
 import { getPluginHandlers } from '@/plugin.js';
 import { DI } from '@/di.js';
+import { shouldReplyBePrivate } from '@/utility/private-note.js';
+import { globalEvents } from '@/events.js';
+import { checkDragDataType, getDragData } from '@/drag-and-drop.js';
 
 const $i = ensureSignin();
 
@@ -195,12 +200,14 @@ const props = withDefaults(defineProps<PostFormProps & {
 	freezeAfterPosted?: boolean;
 	mock?: boolean;
 	isInYamiTimeline?: boolean;
+	initialDmIntent?: boolean;
 }>(), {
 	initialVisibleUsers: () => [],
 	autofocus: true,
 	mock: false,
 	initialLocalOnly: undefined,
 	isInYamiTimeline: false,
+	initialDmIntent: undefined,
 });
 
 provide(DI.mock, props.mock);
@@ -471,6 +478,63 @@ const bottomItemActionDef: Record<keyof typeof bottomItemDef, {
 	},
 });
 
+// 新しい状態変数を追加
+const isDmIntent = ref(props.initialDmIntent ??
+  (visibility.value === 'specified' ? prefer.s.defaultIsDmIntent : false));
+
+// 自分のみ投稿の判定を改善
+const isPrivatePost = computed(() => {
+	// 基本的な自分のみ投稿
+	if (visibility.value === 'specified' && visibleUsers.value.length === 0 && !isDmIntent.value) {
+		return true;
+	}
+
+	// 自分のみノートへのリプライ
+	if (visibility.value === 'specified' &&
+        visibleUsers.value.length === 1 &&
+        visibleUsers.value[0].id === $i.id &&
+        props.reply) {
+		return shouldReplyBePrivate(props.reply);
+	}
+
+	return false;
+});
+
+// リプライ先の変更を監視して自動的にプライベート設定を適用
+watch(() => props.reply, (newReply) => {
+	if (newReply && shouldReplyBePrivate(newReply)) {
+		visibility.value = 'specified';
+		visibleUsers.value = []; // 自分のみ閲覧可能に設定
+	}
+}, { immediate: true });
+
+// 表示用の公開範囲
+const displayVisibility = computed(() => {
+	if (isPrivatePost.value) {
+		return 'private';
+	}
+	return visibility.value;
+});
+
+// 連合ボタンの無効化条件
+const isFederationToggleDisabled = computed(() => {
+	return props.channel != null ||
+    visibility.value === 'specified' ||
+    $i.policies.canFederateNote === false ||
+    (isNoteInYamiMode.value && !yamiNoteFederationEnabled.value);
+});
+
+// 自分のみ投稿の場合は強制的にlocalOnlyをtrueに
+watch([visibility, visibleUsers], () => {
+	if (isPrivatePost.value) {
+		localOnly.value = true;
+	}
+	// DMの場合で、やみノートでない場合は連合設定を解除する
+	else if (visibility.value === 'specified' && visibleUsers.value.length > 0 && !isNoteInYamiMode.value) {
+		localOnly.value = false;
+	}
+}, { deep: true, immediate: true });
+
 watch(text, () => {
 	checkMissingMention();
 }, { immediate: true });
@@ -484,6 +548,14 @@ watch(visibleUsers, () => {
 }, {
 	deep: true,
 });
+
+// 宛先が変更されたらDM意図フラグをリセット
+watch(visibleUsers, (newUsers) => {
+	// 宛先が明示的に変更されたらDM意図状態を解除
+	if (newUsers.length > 0) {
+		isDmIntent.value = false;
+	}
+}, { deep: true });
 
 if (props.mention) {
 	text.value = props.mention.host ? `@${props.mention.username}@${toASCII(props.mention.host)}` : `@${props.mention.username}`;
@@ -663,18 +735,6 @@ function updateFileName(file, name) {
 	files.value[files.value.findIndex(x => x.id === file.id)].name = name;
 }
 
-function replaceFile(file: Misskey.entities.DriveFile, newFile: Misskey.entities.DriveFile): void {
-	files.value[files.value.findIndex(x => x.id === file.id)] = newFile;
-}
-
-function upload(file: File, name?: string): void {
-	if (props.mock) return;
-
-	uploadFile(file, prefer.s.uploadFolder, name).then(res => {
-		files.value.push(res);
-	});
-}
-
 function setVisibility() {
 	if (props.channel) {
 		visibility.value = 'public';
@@ -684,10 +744,12 @@ function setVisibility() {
 
 	const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkVisibilityPicker.vue')), {
 		currentVisibility: visibility.value,
+		currentVisibleUsers: visibleUsers.value,
 		isSilenced: $i.isSilenced,
 		localOnly: localOnly.value,
-		src: visibilityButton.value,
-		isNoteInYamiMode: isNoteInYamiMode.value, // Add this prop to pass the note-specific YamiMode flag
+		anchorElement: visibilityButton.value,
+		isNoteInYamiMode: isNoteInYamiMode.value,
+		isDmIntent: isDmIntent.value,
 		...(props.reply ? { isReplyVisibilitySpecified: props.reply.visibility === 'specified' } : {}),
 	}, {
 		changeVisibility: v => {
@@ -695,6 +757,12 @@ function setVisibility() {
 			if (prefer.s.rememberNoteVisibility) {
 				store.set('visibility', visibility.value);
 			}
+		},
+		changeVisibleUsers: users => {
+			visibleUsers.value = users;
+		},
+		changeDmIntent: intent => {
+			isDmIntent.value = intent;
 		},
 		closed: () => dispose(),
 	});
@@ -704,7 +772,19 @@ function setVisibility() {
 async function toggleLocalOnly() {
 	if (props.channel) {
 		visibility.value = 'public';
-		localOnly.value = true; // TODO: チャンネルが連合するようになった折には消す
+		localOnly.value = true;
+		return;
+	}
+
+	// 自分のみ投稿の場合は連合なし固定
+	if (isPrivatePost.value) {
+		localOnly.value = true;
+		return;
+	}
+
+	// 普通のDM（宛先あり）の場合は連合あり固定
+	if (visibility.value === 'specified' && visibleUsers.value.length > 0) {
+		localOnly.value = false;
 		return;
 	}
 
@@ -714,7 +794,7 @@ async function toggleLocalOnly() {
 		return;
 	}
 
-	// 既存の処理
+	// 既存の処理（通常のDMは連合ありのまま）
 	const neverShowInfo = miLocalStorage.getItem('neverShowLocalOnlyInfo');
 
 	if (!localOnly.value && neverShowInfo !== 'true') {
@@ -819,6 +899,10 @@ function pushVisibleUser(user: Misskey.entities.UserDetailed) {
 function addVisibleUser() {
 	os.selectUser().then(user => {
 		pushVisibleUser(user);
+		// 宛先が追加されたらDMなので、やみノートでない限り連合ありに戻す
+		if (localOnly.value && !isNoteInYamiMode.value) {
+			localOnly.value = false;
+		}
 
 		if (!text.value.toLowerCase().includes(`@${user.username.toLowerCase()}`)) {
 			text.value = `@${Misskey.acct.toString(user)} ${text.value}`;
@@ -828,6 +912,10 @@ function addVisibleUser() {
 
 function removeVisibleUser(user) {
 	visibleUsers.value = erase(user, visibleUsers.value);
+	// 宛先を全て削除したらプライベートノートになるが、ユーザーがDMを意図していることを考慮
+	if (visibleUsers.value.length === 0) {
+		isDmIntent.value = true; // 宛先を削除してもDM意図を維持
+	}
 }
 
 function clear() {
@@ -865,15 +953,24 @@ async function onPaste(ev: ClipboardEvent) {
 	if (props.mock) return;
 	if (!ev.clipboardData) return;
 
+	let pastedFiles: File[] = [];
 	for (const { item, i } of Array.from(ev.clipboardData.items, (data, x) => ({ item: data, i: x }))) {
 		if (item.kind === 'file') {
 			const file = item.getAsFile();
 			if (!file) continue;
 			const lio = file.name.lastIndexOf('.');
 			const ext = lio >= 0 ? file.name.slice(lio) : '';
-			const formatted = `${formatTimeString(new Date(file.lastModified), pastedFileName).replace(/{{number}}/g, `${i + 1}`)}${ext}`;
-			upload(file, formatted);
+			const formattedName = `${formatTimeString(new Date(file.lastModified), pastedFileName).replace(/{{number}}/g, `${i + 1}`)}${ext}`;
+			const renamedFile = new File([file], formattedName, { type: file.type });
+			pastedFiles.push(renamedFile);
 		}
+	}
+	if (pastedFiles.length > 0) {
+		ev.preventDefault();
+		os.launchUploader(pastedFiles, {}).then(driveFiles => {
+			files.value.push(...driveFiles);
+		});
+		return;
 	}
 
 	const paste = ev.clipboardData.getData('text');
@@ -907,17 +1004,17 @@ async function onPaste(ev: ClipboardEvent) {
 
 			const fileName = formatTimeString(new Date(), pastedFileName).replace(/{{number}}/g, '0');
 			const file = new File([paste], `${fileName}.txt`, { type: 'text/plain' });
-			upload(file, `${fileName}.txt`);
-		},
-		);
+			os.launchUploader([file], {}).then(driveFiles => {
+				files.value.push(...driveFiles);
+			});
+		});
 	}
 }
 
 function onDragover(ev) {
 	if (!ev.dataTransfer.items[0]) return;
 	const isFile = ev.dataTransfer.items[0].kind === 'file';
-	const isDriveFile = ev.dataTransfer.types[0] === _DATA_TRANSFER_DRIVE_FILE_;
-	if (isFile || isDriveFile) {
+	if (isFile || checkDragDataType(ev, ['driveFiles'])) {
 		ev.preventDefault();
 		draghover.value = true;
 		switch (ev.dataTransfer.effectAllowed) {
@@ -953,16 +1050,19 @@ function onDrop(ev: DragEvent): void {
 	// ファイルだったら
 	if (ev.dataTransfer && ev.dataTransfer.files.length > 0) {
 		ev.preventDefault();
-		for (const x of Array.from(ev.dataTransfer.files)) upload(x);
+		os.launchUploader(Array.from(ev.dataTransfer.files), {}).then(driveFiles => {
+			files.value.push(...driveFiles);
+		});
 		return;
 	}
 
 	//#region ドライブのファイル
-	const driveFile = ev.dataTransfer?.getData(_DATA_TRANSFER_DRIVE_FILE_);
-	if (driveFile != null && driveFile !== '') {
-		const file = JSON.parse(driveFile);
-		files.value.push(file);
-		ev.preventDefault();
+	{
+		const droppedData = getDragData(ev, 'driveFiles');
+		if (droppedData != null) {
+			files.value.push(...droppedData);
+			ev.preventDefault();
+		}
 	}
 	//#endregion
 }
@@ -1105,12 +1205,15 @@ async function post(ev?: MouseEvent) {
 	}
 
 	posting.value = true;
-	misskeyApi(props.updateMode ? 'notes/update' : (postData.scheduleNote ? 'notes/schedule/create' : 'notes/create'), postData, token).then(() => {
+	misskeyApi(postData.scheduleNote ? 'notes/schedule/create' : 'notes/create', postData, token).then((res) => {
 		if (props.freezeAfterPosted) {
 			posted.value = true;
 		} else {
 			clear();
 		}
+
+		globalEvents.emit('notePosted', res.createdNote);
+
 		nextTick(() => {
 			deleteDraft();
 			emit('posted');

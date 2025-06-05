@@ -205,7 +205,22 @@ export class NoteEntityService implements OnModuleInit {
 		}
 
 		if (hide) {
-			packedNote.visibleUserIds = undefined;
+			// DMの場合は自分に関する宛先情報のみを保持
+			if (packedNote.visibility === 'specified' && meId && packedNote.visibleUserIds?.includes(meId)) {
+				// 自分のIDのみを含む配列に置き換え
+				packedNote.visibleUserIds = [meId];
+
+				// mentionsも自分のIDのみを保持
+				if (packedNote.mentions?.includes(meId)) {
+					packedNote.mentions = [meId];
+				} else {
+					packedNote.mentions = undefined;
+				}
+			} else {
+				packedNote.visibleUserIds = undefined;
+				packedNote.mentions = undefined;
+			}
+
 			packedNote.fileIds = [];
 			packedNote.files = [];
 			packedNote.text = null;
@@ -489,6 +504,7 @@ export class NoteEntityService implements OnModuleInit {
 				userId: channel.userId,
 			} : undefined,
 			mentions: note.mentions.length > 0 ? note.mentions : undefined,
+			hasPoll: note.hasPoll || undefined,
 			uri: note.uri ?? undefined,
 			url: note.url ?? undefined,
 			isNoteInYamiMode: note.isNoteInYamiMode,
@@ -654,5 +670,43 @@ export class NoteEntityService implements OnModuleInit {
 			where: { id },
 			relations: ['user'],
 		});
+	}
+
+	@bindThis
+	public async fetchDiffs(noteIds: MiNote['id'][]) {
+		if (noteIds.length === 0) return [];
+
+		const notes = await this.notesRepository.find({
+			where: {
+				id: In(noteIds),
+			},
+			select: {
+				id: true,
+				userHost: true,
+				reactions: true,
+				reactionAndUserPairCache: true,
+			},
+		});
+
+		const bufferedReactionsMap = this.meta.enableReactionsBuffering ? await this.reactionsBufferingService.getMany(noteIds) : null;
+
+		const packings = notes.map(note => {
+			const bufferedReactions = bufferedReactionsMap?.get(note.id);
+			//const reactionAndUserPairCache = note.reactionAndUserPairCache.concat(bufferedReactions.pairs.map(x => x.join('/')));
+
+			const reactions = this.reactionService.convertLegacyReactions(this.reactionsBufferingService.mergeReactions(note.reactions, bufferedReactions?.deltas ?? {}));
+
+			const reactionEmojiNames = Object.keys(reactions)
+				.filter(x => x.startsWith(':') && x.includes('@') && !x.includes('@.')) // リモートカスタム絵文字のみ
+				.map(x => this.reactionService.decodeReaction(x).reaction.replaceAll(':', ''));
+
+			return this.customEmojiService.populateEmojis(reactionEmojiNames, note.userHost).then(reactionEmojis => ({
+				id: note.id,
+				reactions,
+				reactionEmojis,
+			}));
+		});
+
+		return await Promise.all(packings);
 	}
 }

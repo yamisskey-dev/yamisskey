@@ -4,7 +4,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<MkModal ref="modal" v-slot="{ type }" :zPriority="'high'" :src="src" @click="modal?.close()" @closed="emit('closed')" @esc="modal?.close()">
+<MkModal ref="modal" v-slot="{ type }" :zPriority="'high'" :anchorElement="anchorElement" @click="modal?.close()" @closed="emit('closed')" @esc="modal?.close()">
 	<div class="_popup" :class="{ [$style.root]: true, [$style.asDrawer]: type === 'drawer' }">
 		<div :class="[$style.label, $style.item]">
 			{{ i18n.ts.visibility }}
@@ -37,40 +37,94 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<span :class="$style.itemDescription">{{ isNoteInYamiMode ? i18n.ts._visibility.yamiDescription : i18n.ts._visibility.specifiedDescription }}</span>
 			</div>
 		</button>
+		<button key="private" :disabled="!localOnly" class="_button" :class="[$style.item, { [$style.active]: isPrivate }]" @click="choosePrivate()">
+			<div :class="$style.icon">
+				<i class="ti ti-eye-closed"></i>
+			</div>
+			<div :class="$style.body">
+				<span :class="$style.itemTitle">{{ i18n.ts._visibility.private }}{{ isNoteInYamiMode ? ` (${i18n.ts._yami.yamiModeShort})` : '' }}</span>
+				<span :class="$style.itemDescription">{{ isNoteInYamiMode ? i18n.ts._visibility.yamiDescription : i18n.ts._visibility.privateDescription }}</span>
+			</div>
+		</button>
 	</div>
 </MkModal>
 </template>
 
 <script lang="ts" setup>
-import { nextTick, useTemplateRef, ref } from 'vue';
+import { nextTick, useTemplateRef, computed } from 'vue';
 import * as Misskey from 'misskey-js';
 import MkModal from '@/components/MkModal.vue';
 import { i18n } from '@/i18n.js';
-import { $i } from '@/i.js'; // signinRequired の代わりに $i を直接インポート
+import { $i } from '@/i.js';
+import { isPrivateNoteInReplyChain } from '@/utility/private-note.js';
 
 const modal = useTemplateRef('modal');
 
 const props = withDefaults(defineProps<{
 	currentVisibility: typeof Misskey.noteVisibilities[number];
+	currentVisibleUsers?: Misskey.entities.UserLite[];
 	isSilenced: boolean;
 	localOnly: boolean;
-	src?: HTMLElement;
+	anchorElement?: HTMLElement;
 	isReplyVisibilitySpecified?: boolean;
-	isNoteInYamiMode: boolean; // Add prop for per-note YamiMode
+	isNoteInYamiMode: boolean;
+	reply?: Misskey.entities.Note;
+	isDmIntent?: boolean;
 }>(), {
-	isNoteInYamiMode: false, // Default to false
+	currentVisibleUsers: () => [],
+	isNoteInYamiMode: false,
+	reply: undefined,
+	isDmIntent: false,
 });
 
 const emit = defineEmits<{
 	(ev: 'changeVisibility', v: typeof Misskey.noteVisibilities[number]): void;
+	(ev: 'changeVisibleUsers', users: Misskey.entities.UserLite[]): void;
+	(ev: 'changeDmIntent', intent: boolean): void;
 	(ev: 'closed'): void;
 }>();
 
-const v = ref(props.currentVisibility);
+// 自分のみ投稿の判定
+const isPrivate = computed(() => {
+	// DMを意図して選択した場合は、宛先が空でもプライベートノートにしない
+	if (props.currentVisibility === 'specified' && props.currentVisibleUsers.length === 0 && !props.isDmIntent) {
+		return true;
+	}
+
+	// リプライ先がプライベートノートチェーンの場合
+	if (props.reply && props.currentVisibility === 'specified') {
+		return isPrivateNoteInReplyChain(props.reply);
+	}
+
+	return false;
+});
+
+// 表示用のvisibility
+const v = computed(() => {
+	if (isPrivate.value) return 'private';
+	return props.currentVisibility;
+});
 
 function choose(visibility: typeof Misskey.noteVisibilities[number]): void {
-	v.value = visibility;
 	emit('changeVisibility', visibility);
+	// DMを選択した場合はDM意図フラグを立てる
+	if (visibility === 'specified') {
+		emit('changeDmIntent', true);
+	} else {
+		emit('changeDmIntent', false);
+	}
+	if (visibility !== 'specified') {
+		emit('changeVisibleUsers', []);
+	}
+	nextTick(() => {
+		if (modal.value) modal.value.close();
+	});
+}
+
+function choosePrivate(): void {
+	emit('changeVisibility', 'specified');
+	emit('changeDmIntent', false); // プライベートモードなのでDM意図はfalse
+	emit('changeVisibleUsers', []);
 	nextTick(() => {
 		if (modal.value) modal.value.close();
 	});
