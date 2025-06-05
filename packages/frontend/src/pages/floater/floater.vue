@@ -4,34 +4,31 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<div class="_spacer" style="--MI_SPACER-w: 800px;">
-	<MkPagination
-		v-slot="{ items: paginationItems, fetching }" ref="paginationComponent"
-		:pagination="followingPagination" :class="$style.tl"
-	>
-		<div :class="$style.content">
-			<MkLoading v-if="fetching && paginationItems.length === 0"/>
-			<MkResult v-else-if="paginationItems.length === 0" type="empty"/>
+	<div class="_spacer" style="--MI_SPACER-w: 800px;">
+		<MkPagination v-slot="{ items: paginationItems, fetching }" ref="paginationComponent"
+			:pagination="followingPagination" :class="$style.tl">
+			<div :class="$style.content">
+				<MkLoading v-if="fetching && paginationItems.length === 0" />
+				<MkResult v-else-if="paginationItems.length === 0" type="empty" />
 
-			<!-- 重複排除したアイテムを使用 -->
-			<div v-for="item in getUniqueItems(paginationItems)" :key="item.id" :class="$style.userNotes">
-				<!-- ノート表示（最大3つまで表示に変更） -->
-				<template v-for="(note, i) in item.notes.slice(0, 3)" :key="note.id">
-					<!-- 日付区切り: 日付が変わる場合や最初のノートに表示 -->
-					<div
-						v-if="shouldShowDateSeparator(note, i, item)" :class="[$style.dateSeparator,
-							i === 0 ? $style.firstDateSeparator : '',
-							isFloaterInfo(note, i, item) ? $style.floaterSeparator : '']"
-					>
-						<span>{{ getDateInfo(note, i, item) }}</span>
-					</div>
+				<!-- 重複排除したアイテムを使用 -->
+				<div v-for="item in getUniqueItems(paginationItems)" :key="item.id" :class="$style.userNotes">
+					<template v-for="(note, i) in item.notes.slice(0, displayCount)" :key="note.id">
+						<!-- 日付区切り: 日付が変わる場合や最初のノートに表示 -->
+						<div v-if="shouldShowDateSeparator(note, i, item)" :class="[$style.dateSeparator,
+						i === 0 ? $style.firstDateSeparator : '',
+						item.isFirstPublicPost && i === 0 ? $style.firstPublicPostSeparator : '',
+						shouldHighlightAppearance(note, i, item) ? $style.rarelyAppearedSeparator : '',
+						isFloaterInfo(note, i, item) ? $style.floaterSeparator : '']">
+							<span>{{ getDateInfo(note, i, item) }}</span>
+						</div>
 
-					<MkNote :note="note" :class="$style.note" :withHardMute="true" :ignoreInheritedHardMute="false"/>
-				</template>
+						<MkNote :note="note" :class="$style.note" :withHardMute="true" :ignoreInheritedHardMute="false" />
+					</template>
+				</div>
 			</div>
-		</div>
-	</MkPagination>
-</div>
+		</MkPagination>
+	</div>
 </template>
 
 <script lang="ts" setup>
@@ -49,11 +46,16 @@ provide('inTimeline', true);
 // プロパティ定義
 const props = defineProps<{
 	anchorDate: number;
+	timeRange: number; // タブの時間範囲（ミリ秒）
+	displayNoteCount?: number; // 表示するノート数
 }>();
 
 // 参照
 const paginationComponent = shallowRef(null);
 const forceReload = ref(0);
+
+// デフォルト値の設定
+const displayCount = computed(() => props.displayNoteCount || 3);
 
 // ページネーション設定
 const followingPagination = computed(() => ({
@@ -63,6 +65,8 @@ const followingPagination = computed(() => ({
 	params: {
 		anchorDate: props.anchorDate,
 		forceReload: forceReload.value,
+		noteLimit: 0, // 0=日付差があるまで動的に取得
+		maxNoteLimit: 10, // 最大10件まで取得
 	},
 }));
 
@@ -111,11 +115,14 @@ function isToday(dateStr: string | Date): boolean {
 
 // 日付区切りを表示すべきか判断する関数
 function shouldShowDateSeparator(note: any, index: number, item: FloaterItem): boolean {
+	// 初浮上の場合は常に表示
+	if (item.isFirstPublicPost && index === 0) return true;
+
 	// グループ内の全てのノートが今日の日付かチェック
 	const allToday = item.notes.every(n => isToday(n.createdAt));
 
-	// 全て今日のノートなら日付区切りを表示しない
-	if (allToday) return false;
+	// 全て今日のノートなら日付区切りを表示しない（初浮上を除く）
+	if (allToday && !(item.isFirstPublicPost && index === 0)) return false;
 
 	// 最初のノートには常に表示（今日だけのグループでない場合）
 	if (index === 0) return true;
@@ -134,50 +141,70 @@ function getCombinedFloaterInfo(item: FloaterItem, noteIndex = 0, nextNote?: any
 		const currentNote = item.notes[noteIndex];
 		if (!currentNote) return '';
 
+		// 初浮上の場合の特別なメッセージ
+		if (item.isFirstPublicPost && noteIndex === 0) {
+			const userName = (currentNote.user.name || currentNote.user.username).replace(/:([\w-]+):/g, '').trim();
+			const dateStr = isToday(currentNote.createdAt) ? '今日' : formatDateTimeString(currentNote.createdAt, 'yyyy年M月d日');
+
+			// 初浮上メッセージを生成
+			const result = formatFloaterMessage('userFirstPublicPost', {
+				user: userName,
+				date: dateStr,
+			});
+
+			// キャッシュする
+			item._cachedInfo = result;
+			return result;
+		}
+
 		// 日付を取得
 		const currentDate = ensureDate(currentNote.createdAt);
 
-		// グループ内のノートが全て同じ日付かチェック
-		const allSameDay = item.notes.length > 1 &&
-      item.notes.every(n => isSameDay(n.createdAt, currentNote.createdAt));
-
-		// 全て同じ日付なら単純な日付表示（浮上情報なし）
-		if (allSameDay) {
-			// 今日の場合は何も表示しない
-			if (isToday(currentDate)) return '';
-
-			// 今日でない場合は単純に日付表示
-			return getDateText(currentDate);
+		// 全てのノートが今日の日付かどうかチェック
+		const allToday = item.notes.every(n => isToday(n.createdAt));
+		if (allToday && !(item.isFirstPublicPost && noteIndex === 0)) {
+			return ''; // 全て今日なら何も表示しない（初浮上を除く）
 		}
 
-		// グループ内の全てのノートが今日の日付かチェック
-		const allToday = item.notes.every(n => isToday(n.createdAt));
-		if (allToday) return ''; // 全て今日なら何も表示しない
+		// 日付差がないケースを早期リターン
+		if (item.notes.length > 1 && noteIndex === 0) {
+			const firstNote = item.notes[0];
+			const lastNote = item.notes[item.notes.length - 1];
 
-		// 比較対象のノートを選択
+			if (isSameDay(firstNote.createdAt, lastNote.createdAt)) {
+				// 同じ日付で今日でない場合は単純日付表示
+				if (!isToday(currentDate)) {
+					return getDateText(currentDate);
+				}
+				return ''; // 同じ日付で今日の場合は何も表示しない
+			}
+			// 日付差がある場合は後続処理に進む（浮上情報表示）
+		}
+
+		// 比較対象のノートを選択（ここから浮上情報の処理）
 		let compareNote = nextNote;
 
 		// nextNoteが指定されていない場合（主に最初のノート）
 		if (!compareNote && noteIndex === 0) {
-			// 最初のノートの場合、適切な比較対象を探す
+			// 最初のノートの場合、最後のノート（バックエンドが日付差のあるノートを含めている）を使用
 			if (item.notes.length > 1) {
-				// まず2番目のノートを取得
-				const secondNote = item.notes[1];
-				const secondDate = ensureDate(secondNote.createdAt);
-
-				// 2番目のノートが同じ日付かチェック
-				if (isSameDay(currentDate, secondDate) && item.notes.length > 2) {
-					// 同じ日付で3番目があれば、3番目のノートを使用
-					compareNote = item.notes[2];
-				} else {
-					// 日付が異なるか3番目がなければ2番目のノートを使用
-					compareNote = secondNote;
-				}
+				// バックエンドが日付差のあるノートまで動的に取得するモードでは、
+				// 日付の異なるノートも含まれている可能性が高い
+				compareNote = item.notes[item.notes.length - 1];
 			}
 		}
 
-		// 比較対象がない場合は単純な日付表示
-		if (!compareNote) return getDateText(currentDate);
+		// 比較対象がない場合は「珍しく浮上」として表示
+		if (!compareNote) {
+			const userName = (currentNote.user.name || currentNote.user.username).replace(/:([\w-]+):/g, '').trim();
+			const dateStr = isToday(currentDate) ? '今日' : formatDateTimeString(currentDate, 'yyyy年M月d日');
+
+			// 比較対象がないので「珍しく浮上」
+			return formatFloaterMessage('userRarelyAppeared', {
+				user: userName,
+				date: dateStr,
+			});
+		}
 
 		const compareDate = ensureDate(compareNote.createdAt);
 
@@ -200,7 +227,10 @@ function getCombinedFloaterInfo(item: FloaterItem, noteIndex = 0, nextNote?: any
 			return getDateText(currentDate);
 		}
 
-		let messageKey = !item.last && noteIndex === 0 ? 'userFirstPost' : 'userAfterNDays';
+		// 日付差がある場合は「X日ぶりに浮上」
+		// (スタイルによる強調は isRarelyAppeared 関数が担当)
+		const messageKey = 'userAfterNDays';
+
 		const params = {
 			user: userName,
 			date: dateStr,
@@ -247,6 +277,7 @@ interface FloaterItem {
 		// 他のノートプロパティ
 	}>;
 	_cachedInfo?: string; // キャッシュ用
+	isFirstPublicPost?: boolean; // 初浮上かどうか
 }
 
 // 日付計算を専門にする関数
@@ -332,6 +363,45 @@ function getDateInfo(note: any, index: number, item: FloaterItem): string {
 	return getDateText(ensureDate(note.createdAt));
 }
 
+// 久々に浮上かどうかを判定する関数（スタイル適用用）
+function shouldHighlightAppearance(note: any, index: number, item: FloaterItem): boolean {
+	// 初浮上の場合は除外
+	if (item.isFirstPublicPost && index === 0) return false;
+
+	// 1. 比較対象のノートが取得できない場合（前のノートが存在しない）
+	if (index === 0 && item.notes.length <= 1) return true;
+
+	// 2. 比較対象を特定
+	let compareNote;
+
+	if (index === 0) {
+		// 最初のノートの場合
+		// バックエンドが日付差のあるノートまで動的に取得するため
+		// 最後のノートは日付の異なるノートになっている可能性が高い
+		compareNote = item.notes[item.notes.length - 1];
+	} else {
+		// 中間ノートの場合は前のノートと比較
+		compareNote = item.notes[index - 1];
+	}
+
+	if (!compareNote) return false;
+
+	// 3. 日付差を計算
+	const currentDate = ensureDate(note.createdAt);
+	const compareDate = ensureDate(compareNote.createdAt);
+
+	// 同じ日ならスキップ
+	if (isSameDay(currentDate, compareDate)) return false;
+
+	const diffDays = calculateDaysDifference(compareDate, currentDate);
+
+	// 4. タブの時間範囲との比較
+	const tabRangeDays = props.timeRange / (1000 * 60 * 60 * 24);
+
+	// タブの日数範囲の2倍以上前からの浮上なら強調表示
+	return diffDays >= tabRangeDays * 2;
+}
+
 // コンポーネントの関数を外部に公開
 defineExpose({
 	reload,
@@ -354,7 +424,7 @@ defineExpose({
 			margin-bottom: var(--MI-margin);
 
 			// 共通スタイルを変数として定義
-			$separator-padding: 8px 0;
+			$separator-padding: 6px 0;
 			$separator-color: var(--MI_THEME-fgOnX);
 			$separator-bg: var(--MI_THEME-panel);
 			$separator-border: solid 0.5px var(--MI_THEME-divider);
@@ -370,25 +440,43 @@ defineExpose({
 				border-bottom: $separator-border;
 				margin: 0;
 				background: $separator-bg;
+				opacity: 0.75;
 
 				span {
 					display: inline-block;
 					position: relative;
 					padding: 0 16px;
-					font-size: 0.9em;
-					line-height: 1.5em;
-					font-weight: 500;
+					font-size: 0.8em;
+					line-height: 1.0em;
+					font-weight: normal;
 				}
 
 				// モディファイアとして追加
 				&.floaterSeparator {
 					border-top-left-radius: $border-radius;
 					border-top-right-radius: $border-radius;
-					padding: 10px 0;
+					padding: 6px 0;
 				}
 
 				&.firstDateSeparator {
 					border-top: none;
+				}
+
+				// 強調表示の共通スタイル
+				&.firstPublicPostSeparator,
+				&.rarelyAppearedSeparator {
+					background: $separator-bg;
+					font-weight: bold;
+					opacity: 1;
+				}
+
+				// 個別の色指定
+				&.firstPublicPostSeparator {
+					color: var(--MI_THEME-accent); // 初浮上はアクセント色
+				}
+
+				&.rarelyAppearedSeparator {
+					color: var(--MI_THEME-warning); // 久々に浮上は警告色
 				}
 			}
 
