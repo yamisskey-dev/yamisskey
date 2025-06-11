@@ -22,7 +22,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<div ref="bannerEl" class="banner" :style="style"></div>
 							<div class="fade"></div>
 							<div class="title">
-								<MkUserName class="name" :user="user" :nowrap="true"/>
+								<div class="name">
+									<MkUserName :user="user" :nowrap="true"/>
+									<button v-if="nicknameState.enabled.value" class="_button nickname-button" @click="editNickname(user)">
+										<i class="ti ti-edit"/> {{ i18n.ts.editNickname }}
+									</button>
+								</div>
 								<div class="bottom">
 									<span class="username"><MkAcct :user="user" :detail="true"/></span>
 									<span v-if="user.isAdmin" :title="i18n.ts.isAdmin" style="color: var(--MI_THEME-badge);"><i class="ti ti-shield"></i></span>
@@ -42,11 +47,17 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<MkAvatar class="avatar" :user="user" indicator/>
 						<div class="title">
 							<MkUserName :user="user" :nowrap="false" class="name"/>
+							<button v-if="nicknameState.enabled.value" class="_button nickname-button" @click="editNickname(user)">
+								<i class="ti ti-edit"/> {{ i18n.ts.editNickname }}
+							</button>
 							<div class="bottom">
 								<span class="username"><MkAcct :user="user" :detail="true"/></span>
 								<span v-if="user.isAdmin" :title="i18n.ts.isAdmin" style="color: var(--MI_THEME-badge);"><i class="ti ti-shield"></i></span>
 								<span v-if="user.isLocked" :title="i18n.ts.isLocked"><i class="ti ti-lock"></i></span>
 								<span v-if="user.isBot" :title="i18n.ts.isBot"><i class="ti ti-robot"></i></span>
+								<button v-if="$i && !isEditingMemo && !memoDraft" class="_button add-note-button" @click="showMemoTextarea">
+									<i class="ti ti-edit"/> {{ i18n.ts.addMemo }}
+								</button>
 							</div>
 						</div>
 						<div v-if="user.followedMessage != null" class="followedMessage">
@@ -219,9 +230,10 @@ import MkSparkle from '@/components/MkSparkle.vue';
 import { prefer } from '@/preferences.js';
 import MkPullToRefresh from '@/components/MkPullToRefresh.vue';
 import { shouldHideNotesCount, shouldHideFollowingCount, shouldHideFollowersCount } from '@/utility/shouldHideCount.js';
+import { editNickname, nicknameState } from '@/utility/edit-nickname.js';
 
 const emit = defineEmits<{
-  (ev: 'showMoreFiles'): void;
+	(ev: 'showMoreFiles'): void;
 }>();
 
 function calcAge(birthdate: string): number {
@@ -470,13 +482,28 @@ onUnmounted(() => {
 						color: #fff;
 
 						> .name {
-							display: block;
+							display: flex;
+							gap: 8px;
 							margin: -10px;
 							padding: 10px;
 							line-height: 32px;
 							font-weight: bold;
 							font-size: 1.8em;
 							filter: drop-shadow(0 0 4px #000);
+
+							> .nickname-button {
+								-webkit-backdrop-filter: var(--MI-blur, blur(8px));
+								backdrop-filter: var(--MI-blur, blur(8px));
+								background: rgba(0, 0, 0, 0.2);
+								color: #fff;
+								border-radius: 24px;
+								padding: 4px 8px;
+								font-size: 0.5em; /* 親要素に対して相対的に小さく */
+								line-height: normal; /* 親の line-height をリセット */
+								font-weight: normal; /* 親の font-weight をリセット */
+								filter: none; /* 親の drop-shadow を解除 */
+								align-self: center; /* 縦方向の中央揃え */
+							}
 						}
 
 						> .bottom {
