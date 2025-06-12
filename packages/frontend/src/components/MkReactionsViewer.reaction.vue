@@ -38,6 +38,7 @@ import { prefer } from '@/preferences.js';
 import { DI } from '@/di.js';
 import { noteEvents } from '@/composables/use-note-capture.js';
 import { mute as muteEmoji, unmute as unmuteEmoji, checkMuted as isEmojiMuted } from '@/utility/emoji-mute.js';
+import { fetchMutings, filterMutedReactionUsers, isReactionFromMutedUsersOnly } from '@/utility/hide-reactions-from-muted-users';
 
 const props = defineProps<{
 	noteId: Misskey.entities.Note['id'];
@@ -46,6 +47,7 @@ const props = defineProps<{
 	myReaction: Misskey.entities.Note['myReaction'];
 	count: number;
 	isInitial: boolean;
+	hideReactionCount?: boolean;
 }>();
 
 const mock = inject(DI.mock, false);
@@ -201,8 +203,23 @@ async function menu(ev) {
 	os.popupMenu(menuItems, ev.currentTarget ?? ev.target);
 }
 
-function anime() {
+async function isReactionFromMutedUser(reaction) {
+	if (!$i || !prefer.s.hideReactionsFromMutedUsers) return false;
+
+	// ユーティリティ関数を使用してミュートユーザーだけからのリアクションかチェック
+	return await isReactionFromMutedUsersOnly(props.noteId, reaction);
+}
+
+async function anime() {
 	if (window.document.hidden || !prefer.s.animation || buttonEl.value == null) return;
+
+	// ミュートユーザーからのリアクションなら非表示設定時にアニメーションをスキップ
+	if (prefer.s.hideReactionsFromMutedUsers) {
+		// ミュートユーザーだけからのリアクションかチェック
+		if (await isReactionFromMutedUser(props.reaction)) {
+			return;
+		}
+	}
 
 	const rect = buttonEl.value.getBoundingClientRect();
 	const x = rect.left + 16;
@@ -218,20 +235,42 @@ watch(() => props.count, (newCount, oldCount) => {
 
 onMounted(() => {
 	if (!props.isInitial) anime();
+
+	// ミュート設定が有効かつログイン済みの場合のみミュートリストを取得
+	if (prefer.s.hideReactionsFromMutedUsers && $i) {
+		fetchMutings();
+	}
 });
 
+// ツールチップ処理
 if (!mock) {
 	useTooltip(buttonEl, async (showing) => {
-		const reactions = await misskeyApiGet('notes/reactions', {
+		const useGet = !prefer.s.hideReactionsFromMutedUsers;
+		const apiCall = useGet ? misskeyApiGet : misskeyApi;
+
+		// ミュート情報を最新化
+		if (prefer.s.hideReactionsFromMutedUsers && $i) {
+			await fetchMutings();
+		}
+
+		// リアクションの取得
+		const reactions = !prefer.s.hideReactionUsers ? await apiCall('notes/reactions', {
 			noteId: props.noteId,
 			type: props.reaction,
 			limit: 10,
 			_cacheKey_: props.count,
-		});
+		}) : [];
 
-		const users = reactions.map(x => x.user) || [];
+		// ミュートユーザーをフィルタリング
+		const filteredReactions = prefer.s.hideReactionsFromMutedUsers
+			? filterMutedReactionUsers(reactions)
+			: reactions;
+
+		// ユーザーリストを抽出
+		const users = filteredReactions.map(x => x.user);
 		const count = users.length;
 
+		// ポップアップ表示
 		const { dispose } = os.popup(XDetails, {
 			showing,
 			reaction: props.reaction,

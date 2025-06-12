@@ -5805,6 +5805,14 @@ export interface Locale extends ILocale {
      * ニックネーム設定
      */
     "nicknameMap": string;
+    /**
+     * リアクション統計を非表示
+     */
+    "hideReactionStats": string;
+    /**
+     * ノートのリアクション統計を非表示にします。
+     */
+    "hideReactionStatsDescription": string;
     "_chat": {
         /**
          * まだメッセージはありません
@@ -12005,9 +12013,9 @@ export interface Locale extends ILocale {
          */
         "native": string;
     };
-    "_reactionChecksMuting": {
+    "_hideReactionsFromMutedUsers": {
         /**
-         * リアクションでミュートを考慮する
+         * ミュートユーザーのリアクションを非表示
          */
         "title": string;
         /**

@@ -141,7 +141,7 @@ export function migrateOldSettings() {
 		prefer.commit('defaultScheduledNoteDelete', store.s.defaultScheduledNoteDelete);
 		prefer.commit('defaultScheduledNoteDeleteTime', store.s.defaultScheduledNoteDeleteTime);
 		prefer.commit('customFont', store.s.customFont);
-		prefer.commit('reactionChecksMuting', store.s.reactionChecksMuting);
+		prefer.commit('hideReactionsFromMutedUsers', store.s.hideReactionsFromMutedUsers);
 		prefer.commit('hideReactionUsers', store.s.hideReactionUsers);
 		prefer.commit('hideReactionCount', store.s.hideReactionCount);
 		prefer.commit('instanceIcon', store.s.instanceIcon);

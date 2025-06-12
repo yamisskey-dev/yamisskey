@@ -30,11 +30,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import * as Misskey from 'misskey-js';
-import { inject, watch, ref } from 'vue';
+import { inject, watch, ref, onMounted, computed } from 'vue';
 import { TransitionGroup } from 'vue';
 import XReaction from '@/components/MkReactionsViewer.reaction.vue';
 import { prefer } from '@/preferences.js';
 import { DI } from '@/di.js';
+import { $i } from '@/i.js';
+// ユーティリティをインポート
+import { fetchMutings, filterMutedReactionCounts } from '@/utility/hide-reactions-from-muted-users';
 
 const props = withDefaults(defineProps<{
 	noteId: Misskey.entities.Note['id'];
@@ -43,7 +46,9 @@ const props = withDefaults(defineProps<{
 	myReaction: Misskey.entities.Note['myReaction'];
 	maxNumber?: number;
 }>(), {
-	maxNumber: Infinity,
+	reactionEmojis: () => ({}),
+	myReaction: null,
+	maxNumber: 8,
 });
 
 const mock = inject(DI.mock, false);
@@ -70,33 +75,55 @@ function onMockToggleReaction(emoji: string, count: number) {
 	emit('mockUpdateMyReaction', emoji, (count - _reactions.value[i][1]));
 }
 
-watch([() => props.reactions, () => props.maxNumber], ([newSource, maxNumber]) => {
-	let newReactions: [string, number][] = [];
-	hasMoreReactions.value = Object.keys(newSource).length > maxNumber;
+// リアクションリストの更新処理を関数化
+async function updateVisibleReactions() {
+  // ミュートユーザーからのリアクションを除外（設定が有効な場合のみ）
+  const visibleReactions = prefer.s.hideReactionsFromMutedUsers && $i
+    ? await filterMutedReactionCounts(props.reactions, props.noteId)
+    : { ...props.reactions };
 
-	for (let i = 0; i < _reactions.value.length; i++) {
-		const reaction = _reactions.value[i][0];
-		if (reaction in newSource && newSource[reaction] !== 0) {
-			_reactions.value[i][1] = newSource[reaction];
-			newReactions.push(_reactions.value[i]);
-		}
-	}
+  // 空の場合の早期リターン（ミュートユーザーのみからのリアクションがあるケース）
+  if (Object.keys(visibleReactions).length === 0) {
+    _reactions.value = [];
+    hasMoreReactions.value = false;
+    return;
+  }
 
-	const newReactionsNames = newReactions.map(([x]) => x);
-	newReactions = [
-		...newReactions,
-		...Object.entries(newSource)
-			.sort(([, a], [, b]) => b - a)
-			.filter(([y], i) => i < maxNumber && !newReactionsNames.includes(y)),
-	];
+  // リアクションを降順に並べ替え
+  const reactions = [...Object.entries(visibleReactions)]
+    .sort((a, b) => b[1] - a[1]);
 
-	newReactions = newReactions.slice(0, props.maxNumber);
+  // 最大表示数を超える場合はスライス
+  if (props.maxNumber && reactions.length > props.maxNumber) {
+    _reactions.value = reactions.slice(0, props.maxNumber);
+    hasMoreReactions.value = true;
+  } else {
+    _reactions.value = reactions;
+    hasMoreReactions.value = false;
+  }
 
-	if (props.myReaction && !newReactions.map(([x]) => x).includes(props.myReaction)) {
-		newReactions.push([props.myReaction, newSource[props.myReaction]]);
-	}
+  // 自分のリアクションを処理
+  if (props.myReaction) {
+    // 自分のリアクションが含まれていなければ追加
+    if (!_reactions.value.some(([reaction]) => reaction === props.myReaction)) {
+      // 原本のリアクション数を使用
+      const count = props.reactions[props.myReaction] || 1;
+      _reactions.value.push([props.myReaction, count]);
+    }
+  }
+}
 
-	_reactions.value = newReactions;
+// コンポーネント初期化時にミュートリストを取得
+onMounted(async () => {
+  if (prefer.s.hideReactionsFromMutedUsers && $i) {
+    await fetchMutings();
+    updateVisibleReactions();
+  }
+});
+
+// リアクションリストの更新watcher
+watch([() => props.reactions, () => prefer.s.hideReactionsFromMutedUsers], () => {
+  updateVisibleReactions();
 }, { immediate: true, deep: true });
 </script>
 

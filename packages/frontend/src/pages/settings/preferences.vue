@@ -261,39 +261,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkPreferenceContainer>
 							</SearchMarker>
 
-							<!-- リアクションユーザー非表示（独自機能） -->
-							<SearchMarker :keywords="['reaction', 'hide', 'user']">
-								<MkPreferenceContainer k="hideReactionUsers">
-									<MkSwitch v-model="hideReactionUsers">
-										<template #label><SearchLabel>{{ i18n.ts.hideReactionUsers }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-										<template #caption><SearchKeyword>{{ i18n.ts.hideReactionUsersDescription }}</SearchKeyword></template>
-									</MkSwitch>
-								</MkPreferenceContainer>
-							</SearchMarker>
-
-							<!-- リアクション数非表示（独自機能） -->
-							<SearchMarker :keywords="['reaction', 'hide', 'count']">
-								<MkPreferenceContainer k="hideReactionCount">
-									<MkSelect v-model="hideReactionCount">
-										<template #label><SearchLabel>{{ i18n.ts.hideReactionCount }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-										<option value="none">{{ i18n.ts._hideReactionCount.none }}</option>
-										<option value="self">{{ i18n.ts._hideReactionCount.self }}</option>
-										<option value="others">{{ i18n.ts._hideReactionCount.others }}</option>
-										<option value="all">{{ i18n.ts._hideReactionCount.all }}</option>
-									</MkSelect>
-								</MkPreferenceContainer>
-							</SearchMarker>
-
-							<!-- リアクション時のミュート確認（独自機能） -->
-							<SearchMarker :keywords="['reaction', 'mute', 'check']">
-								<MkPreferenceContainer k="reactionChecksMuting">
-									<MkSwitch v-model="reactionChecksMuting">
-										<template #label><SearchLabel>{{ i18n.ts._reactionChecksMuting.title }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-										<template #caption><SearchKeyword>{{ i18n.ts._reactionChecksMuting.caption }}</SearchKeyword></template>
-									</MkSwitch>
-								</MkPreferenceContainer>
-							</SearchMarker>
-
 							<SearchMarker :keywords="['attachment', 'image', 'photo', 'picture', 'media', 'thumbnail', 'list', 'size', 'height']">
 								<MkPreferenceContainer k="mediaListWithOneImageAppearance">
 									<MkRadios v-model="mediaListWithOneImageAppearance">
@@ -906,6 +873,44 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkFolder>
 							</SearchMarker>
 						</div>
+
+						<div class="_gaps_s">
+							<SearchMarker :keywords="['reaction', 'stats', 'hide']">
+								<MkFolder>
+									<template #label><SearchLabel>{{ i18n.ts.hideReactionStats }}</SearchLabel></template>
+									<template #caption><SearchKeyword>{{ i18n.ts.hideReactionStatsDescription }}</SearchKeyword></template>
+
+									<div class="_gaps_s">
+										<!-- リアクションユーザー非表示（独自機能） -->
+										<MkPreferenceContainer k="hideReactionUsers">
+											<MkSwitch v-model="hideReactionUsers">
+												<template #label><SearchLabel>{{ i18n.ts.hideReactionUsers }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+												<template #caption><SearchKeyword>{{ i18n.ts.hideReactionUsersDescription }}</SearchKeyword></template>
+											</MkSwitch>
+										</MkPreferenceContainer>
+
+										<!-- リアクション数非表示（独自機能） -->
+										<MkPreferenceContainer k="hideReactionCount">
+											<MkSelect v-model="hideReactionCount">
+												<template #label><SearchLabel>{{ i18n.ts.hideReactionCount }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+												<option value="none">{{ i18n.ts._hideReactionCount.none }}</option>
+												<option value="self">{{ i18n.ts._hideReactionCount.self }}</option>
+												<option value="others">{{ i18n.ts._hideReactionCount.others }}</option>
+												<option value="all">{{ i18n.ts._hideReactionCount.all }}</option>
+											</MkSelect>
+										</MkPreferenceContainer>
+
+										<!-- ミュートユーザーのリアクション非表示（独自機能） -->
+										<MkPreferenceContainer k="hideReactionsFromMutedUsers">
+											<MkSwitch v-model="hideReactionsFromMutedUsers">
+												<template #label><SearchLabel>{{ i18n.ts._hideReactionsFromMutedUsers.title }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+												<template #caption><SearchKeyword>{{ i18n.ts._hideReactionsFromMutedUsers.caption }}</SearchKeyword></template>
+											</MkSwitch>
+										</MkPreferenceContainer>
+									</div>
+								</MkFolder>
+							</SearchMarker>
+						</div>
 					</div>
 				</MkFolder>
 			</SearchMarker>
@@ -1163,7 +1168,7 @@ const menuStyle = prefer.model('menuStyle');
 const makeEveryTextElementsSelectable = prefer.model('makeEveryTextElementsSelectable');
 const hideReactionUsers = prefer.model('hideReactionUsers');
 const hideReactionCount = prefer.model('hideReactionCount');
-const reactionChecksMuting = prefer.model('reactionChecksMuting');
+const hideReactionsFromMutedUsers = prefer.model('hideReactionsFromMutedUsers');
 const isNoteInYamiMode = prefer.model('isNoteInYamiMode');
 const defaultIsNoteInYamiMode = prefer.model('defaultIsNoteInYamiMode');
 const searchEngine = prefer.model('searchEngine');
@@ -1258,7 +1263,7 @@ watch([
 	makeEveryTextElementsSelectable,
 	hideReactionUsers,
 	hideReactionCount,
-	reactionChecksMuting,
+	hideReactionsFromMutedUsers,
 	enableHorizontalSwipe,
 	enablePullToRefresh,
 	reduceAnimation,

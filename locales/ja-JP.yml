@@ -1446,6 +1446,8 @@ editNickname: "ニックネームを編集"
 nicknameEnabled: "ニックネーム機能を有効にする"
 nicknameEnabledDescription: "他のユーザーに表示される独自のニックネームを設定できるようにします。"
 nicknameMap: "ニックネーム設定"
+hideReactionStats: "リアクション統計を非表示"
+hideReactionStatsDescription: "ノートのリアクション統計を非表示にします。"
 _chat:
   noMessagesYet: "まだメッセージはありません"
   newMessage: "新しいメッセージ"
@@ -3189,8 +3191,8 @@ _contextMenu:
   appWithShift: "Shiftキーでアプリケーション"
   native: "ブラウザのUI"
 
-_reactionChecksMuting:
-  title: "リアクションでミュートを考慮する"
+_hideReactionsFromMutedUsers:
+  title: "ミュートユーザーのリアクションを非表示"
   caption: "リアクションがミュートを考慮しますが、キャッシュが効かず通信量が増えることがあります。"
 
 _gridComponent:

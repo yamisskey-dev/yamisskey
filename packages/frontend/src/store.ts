@@ -556,7 +556,7 @@ export const store = markRaw(new Pizzax('base', {
 		where: 'device',
 		default: 'https://search.yami.ski/search?',
 	},
-	reactionChecksMuting: {
+	hideReactionsFromMutedUsers: {
 		where: 'device',
 		default: true,
 	},

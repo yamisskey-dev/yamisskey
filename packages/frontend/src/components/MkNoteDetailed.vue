@@ -205,7 +205,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div v-else-if="tab === 'reactions'" :class="$style.tab_reactions">
 			<div :class="$style.reactionTabs">
 				<button
-					v-for="reaction in Object.keys($appearNote.reactions)"
+					v-for="reaction in filteredReactions"
 					:key="reaction"
 					:class="[$style.reactionTab, { [$style.reactionTabActive]: reactionTabType === reaction }]"
 					class="_button"
@@ -239,7 +239,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, inject, onMounted, provide, ref, useTemplateRef } from 'vue';
+import { computed, inject, onMounted, provide, ref, useTemplateRef, watch } from 'vue';
 import * as mfm from 'mfm-js';
 import * as Misskey from 'misskey-js';
 import { isLink } from '@@/js/is-link.js';
@@ -285,6 +285,11 @@ import { prefer } from '@/preferences.js';
 import { getPluginHandlers } from '@/plugin.js';
 import { DI } from '@/di.js';
 import { globalEvents, useGlobalEvent } from '@/events.js';
+import {
+  fetchMutings,
+  filterMutedReactionCounts,
+  getFilteredReactionEmojis
+} from '@/utility/hide-reactions-from-muted-users';
 
 const props = withDefaults(defineProps<{
 	note: Misskey.entities.Note;
@@ -414,14 +419,61 @@ const renotesPagination = computed(() => ({
 	},
 }));
 
-const reactionsPagination = computed(() => ({
-	endpoint: 'notes/reactions',
-	limit: 10,
-	params: {
-		noteId: appearNote.id,
-		type: reactionTabType.value,
+const reactionsPagination = computed(() => {
+	// ミュート設定が有効な場合はPOST、無効な場合はGET
+	const useGet = !prefer.s.hideReactionsFromMutedUsers;
+
+	return {
+		endpoint: 'notes/reactions',
+		limit: 10,
+		params: {
+			noteId: appearNote.id,
+			type: reactionTabType.value,
+		},
+		// API呼び出し方法の指定
+		noPaging: true,
+		useGet: useGet,
+	};
+});
+
+// マウント時にミュートリストを取得
+onMounted(() => {
+	if (prefer.s.hideReactionsFromMutedUsers && $i) {
+		fetchMutings();
+	}
+});
+
+// フィルタリング済みのリアクション絵文字リスト
+const filteredReactions = ref<string[]>([]);
+
+// リアクションタブのデータを更新する関数（簡素化）
+async function updateReactionTabData() {
+	filteredReactions.value = await getFilteredReactionEmojis(
+		appearNote.id,
+		$appearNote.reactions
+	);
+}
+
+// タブが変わったときに更新（一箇所にまとめる）
+watch(
+	[() => tab.value, () => $appearNote.reactions, () => prefer.s.hideReactionsFromMutedUsers],
+	async () => {
+		if (tab.value === 'reactions') {
+			await updateReactionTabData();
+		}
 	},
-}));
+	{ deep: true }
+);
+
+// マウント時に1回だけ呼び出す
+onMounted(async () => {
+	if (prefer.s.hideReactionsFromMutedUsers && $i) {
+		await fetchMutings();
+		if (tab.value === 'reactions') {
+			await updateReactionTabData();
+		}
+	}
+});
 
 useTooltip(renoteButton, async (showing) => {
 	const renotes = await misskeyApi('notes/renotes', {

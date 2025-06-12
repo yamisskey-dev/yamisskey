@@ -508,7 +508,7 @@ export const PREF_DEF = definePreferences({
 	instanceIcon: {
 		default: true,
 	},
-	reactionChecksMuting: {
+	hideReactionsFromMutedUsers: {
 		default: true,
 	},
 	publicReactions: {
