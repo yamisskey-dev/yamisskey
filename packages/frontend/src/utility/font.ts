@@ -1,4 +1,3 @@
-import { watch } from 'vue';
 import { prefer } from '@/preferences.js';
 
 export const fontList = {
@@ -11,6 +10,21 @@ export const fontList = {
 		name: 'Noto Sans',
 		fontFamily: 'Noto Sans JP',
 		importUrl: 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap',
+	},
+	'noto-serif': {
+		name: 'Noto Serif JP',
+		fontFamily: 'Noto Serif JP',
+		importUrl: 'https://fonts.googleapis.com/css2?family=Noto+Serif+JP&display=swap',
+	},
+	'sawarabi-gothic': {
+		name: 'Sawarabi Gothic',
+		fontFamily: 'Sawarabi Gothic',
+		importUrl: 'https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap',
+	},
+	'sawarabi-mincho': {
+		name: 'Sawarabi Mincho',
+		fontFamily: 'Sawarabi Mincho',
+		importUrl: 'https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&display=swap',
 	},
 	'm-plus': {
 		name: 'M PLUS',
@@ -26,6 +40,16 @@ export const fontList = {
 		name: 'M PLUS 2',
 		fontFamily: 'M PLUS 2',
 		importUrl: 'https://fonts.googleapis.com/css2?family=M+PLUS+2&display=swap',
+	},
+	'murecho': {
+		name: 'Murecho',
+		fontFamily: 'Murecho',
+		importUrl: 'https://fonts.googleapis.com/css2?family=Murecho&display=swap',
+	},
+	'rocknroll-one': {
+		name: 'RocknRoll One',
+		fontFamily: 'RocknRoll One',
+		importUrl: 'https://fonts.googleapis.com/css2?family=RocknRoll+One&display=swap',
 	},
 	'klee-one': {
 		name: 'Klee One',
@@ -47,6 +71,11 @@ export const fontList = {
 		fontFamily: 'Yomogi',
 		importUrl: 'https://fonts.googleapis.com/css2?family=Yomogi&display=swap',
 	},
+	'kosugi': {
+		name: 'Kosugi',
+		fontFamily: 'Kosugi',
+		importUrl: 'https://fonts.googleapis.com/css2?family=Kosugi&display=swap',
+	},
 	'kosugi-maru': {
 		name: 'Kosugi Maru',
 		fontFamily: 'Kosugi Maru',
@@ -56,6 +85,16 @@ export const fontList = {
 		name: 'Hachi Maru Pop',
 		fontFamily: 'Hachi Maru Pop',
 		importUrl: 'https://fonts.googleapis.com/css2?family=Hachi+Maru+Pop&display=swap',
+	},
+	'mochiy-pop-one': {
+		name: 'Mochiy Pop One',
+		fontFamily: 'Mochiy Pop One',
+		importUrl: 'https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&display=swap',
+	},
+	'mochiy-pop-p-one': {
+		name: 'Mochiy Pop P One',
+		fontFamily: 'Mochiy Pop P One',
+		importUrl: 'https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&display=swap',
 	},
 	'yusei-magic': {
 		name: 'Yusei Magic',
@@ -109,8 +148,3 @@ export function applyFont(fontname: null | string) {
 if (prefer.s.customFont) {
 	applyFont(prefer.s.customFont);
 }
-
-// Set up watcher to change font when the setting changes
-watch(() => prefer.s.customFont, (font) => {
-	applyFont(font);
-}, { immediate: false });

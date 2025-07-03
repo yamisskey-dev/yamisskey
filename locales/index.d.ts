@@ -3847,6 +3847,10 @@ export interface Locale extends ILocale {
      */
     "deleteAccountConfirm": string;
     /**
+     * このアカウントの登録を拒否しますか？
+     */
+    "rejectAccountConfirm": string;
+    /**
      * パスワードが間違っています。
      */
     "incorrectPassword": string;
@@ -4051,9 +4055,9 @@ export interface Locale extends ILocale {
      */
     "approveAccount": string;
     /**
-     * 拒否してアカウント削除
+     * 拒否する
      */
-    "denyAccount": string;
+    "rejectAccount": string;
     /**
      * 承認済み
      */
@@ -4062,6 +4066,10 @@ export interface Locale extends ILocale {
      * 未承認
      */
     "notApproved": string;
+    /**
+     * 拒否済み
+     */
+    "rejected": string;
     /**
      * 承認状況
      */
@@ -4474,6 +4482,10 @@ export interface Locale extends ILocale {
      * サーバーへの登録はまだ承認されていません。しばらくしてから再度お試しください。登録時にメールアドレスを記入した場合は、登録が承認されたらメールでお知らせします。
      */
     "registerHasNotBeenApprovedYet": string;
+    /**
+     * サーバーへの登録は拒否されました。登録時にメールアドレスを記入した場合は、登録が拒否されたらメールでお知らせします。
+     */
+    "registerHasBeenRejected": string;
     /**
      * サーバーへの登録が承認されたかどうかの通知を行うために、併せてアカウント登録にメールアドレスを必須にすることを強く推奨します。
      */
@@ -5697,6 +5709,122 @@ export interface Locale extends ILocale {
      * 全ての「ヒントとコツ」を非表示
      */
     "hideAllTips": string;
+    /**
+     * メンタルヘルス
+     */
+    "mentalHealth": string;
+    /**
+     * 数字に囚われない体験のための設定
+     */
+    "mentalHealthDescription": string;
+    /**
+     * 自分の統計を非表示
+     */
+    "hidePersonalStats": string;
+    /**
+     * 自分のプロフィール統計を非表示にします
+     */
+    "hidePersonalStatsDescription": string;
+    /**
+     * 自分にノート数を非表示
+     */
+    "hideNotesCountMyself": string;
+    /**
+     * 投稿数を気にせず使えます
+     */
+    "hideNotesCountMyselfDescription": string;
+    /**
+     * 自分にフォロー数を非表示
+     */
+    "hideFollowingCountMyself": string;
+    /**
+     * フォロー数を気にせず使えます
+     */
+    "hideFollowingCountMyselfDescription": string;
+    /**
+     * 自分にフォロワー数を非表示
+     */
+    "hideFollowersCountMyself": string;
+    /**
+     * フォロワー数を気にせず使えます
+     */
+    "hideFollowersCountMyselfDescription": string;
+    /**
+     * 他人の統計を非表示
+     */
+    "hideOthersStats": string;
+    /**
+     * 他人のプロフィールの統計情報を非表示にします
+     */
+    "hideOthersStatsDescription": string;
+    /**
+     * 他人のノート数を非表示
+     */
+    "hideNotesCountOthers": string;
+    /**
+     * 他人のノート数が気にならなくなります
+     */
+    "hideNotesCountOthersDescription": string;
+    /**
+     * 他人のフォロー数を非表示
+     */
+    "hideFollowingCountOthers": string;
+    /**
+     * 他人のフォロー数が気にならなくなります
+     */
+    "hideFollowingCountOthersDescription": string;
+    /**
+     * 他人のフォロワー数を非表示
+     */
+    "hideFollowersCountOthers": string;
+    /**
+     * 他人のフォロワー数が気にならなくなります
+     */
+    "hideFollowersCountOthersDescription": string;
+    /**
+     * タイムラインを非表示
+     */
+    "hideTimelines": string;
+    /**
+     * 任意のタイムラインを非表示にします
+     */
+    "hideTimelinesDescription": string;
+    /**
+     * ローカルタイムラインを非表示にする
+     */
+    "hideLocalTimeLine": string;
+    /**
+     * ソーシャルタイムラインを非表示にする
+     */
+    "hideSocialTimeLine": string;
+    /**
+     * グローバルタイムラインを非表示にする
+     */
+    "hideGlobalTimeLine": string;
+    /**
+     * ニックネームを編集
+     */
+    "editNickname": string;
+    /**
+     * ニックネーム機能を有効にする
+     */
+    "nicknameEnabled": string;
+    /**
+     * 他のユーザーに表示される独自のニックネームを設定できるようにします。
+     */
+    "nicknameEnabledDescription": string;
+    /**
+     * ニックネーム設定
+     */
+    "nicknameMap": string;
+    /**
+     * デフォルトの画像圧縮度
+     */
+    "defaultImageCompressionLevel": string;
+    /**
+     * 低くすると画質を保てますが、ファイルサイズは増加します。<br>高くするとファイルサイズを減らせますが、画質は低下します。
+     */
+    "defaultImageCompressionLevel_description": string;
     "_chat": {
         /**
          * まだメッセージはありません
@@ -6041,6 +6169,10 @@ export interface Locale extends ILocale {
          * URLプレビューを表示する
          */
         "showUrlPreview": string;
+        /**
+         * 利用できるリアクションを先頭に表示
+         */
+        "showAvailableReactionsFirstInNote": string;
         "_chat": {
             /**
              * 送信者の名前を表示
@@ -10059,6 +10191,14 @@ export interface Locale extends ILocale {
     };
     "_postForm": {
         /**
+         * アップロードされていないファイルがありますが、破棄してフォームを閉じますか？
+         */
+        "quitInspiteOfThereAreUnuploadedFilesConfirm": string;
+        /**
+         * ファイルはまだアップロードされていません。ファイルのメニューから、リネームや画像のクロップ、ウォーターマークの付与、圧縮の有無などを設定できます。ファイルはノート投稿時に自動でアップロードされます。
+         */
+        "uploaderTip": string;
+        /**
          * このノートに返信...
          */
         "replyPlaceholder": string;
@@ -10337,11 +10477,15 @@ export interface Locale extends ILocale {
     "floater": string;
     "_floater": {
         /**
-         * {date}に{user}さんが珍しく浮上しました
+         * {date}に{user}が初めて浮上
          */
-        "userFirstPost": ParameterizedString<"date" | "user">;
+        "userFirstPublicPost": ParameterizedString<"date" | "user">;
         /**
-         * {date}に{user}さんが{n}日ぶりに浮上しました
+         * {date}に{user}が珍しく浮上
+         */
+        "userRarelyAppeared": ParameterizedString<"date" | "user">;
+        /**
+         * {date}に{user}が{n}日ぶりに浮上
          */
         "userAfterNDays": ParameterizedString<"date" | "user" | "n">;
     };
@@ -11198,6 +11342,10 @@ export interface Locale extends ILocale {
          * 承認済み
          */
         "approve": string;
+        /**
+         * 拒否済み
+         */
+        "reject": string;
         /**
          * 凍結
          */
@@ -12731,6 +12879,196 @@ export interface Locale extends ILocale {
          * 任意のユーザーが含まれるリストを作成できます。作成したリストはタイムラインとして表示可能です。
          */
         "tip": string;
+    };
+    /**
+     * ウォーターマーク
+     */
+    "watermark": string;
+    /**
+     * デフォルトのプリセット
+     */
+    "defaultPreset": string;
+    "_watermarkEditor": {
+        /**
+         * 画像にクレジット情報などのウォーターマークを追加することができます。
+         */
+        "tip": string;
+        /**
+         * 保存せずに終了しますか？
+         */
+        "quitWithoutSaveConfirm": string;
+        /**
+         * このファイルは対応していません
+         */
+        "driveFileTypeWarn": string;
+        /**
+         * 画像ファイルを選択してください
+         */
+        "driveFileTypeWarnDescription": string;
+        /**
+         * ウォーターマークの編集
+         */
+        "title": string;
+        /**
+         * 全体に被せる
+         */
+        "cover": string;
+        /**
+         * 敷き詰める
+         */
+        "repeat": string;
+        /**
+         * 不透明度
+         */
+        "opacity": string;
+        /**
+         * サイズ
+         */
+        "scale": string;
+        /**
+         * テキスト
+         */
+        "text": string;
+        /**
+         * 位置
+         */
+        "position": string;
+        /**
+         * タイプ
+         */
+        "type": string;
+        /**
+         * 画像
+         */
+        "image": string;
+        /**
+         * 高度
+         */
+        "advanced": string;
+        /**
+         * ストライプ
+         */
+        "stripe": string;
+        /**
+         * ラインの幅
+         */
+        "stripeWidth": string;
+        /**
+         * ラインの数
+         */
+        "stripeFrequency": string;
+        /**
+         * 角度
+         */
+        "angle": string;
+        /**
+         * ポルカドット
+         */
+        "polkadot": string;
+        /**
+         * チェッカー
+         */
+        "checker": string;
+        /**
+         * メインドットの不透明度
+         */
+        "polkadotMainDotOpacity": string;
+        /**
+         * メインドットの大きさ
+         */
+        "polkadotMainDotRadius": string;
+        /**
+         * サブドットの不透明度
+         */
+        "polkadotSubDotOpacity": string;
+        /**
+         * サブドットの大きさ
+         */
+        "polkadotSubDotRadius": string;
+        /**
+         * サブドットの数
+         */
+        "polkadotSubDotDivisions": string;
+    };
+    "_imageEffector": {
+        /**
+         * エフェクト
+         */
+        "title": string;
+        /**
+         * エフェクトを追加
+         */
+        "addEffect": string;
+        /**
+         * 変更を破棄して終了しますか？
+         */
+        "discardChangesConfirm": string;
+        "_fxs": {
+            /**
+             * 色収差
+             */
+            "chromaticAberration": string;
+            /**
+             * グリッチ
+             */
+            "glitch": string;
+            /**
+             * ミラー
+             */
+            "mirror": string;
+            /**
+             * 色の反転
+             */
+            "invert": string;
+            /**
+             * 白黒
+             */
+            "grayscale": string;
+            /**
+             * 色調補正
+             */
+            "colorAdjust": string;
+            /**
+             * 色の圧縮
+             */
+            "colorClamp": string;
+            /**
+             * 色の圧縮(高度)
+             */
+            "colorClampAdvanced": string;
+            /**
+             * 歪み
+             */
+            "distort": string;
+            /**
+             * 二値化
+             */
+            "threshold": string;
+            /**
+             * 集中線
+             */
+            "zoomLines": string;
+            /**
+             * ストライプ
+             */
+            "stripe": string;
+            /**
+             * ポルカドット
+             */
+            "polkadot": string;
+            /**
+             * チェッカー
+             */
+            "checker": string;
+            /**
+             * ブロックノイズ
+             */
+            "blockNoise": string;
+            /**
+             * ティアリング
+             */
+            "tearing": string;
+        };
     };
 }
 declare const locales: {

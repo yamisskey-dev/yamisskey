@@ -6,8 +6,7 @@ declare global {
 
 class JitsiApiService {
 	private api: any = null;
-	private domain = 'call.yami.ski';
-	private isScriptLoaded = false;
+	private isScriptLoaded: Record<string, boolean> = {};
 
 	// Misskeyの絵文字を除去する関数
 	private removeEmojiFromName(name: string | null): string | null {
@@ -20,26 +19,58 @@ class JitsiApiService {
 		return cleanedName || null;
 	}
 
-	async loadScript(): Promise<void> {
-		if (this.isScriptLoaded || window.JitsiMeetExternalAPI) {
-			this.isScriptLoaded = true;
+	async loadScript(domain: string): Promise<void> {
+		if (this.isScriptLoaded[domain] ||
+			(window.JitsiMeetExternalAPI && this.api?.getIFrame()?.src.includes(domain))) {
+			this.isScriptLoaded[domain] = true;
 			return;
 		}
 
 		return new Promise((resolve, reject) => {
 			const script = window.document.createElement('script');
-			script.src = `https://${this.domain}/external_api.js`;
+			script.src = `https://${domain}/external_api.js`;
 			script.onload = () => {
-				this.isScriptLoaded = true;
+				this.isScriptLoaded[domain] = true;
 				resolve();
 			};
-			script.onerror = () => reject(new Error('Failed to load Jitsi Meet API'));
+			script.onerror = () => reject(new Error(`Failed to load Jitsi Meet API from ${domain}`));
 			window.document.head.appendChild(script);
 		});
 	}
 
-	async startMeeting(roomName: string, containerId: string, displayName: string | null, email: string | null, avatarUrl: string | null | undefined): Promise<void> {
-		await this.loadScript();
+	async startMeeting(
+		domain: string,
+		roomName: string,
+		containerId: string,
+		displayName: string | null,
+		email: string | null,
+		config?: {
+			// 音声・ビデオ設定
+			startWithAudioMuted?: boolean;
+			startWithVideoMuted?: boolean;
+			startAudioOnly?: boolean;
+			requestAudioPermission?: boolean;
+			requestVideoPermission?: boolean;
+
+			// インターフェース設定
+			useThemeColor?: boolean;
+			customBackgroundColor?: string;
+			verticalFilmstrip?: boolean;
+			tileViewMaxColumns?: number;
+			videoLayoutFit?: string;
+
+			// 参加・表示設定
+			skipPrejoinPage?: boolean;
+			enableFaceCentering?: boolean;
+			disableTileEnlargement?: boolean;
+
+			// パフォーマンス設定
+			disableNotifications?: boolean;
+			resolution?: number;
+			enableLayerSuspension?: boolean;
+		},
+	): Promise<void> {
+		await this.loadScript(domain);
 
 		if (!window.JitsiMeetExternalAPI) {
 			throw new Error('JitsiMeetExternalAPI is not available');
@@ -66,12 +97,18 @@ class JitsiApiService {
 		// 絵文字を除去した名前を生成
 		const cleanedDisplayName = this.removeEmojiFromName(displayName);
 
-		console.log('User settings:', {
-			originalDisplayName: displayName,
-			cleanedDisplayName: cleanedDisplayName,
-			email,
-			avatarUrl,
-		});
+		// 設定のデフォルト値を設定
+		const configWithDefaults = {
+			startWithAudioMuted: false, // 音声はデフォルトで有効
+			startWithVideoMuted: true, // ビデオはデフォルトで無効
+			requestAudioPermission: true, // 音声権限はリクエスト
+			requestVideoPermission: false, // ビデオ権限はリクエストしない
+			useThemeColor: true, // テーマカラーを使用
+			customBackgroundColor: '#966BFF', // デフォルトの背景色
+			...config,
+		};
+
+		console.log('Jitsi meeting options:', configWithDefaults);
 
 		const options = {
 			roomName: roomName,
@@ -79,30 +116,44 @@ class JitsiApiService {
 			height: '100%',
 			parentNode: container,
 			userInfo: {
-				displayName: cleanedDisplayName ?? 'Anonymous',
-				email: email ?? undefined, // Gravatarで使用されるメールアドレス
-				avatarUrl: avatarUrl ?? undefined, // アバターURLがあれば設定
+				displayName: cleanedDisplayName || 'Anonymous',
+				email: email || undefined,
 			},
 			configOverwrite: {
-				startWithAudioMuted: true,
-				startWithVideoMuted: false,
+				// 音声・ビデオの初期状態
+				startWithAudioMuted: configWithDefaults.startWithAudioMuted,
+				startWithVideoMuted: configWithDefaults.startWithVideoMuted,
+				startAudioOnly: false,
+
+				// 参加前設定
 				enableWelcomePage: false,
 				prejoinPageEnabled: false,
 				defaultLanguage: 'ja',
+
+				// パフォーマンス設定
 				enableLayerSuspension: true,
 				resolution: 720,
-				// Gravatarを有効化
-				gravatar: {
-					baseUrl: 'https://www.gravatar.com/avatar/',
-					disabled: false,
+
+				// 顔検出と表示の最適化
+				faceLandmarks: {
+					enableFaceCentering: false,
 				},
-				disableThirdPartyRequests: false,
+				disableTileEnlargement: true,
+
+				// メディア権限設定
+				disableInitialGUM: !(configWithDefaults.requestAudioPermission || configWithDefaults.requestVideoPermission),
+
+				// 通知設定
+				notifications: [],
+
+				// メディア制約
 				constraints: {
-					video: {
+					video: configWithDefaults.requestVideoPermission ? {
 						aspectRatio: 16 / 9,
 						height: { ideal: 360, max: 720 },
 						width: { ideal: 640, max: 1280 },
-					},
+					} : false,
+					audio: configWithDefaults.requestAudioPermission,
 				},
 			},
 			interfaceConfigOverwrite: {
@@ -111,6 +162,13 @@ class JitsiApiService {
 				SHOW_WATERMARK_FOR_GUESTS: false,
 				MOBILE_APP_PROMO: false,
 				SHOW_PROMOTIONAL_CLOSE_PAGE: false,
+				VERTICAL_FILMSTRIP: false,
+
+				// 背景色設定
+				DEFAULT_BACKGROUND: configWithDefaults.useThemeColor
+					? 'var(--MI_THEME-accent)'
+					: configWithDefaults.customBackgroundColor,
+
 				TOOLBAR_BUTTONS: [
 					'microphone', 'camera', 'hangup', 'chat', 'settings',
 				],
@@ -119,28 +177,10 @@ class JitsiApiService {
 		};
 
 		try {
-			this.api = new window.JitsiMeetExternalAPI(this.domain, options);
-
-			// イベントリスナーを追加
-			this.api.addEventListener('videoConferenceJoined', () => {
-				console.log('Meeting joined successfully');
-			});
-
-			this.api.addEventListener('videoConferenceLeft', () => {
-				console.log('Meeting left');
-			});
-
-			// アバター変更イベントをリッスン（デバッグ用）
-			this.api.addEventListener('avatarChanged', (event: any) => {
-				console.log('Avatar changed event:', event);
-			});
-
-			// 参加者情報変更イベントもリッスン（デバッグ用）
-			this.api.addEventListener('displayNameChange', (event: any) => {
-				console.log('Display name changed:', event);
-			});
+			this.api = new window.JitsiMeetExternalAPI(domain, options);
+			console.log('Jitsi Meet API initialized with domain:', domain);
 		} catch (error) {
-			console.error('Failed to create Jitsi meeting:', error);
+			console.error(`Failed to initialize Jitsi Meet API for domain ${domain}:`, error);
 			throw error;
 		}
 	}

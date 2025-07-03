@@ -9,7 +9,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkTip v-if="isBasicTimeline(src)" :k="`tl.${src}`" style="margin-bottom: var(--MI-margin);">
 			{{ i18n.ts._timelineDescription[src] }}
 		</MkTip>
-		<MkPostForm v-if="prefer.r.showFixedPostForm.value" :class="$style.postForm" class="_panel" fixed style="margin-bottom: var(--MI-margin);" :isInYamiTimeline="src === 'yami'"/>
+		<MkPostForm v-if="prefer.r.showFixedPostForm.value" :class="$style.postForm" class="_panel" fixed style="margin-bottom: var(--MI-margin);" :isInYamiTimeline="src === 'yami'" :isInNormalTimeline="src !== 'yami'"/>
 		<MkStreamingNotesTimeline
 			ref="tlComponent"
 			:key="src + withRenotes + withReplies + withHashtags + withFiles + localOnly + remoteOnly + withSensitive"
@@ -282,18 +282,25 @@ const headerActions = computed(() => {
 			icon: 'ti ti-dots',
 			text: i18n.ts.options,
 			handler: (ev) => {
-				const menuItems: MenuItem[] = [
-					...filterItems.value,
-					{
-						type: 'switch',
-						text: i18n.ts.showRenotes,
-						ref: withRenotes,
-					},
-				];
+				const menuItems: MenuItem[] = [];
+
+				// フィルター項目があれば追加
+				if (filterItems.value.length > 0) {
+					menuItems.push(...filterItems.value);
+				}
+
+				// リノートの表示切り替え（アイコン付き）
+				menuItems.push({
+					type: 'switch',
+					icon: 'ti ti-repeat',
+					text: i18n.ts.showRenotes,
+					ref: withRenotes,
+				});
 
 				if (isBasicTimeline(src.value) && hasWithReplies(src.value)) {
 					menuItems.push({
 						type: 'switch',
+						icon: 'ti ti-messages',
 						text: i18n.ts.showRepliesToOthersInTimeline,
 						ref: withReplies,
 						disabled: withFiles,
@@ -302,10 +309,12 @@ const headerActions = computed(() => {
 
 				menuItems.push({
 					type: 'switch',
+					icon: 'ti ti-eye-exclamation',
 					text: i18n.ts.withSensitive,
 					ref: withSensitive,
 				}, {
 					type: 'switch',
+					icon: 'ti ti-photo',
 					text: i18n.ts.fileAttachedOnly,
 					ref: withFiles,
 					disabled: isBasicTimeline(src.value) && hasWithReplies(src.value) ? withReplies : false,

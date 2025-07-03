@@ -90,6 +90,7 @@ import type {
 	AdminQueueShowJobRequest,
 	AdminQueueShowJobResponse,
 	AdminQueueStatsResponse,
+	AdminRejectUserRequest,
 	AdminRelaysAddRequest,
 	AdminRelaysAddResponse,
 	AdminRelaysListResponse,
@@ -723,6 +724,7 @@ export type Endpoints = {
 	'admin/queue/retry-job': { req: AdminQueueRetryJobRequest; res: EmptyResponse };
 	'admin/queue/show-job': { req: AdminQueueShowJobRequest; res: AdminQueueShowJobResponse };
 	'admin/queue/stats': { req: EmptyRequest; res: AdminQueueStatsResponse };
+	'admin/reject-user': { req: AdminRejectUserRequest; res: EmptyResponse };
 	'admin/relays/add': { req: AdminRelaysAddRequest; res: AdminRelaysAddResponse };
 	'admin/relays/list': { req: EmptyRequest; res: AdminRelaysListResponse };
 	'admin/relays/remove': { req: AdminRelaysRemoveRequest; res: EmptyResponse };
@@ -813,6 +815,7 @@ export type Endpoints = {
 	'chat/messages/show': { req: ChatMessagesShowRequest; res: ChatMessagesShowResponse };
 	'chat/messages/unreact': { req: ChatMessagesUnreactRequest; res: EmptyResponse };
 	'chat/messages/user-timeline': { req: ChatMessagesUserTimelineRequest; res: ChatMessagesUserTimelineResponse };
+	'chat/read-all': { req: EmptyRequest; res: EmptyResponse };
 	'chat/rooms/create': { req: ChatRoomsCreateRequest; res: ChatRoomsCreateResponse };
 	'chat/rooms/delete': { req: ChatRoomsDeleteRequest; res: EmptyResponse };
 	'chat/rooms/invitations/create': { req: ChatRoomsInvitationsCreateRequest; res: ChatRoomsInvitationsCreateResponse };
