@@ -39,7 +39,6 @@ export type SearchOpts = {
 	channelId?: MiNote['channelId'] | null;
 	host?: string | null;
 	excludeYamiMode?: boolean;
-	yamiModeOnly?: boolean;
 	meId?: string;
 };
 
@@ -258,9 +257,6 @@ export class SearchService {
 					qb.orWhere('note.userId = :meId', { meId: opts.meId });
 				}
 			}));
-		} else if (opts.yamiModeOnly) {
-			// やみノートのみを検索対象とする
-			query.andWhere('note.isNoteInYamiMode = TRUE');
 		}
 
 		this.queryService.generateVisibilityQuery(query, me);
