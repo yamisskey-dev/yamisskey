@@ -388,10 +388,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</MkSwitch>
 					</MkFolder>
 
-					<MkFolder v-if="matchQuery([i18n.ts._role._options.canAddRoles, 'canAddRoles'])">
-						<template #label>{{ i18n.ts._role._options.canAddRoles }}</template>
-						<template #suffix>{{ policies.canAddRoles ? i18n.ts.yes : i18n.ts.no }}</template>
-						<MkSwitch v-model="policies.canAddRoles">
+					<MkFolder v-if="matchQuery([i18n.ts._role._options.canEditCommunityRoles, 'canEditCommunityRoles'])">
+						<template #label>{{ i18n.ts._role._options.canEditCommunityRoles }}</template>
+						<template #suffix>{{ policies.canEditCommunityRoles ? i18n.ts.yes : i18n.ts.no }}</template>
+						<MkSwitch v-model="policies.canEditCommunityRoles">
 							<template #label>{{ i18n.ts.enable }}</template>
 						</MkSwitch>
 					</MkFolder>
@@ -402,19 +402,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<MkFoldableSection>
 					<template #header>{{ i18n.ts._role.manualRoles }}</template>
 					<div class="_gaps_s">
-						<MkRolePreview v-for="role in roles.filter(x => x.target === 'manual' && x.permissionGroup !== 'Community')" :key="role.id" :role="role" :forModeration="true"/>
+						<MkRolePreview v-for="role in roles.filter(x => x.target === 'manual' && !x.isCommunity)" :key="role.id" :role="role" :forModeration="true"/>
 					</div>
 				</MkFoldableSection>
 				<MkFoldableSection>
 					<template #header>{{ i18n.ts._role.conditionalRoles }}</template>
 					<div class="_gaps_s">
-						<MkRolePreview v-for="role in roles.filter(x => x.target === 'conditional' && x.permissionGroup !== 'Community')" :key="role.id" :role="role" :forModeration="true"/>
+						<MkRolePreview v-for="role in roles.filter(x => x.target === 'conditional' && !x.isCommunity)" :key="role.id" :role="role" :forModeration="true"/>
 					</div>
 				</MkFoldableSection>
 				<MkFoldableSection>
 					<template #header>{{ i18n.ts.communityRole }}</template>
 					<div class="_gaps_s">
-						<MkRolePreview v-for="role in roles.filter(x => x.permissionGroup === 'Community')" :key="role.id" :role="role" :forModeration="true"/>
+						<MkRolePreview v-for="role in roles.filter(x => x.isCommunity)" :key="role.id" :role="role" :forModeration="true"/>
 					</div>
 				</MkFoldableSection>
 			</div>

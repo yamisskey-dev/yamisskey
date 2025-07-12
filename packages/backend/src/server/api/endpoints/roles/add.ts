@@ -71,7 +71,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 			if (ps.name.trim().length === 0) throw new ApiError(meta.errors.emptyName);
 
 			const policies = await this.roleService.getUserPolicies(me ? me.id : null);
-			if (!policies.canAddRoles) {
+			if (!policies.canEditCommunityRoles) {
 				throw new ApiError(meta.errors.notAllowed);
 			}
 
@@ -89,11 +89,12 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 				asBadge: ps.asBadge,
 				isPublic: ps.isPublic,
 				isExplorable: ps.isExplorable,
-				permissionGroup: 'Community',
+				isCommunity: true,
+				isAdministrator: false,
+				isModerator: false,
 				canEditMembersByModerator: true,
 				displayOrder: 0,
 				policies: {},
-				userId: me.id,
 			}).then(x => this.rolesRepository.findOneByOrFail(x.identifiers[0]));
 
 			this.globalEventService.publishInternalEvent('roleCreated', created);
