@@ -298,7 +298,6 @@ export type DriveFilesShowRequest = operations['drive___files___show']['requestB
 export type DriveFilesShowResponse = operations['drive___files___show']['responses']['200']['content']['application/json'];
 export type DriveFilesUpdateRequest = operations['drive___files___update']['requestBody']['content']['application/json'];
 export type DriveFilesUpdateResponse = operations['drive___files___update']['responses']['200']['content']['application/json'];
-export type DriveFilesUploadFromUrlRequest = operations['drive___files___upload-from-url']['requestBody']['content']['application/json'];
 export type DriveFoldersRequest = operations['drive___folders']['requestBody']['content']['application/json'];
 export type DriveFoldersResponse = operations['drive___folders']['responses']['200']['content']['application/json'];
 export type DriveFoldersCreateRequest = operations['drive___folders___create']['requestBody']['content']['application/json'];

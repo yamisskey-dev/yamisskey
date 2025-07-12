@@ -2153,17 +2153,6 @@ declare module '../api.js' {
     ): Promise<SwitchCaseResponseType<E, P>>;
 
     /**
-     * Request the server to download a new drive file from the specified URL.
-     * 
-     * **Credential required**: *Yes* / **Permission**: *write:drive*
-     */
-    request<E extends 'drive/files/upload-from-url', P extends Endpoints[E]['req']>(
-      endpoint: E,
-      params: P,
-      credential?: string | null,
-    ): Promise<SwitchCaseResponseType<E, P>>;
-
-    /**
      * No description provided.
      * 
      * **Credential required**: *Yes* / **Permission**: *read:drive*

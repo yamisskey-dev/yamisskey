@@ -4285,28 +4285,6 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
-    '/drive/files/upload-from-url': {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * drive/files/upload-from-url
-         * @description Request the server to download a new drive file from the specified URL.
-         *
-         *     **Credential required**: *Yes* / **Permission**: *write:drive*
-         */
-        post: operations['drive___files___upload-from-url'];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     '/drive/folders': {
         parameters: {
             query?: never;
@@ -16972,8 +16950,7 @@ export interface operations {
                     isPublic: boolean;
                     isModerator: boolean;
                     isAdministrator: boolean;
-                    /** @default false */
-                    isCommunity: boolean;
+                    isCommunity?: boolean;
                     /** @default false */
                     isExplorable?: boolean;
                     asBadge: boolean;
@@ -26538,97 +26515,6 @@ export interface operations {
             };
             /** @description I'm Ai */
             418: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['Error'];
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['Error'];
-                };
-            };
-        };
-    };
-    'drive___files___upload-from-url': {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                'application/json': {
-                    url: string;
-                    /**
-                     * Format: misskey:id
-                     * @default null
-                     */
-                    folderId?: string | null;
-                    /** @default false */
-                    isSensitive?: boolean;
-                    /** @default null */
-                    comment?: string | null;
-                    /** @default null */
-                    marker?: string | null;
-                    /** @default false */
-                    force?: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description OK (without any results) */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Client error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['Error'];
-                };
-            };
-            /** @description Authentication error */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['Error'];
-                };
-            };
-            /** @description Forbidden error */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['Error'];
-                };
-            };
-            /** @description I'm Ai */
-            418: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['Error'];
-                };
-            };
-            /** @description Too many requests */
-            429: {
                 headers: {
                     [name: string]: unknown;
                 };
