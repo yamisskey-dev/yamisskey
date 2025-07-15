@@ -191,9 +191,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<SearchMarker :keywords="['pinned', 'channel']">
 								<MkFolder>
 									<template #label><SearchLabel>{{ i18n.ts.pinnedChannel }}</SearchLabel></template>
-									<!-- 複数ピン止め管理できるようにしたいけどめんどいので一旦ひとつのみ -->
-									<MkButton v-if="prefer.r.pinnedChannels.value.length === 0" @click="setPinnedChannel()">{{ i18n.ts.add }}</MkButton>
-									<MkButton v-else danger @click="removePinnedChannel()"><i class="ti ti-trash"></i> {{ i18n.ts.remove }}</MkButton>
+									<div class="_gaps_s">
+										<div v-for="channel in prefer.r.pinnedChannels.value" :key="channel.id" class="_gaps_s">
+											<div style="display: flex; align-items: center; gap: 8px;">
+												<i class="ti ti-device-tv"></i>
+												<span>{{ channel.name }}</span>
+												<MkButton danger style="margin-left: auto;" @click="removePinnedChannel(channel.id)">
+													<i class="ti ti-trash"></i>
+												</MkButton>
+											</div>
+										</div>
+										<MkButton @click="setPinnedChannel()">{{ i18n.ts.add }}</MkButton>
+									</div>
 								</MkFolder>
 							</SearchMarker>
 						</div>
@@ -1350,9 +1359,16 @@ function removePinnedList() {
 
 async function setPinnedChannel() {
 	const channels = await misskeyApi('channels/my-favorites', { limit: 100 });
+	const currentPinnedChannels = prefer.r.pinnedChannels.value;
+
+	// 既にピン止めされているチャンネルを除外
+	const availableChannels = channels.filter(channel =>
+		!currentPinnedChannels.some(pinned => pinned.id === channel.id),
+	);
+
 	const { canceled, result: channel } = await os.select({
 		title: i18n.ts.selectChannel,
-		items: channels.map(x => ({
+		items: availableChannels.map(x => ({
 			value: x, text: x.name,
 		})),
 	});
@@ -1360,11 +1376,15 @@ async function setPinnedChannel() {
 	if (canceled) return;
 	if (channel == null) return;
 
-	prefer.commit('pinnedChannels', [channel]);
+	// 既存のピン止めチャンネルに追加
+	const newPinnedChannels = [...currentPinnedChannels, channel];
+	prefer.commit('pinnedChannels', newPinnedChannels);
 }
 
-function removePinnedChannel() {
-	prefer.commit('pinnedChannels', []);
+function removePinnedChannel(channelId: string) {
+	const currentPinnedChannels = prefer.r.pinnedChannels.value;
+	const newPinnedChannels = currentPinnedChannels.filter(channel => channel.id !== channelId);
+	prefer.commit('pinnedChannels', newPinnedChannels);
 }
 
 function enableAllDataSaver() {
