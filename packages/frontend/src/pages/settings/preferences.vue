@@ -187,6 +187,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 									<MkButton v-else danger @click="removePinnedList()"><i class="ti ti-trash"></i> {{ i18n.ts.remove }}</MkButton>
 								</MkFolder>
 							</SearchMarker>
+
+							<SearchMarker :keywords="['pinned', 'channel']">
+								<MkFolder>
+									<template #label><SearchLabel>{{ i18n.ts.pinnedChannel }}</SearchLabel></template>
+									<!-- 複数ピン止め管理できるようにしたいけどめんどいので一旦ひとつのみ -->
+									<MkButton v-if="prefer.r.pinnedChannels.value.length === 0" @click="setPinnedChannel()">{{ i18n.ts.add }}</MkButton>
+									<MkButton v-else danger @click="removePinnedChannel()"><i class="ti ti-trash"></i> {{ i18n.ts.remove }}</MkButton>
+								</MkFolder>
+							</SearchMarker>
 						</div>
 
 						<hr>
@@ -1337,6 +1346,25 @@ async function setPinnedList() {
 
 function removePinnedList() {
 	prefer.commit('pinnedUserLists', []);
+}
+
+async function setPinnedChannel() {
+	const channels = await misskeyApi('channels/my-favorites', { limit: 100 });
+	const { canceled, result: channel } = await os.select({
+		title: i18n.ts.selectChannel,
+		items: channels.map(x => ({
+			value: x, text: x.name,
+		})),
+	});
+
+	if (canceled) return;
+	if (channel == null) return;
+
+	prefer.commit('pinnedChannels', [channel]);
+}
+
+function removePinnedChannel() {
+	prefer.commit('pinnedChannels', []);
 }
 
 function enableAllDataSaver() {

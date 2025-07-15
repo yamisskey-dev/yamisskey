@@ -15,7 +15,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 			:key="src + withRenotes + withReplies + withHashtags + withFiles + localOnly + remoteOnly + withSensitive"
 			:class="$style.tl"
 			:src="src.split(':')[0]"
-			:list="src.split(':')[1]"
+			:list="src.startsWith('list:') ? src.split(':')[1] : undefined"
+			:channel="src.startsWith('channel:') ? src.split(':')[1] : undefined"
 			:withRenotes="withRenotes"
 			:withReplies="withReplies"
 			:withHashtags="withHashtags"
@@ -54,7 +55,7 @@ provide('shouldOmitHeaderTitle', true);
 
 const tlComponent = useTemplateRef('tlComponent');
 
-type TimelinePageSrc = BasicTimelineType | `list:${string}`;
+type TimelinePageSrc = BasicTimelineType | `list:${string}` | `channel:${string}`;
 
 const srcWhenNotSignin = ref<'local' | 'global'>(isAvailableBasicTimeline('local') ? 'local' : 'global');
 const src = computed<TimelinePageSrc>({
@@ -237,6 +238,11 @@ function saveSrc(newSrc: TimelinePageSrc): void {
 		out.userList = prefer.r.pinnedUserLists.value.find(l => l.id === id) ?? null;
 	}
 
+	if (newSrc.startsWith('channel:')) {
+		const id = newSrc.substring('channel:'.length);
+		out.channel = prefer.r.pinnedChannels.value.find(c => c.id === id) ?? null;
+	}
+
 	store.set('tl', out);
 	if (['local', 'global'].includes(newSrc)) {
 		srcWhenNotSignin.value = newSrc as 'local' | 'global';
@@ -382,6 +388,11 @@ const headerTabs = computed(() => [...(prefer.r.pinnedUserLists.value.map(l => (
 	key: 'list:' + l.id,
 	title: l.name,
 	icon: 'ti ti-star',
+	iconOnly: true,
+}))), ...(prefer.r.pinnedChannels.value.map(c => ({
+	key: 'channel:' + c.id,
+	title: c.name,
+	icon: 'ti ti-device-tv',
 	iconOnly: true,
 }))), ...availableBasicTimelines().map(tl => ({
 	key: tl,
