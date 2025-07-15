@@ -9,7 +9,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkTip v-if="isBasicTimeline(src)" :k="`tl.${src}`" style="margin-bottom: var(--MI-margin);">
 			{{ i18n.ts._timelineDescription[src] }}
 		</MkTip>
-		<MkPostForm v-if="prefer.r.showFixedPostForm.value" :class="$style.postForm" class="_panel" fixed style="margin-bottom: var(--MI-margin);" :isInYamiTimeline="src === 'yami'" :isInNormalTimeline="src !== 'yami'"/>
+		<MkPostForm v-if="shouldShowFixedPostForm" :channel="currentChannel" :class="$style.postForm" class="_panel" fixed style="margin-bottom: var(--MI-margin);" :isInYamiTimeline="src === 'yami'" :isInNormalTimeline="src !== 'yami'"/>
 		<MkStreamingNotesTimeline
 			ref="tlComponent"
 			:key="src + withRenotes + withReplies + withHashtags + withFiles + localOnly + remoteOnly + withSensitive"
@@ -74,6 +74,34 @@ const localOnly = computed<boolean>({
 const remoteOnly = computed<boolean>({
 	get: () => store.r.tl.value.filter.remoteOnly,
 	set: (x) => saveTlFilter('remoteOnly', x),
+});
+
+// 固定投稿フォームの表示制御
+const shouldShowFixedPostForm = computed(() => {
+	const isChannelTimeline = src.value.startsWith('channel:');
+
+	if (isChannelTimeline) {
+		// チャンネルタイムラインの場合、showFixedPostFormInChannelの設定を使用
+		return prefer.r.showFixedPostFormInChannel.value;
+	} else {
+		// その他のタイムラインの場合、showFixedPostFormの設定を使用
+		return prefer.r.showFixedPostForm.value;
+	}
+});
+
+// チャンネル情報を取得
+const currentChannel = computed(() => {
+	if (src.value.startsWith('channel:')) {
+		const channelId = src.value.substring('channel:'.length);
+		// まずピン止めチャンネルから探す
+		const pinnedChannel = prefer.r.pinnedChannels.value.find(c => c.id === channelId);
+		if (pinnedChannel) {
+			return pinnedChannel;
+		}
+		// ピン止めチャンネルになければstoreから取得
+		return store.r.tl.value.channel;
+	}
+	return null;
 });
 
 // computed内での無限ループを防ぐためのフラグ
