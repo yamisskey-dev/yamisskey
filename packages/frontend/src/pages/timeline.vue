@@ -29,6 +29,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 			:sound="true"
 		/>
 	</div>
+	<template v-if="src.startsWith('channel:') && !prefer.r.showFixedPostFormInChannel.value" #footer>
+		<div :class="$style.footer">
+			<div class="_spacer" style="--MI_SPACER-w: 800px; --MI_SPACER-min: 16px; --MI_SPACER-max: 16px;">
+				<div class="_buttonsCenter">
+					<MkButton inline rounded primary gradate @click="openPostForm()"><i class="ti ti-pencil"></i> {{ i18n.ts.postToTheChannel }}</MkButton>
+				</div>
+			</div>
+		</div>
+	</template>
 </PageWithHeader>
 </template>
 
@@ -50,6 +59,7 @@ import { deepMerge } from '@/utility/merge.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { availableBasicTimelines, hasWithReplies, isAvailableBasicTimeline, isBasicTimeline, basicTimelineIconClass } from '@/timelines.js';
 import { prefer } from '@/preferences.js';
+import MkButton from '@/components/MkButton.vue';
 
 provide('shouldOmitHeaderTitle', true);
 
@@ -193,6 +203,14 @@ onMounted(() => {
 		saveTlFilter('showYamiFollowingNotes', prefer.s.showYamiFollowingNotes ?? true);
 	}
 });
+
+function openPostForm() {
+	if (currentChannel.value) {
+		os.post({
+			channel: currentChannel.value,
+		});
+	}
+}
 
 async function chooseList(ev: MouseEvent): Promise<void> {
 	const lists = await userListsCache.fetch();
@@ -485,5 +503,12 @@ definePage(() => ({
 	background: var(--MI_THEME-bg);
 	border-radius: var(--MI-radius);
 	overflow: clip;
+}
+
+.footer {
+	-webkit-backdrop-filter: var(--MI-blur, blur(15px));
+	backdrop-filter: var(--MI-blur, blur(15px));
+	background: color(from var(--MI_THEME-bg) srgb r g b / 0.5);
+	border-top: solid 0.5px var(--MI_THEME-divider);
 }
 </style>
