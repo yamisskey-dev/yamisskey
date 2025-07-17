@@ -88,14 +88,14 @@ const props = withDefaults(defineProps<{
 	withRenotes?: boolean;
 	withReplies?: boolean;
 	withSensitive?: boolean;
-	onlyFiles?: boolean;
+	withFiles?: boolean;
 	showYamiNonFollowingPublicNotes?: boolean;
 	showYamiFollowingNotes?: boolean;
 }>(), {
 	withRenotes: true,
 	withReplies: false,
 	withSensitive: true,
-	onlyFiles: false,
+	withFiles: false,
 	showYamiNonFollowingPublicNotes: false,
 	showYamiFollowingNotes: true,
 	sound: false,
@@ -223,14 +223,13 @@ function connectChannel() {
 	} else if (props.src === 'home') {
 		connection = stream.useChannel('homeTimeline', {
 			withRenotes: props.withRenotes,
-			withFiles: props.onlyFiles ? true : undefined,
+			withFiles: props.withFiles ? true : undefined,
 		});
 		connection2 = stream.useChannel('main');
 	} else if (props.src === 'yami') {
 		connection = stream.useChannel('yamiTimeline', {
 			withRenotes: props.withRenotes,
-			withReplies: props.withReplies,
-			withFiles: props.onlyFiles ? true : undefined,
+			withFiles: props.withFiles ? true : undefined,
 			showYamiNonFollowingPublicNotes: props.showYamiNonFollowingPublicNotes,
 			showYamiFollowingNotes: props.showYamiFollowingNotes,
 		});
@@ -238,18 +237,18 @@ function connectChannel() {
 		connection = stream.useChannel('localTimeline', {
 			withRenotes: props.withRenotes,
 			withReplies: props.withReplies,
-			withFiles: props.onlyFiles ? true : undefined,
+			withFiles: props.withFiles ? true : undefined,
 		});
 	} else if (props.src === 'social') {
 		connection = stream.useChannel('hybridTimeline', {
 			withRenotes: props.withRenotes,
 			withReplies: props.withReplies,
-			withFiles: props.onlyFiles ? true : undefined,
+			withFiles: props.withFiles ? true : undefined,
 		});
 	} else if (props.src === 'global') {
 		connection = stream.useChannel('globalTimeline', {
 			withRenotes: props.withRenotes,
-			withFiles: props.onlyFiles ? true : undefined,
+			withFiles: props.withFiles ? true : undefined,
 		});
 	} else if (props.src === 'mentions') {
 		connection = stream.useChannel('main');
@@ -266,7 +265,7 @@ function connectChannel() {
 		if (props.list == null) return;
 		connection = stream.useChannel('userList', {
 			withRenotes: props.withRenotes,
-			withFiles: props.onlyFiles ? true : undefined,
+			withFiles: props.withFiles ? true : undefined,
 			listId: props.list,
 		});
 	} else if (props.src === 'channel') {
@@ -301,14 +300,14 @@ function updatePaginationQuery() {
 		endpoint = 'notes/timeline';
 		query = {
 			withRenotes: props.withRenotes,
-			withFiles: props.onlyFiles ? true : undefined,
+			withFiles: props.withFiles ? true : undefined,
 		};
 	} else if (props.src === 'yami') {
 		endpoint = 'notes/yami-timeline';
 		query = {
 			withRenotes: props.withRenotes,
 			withReplies: props.withReplies,
-			withFiles: props.onlyFiles ? true : undefined,
+			withFiles: props.withFiles ? true : undefined,
 			showYamiNonFollowingPublicNotes: props.showYamiNonFollowingPublicNotes,
 			showYamiFollowingNotes: props.showYamiFollowingNotes,
 		};
@@ -317,20 +316,20 @@ function updatePaginationQuery() {
 		query = {
 			withRenotes: props.withRenotes,
 			withReplies: props.withReplies,
-			withFiles: props.onlyFiles ? true : undefined,
+			withFiles: props.withFiles ? true : undefined,
 		};
 	} else if (props.src === 'social') {
 		endpoint = 'notes/hybrid-timeline';
 		query = {
 			withRenotes: props.withRenotes,
 			withReplies: props.withReplies,
-			withFiles: props.onlyFiles ? true : undefined,
+			withFiles: props.withFiles ? true : undefined,
 		};
 	} else if (props.src === 'global') {
 		endpoint = 'notes/global-timeline';
 		query = {
 			withRenotes: props.withRenotes,
-			withFiles: props.onlyFiles ? true : undefined,
+			withFiles: props.withFiles ? true : undefined,
 		};
 	} else if (props.src === 'mentions') {
 		endpoint = 'notes/mentions';
@@ -344,7 +343,7 @@ function updatePaginationQuery() {
 		endpoint = 'notes/user-list-timeline';
 		query = {
 			withRenotes: props.withRenotes,
-			withFiles: props.onlyFiles ? true : undefined,
+			withFiles: props.withFiles ? true : undefined,
 			listId: props.list,
 		};
 	} else if (props.src === 'channel') {
