@@ -60,7 +60,7 @@ export type Column = {
 	withRenotes?: boolean;
 	withReplies?: boolean;
 	withSensitive?: boolean;
-	withFiles?: boolean;
+	onlyFiles?: boolean;
 	soundSetting?: SoundStore;
 };
 
