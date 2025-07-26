@@ -416,7 +416,7 @@ export const store = markRaw(new Pizzax('base', {
 	},
 	hideReactionCount: {
 		where: 'account',
-		default: 'self' as 'none' | 'self' | 'others' | 'all',
+		default: 'others' as 'none' | 'self' | 'others' | 'all',
 	},
 	limitWidthOfReaction: {
 		where: 'device',
