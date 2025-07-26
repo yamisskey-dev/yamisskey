@@ -117,6 +117,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				:reactionEmojis="$appearNote.reactionEmojis"
 				:myReaction="$appearNote.myReaction"
 				:noteId="appearNote.id"
+				:hideReactionCount="hideReactionCount"
 				:maxNumber="16"
 				@mockUpdateMyReaction="emitUpdReaction"
 			>
@@ -312,6 +313,15 @@ const canRenote = computed(() => {
 	// 既存の条件
 	return ['public', 'home'].includes(appearNote.visibility) ||
     (appearNote.visibility === 'followers' && appearNote.userId === $i?.id);
+});
+const hideReactionCount = computed(() => {
+	switch (prefer.s.hideReactionCount) {
+		case 'none': return false;
+		case 'all': return true;
+		case 'self': return appearNote.userId === $i.id;
+		case 'others': return appearNote.userId !== $i.id;
+		default: return false;
+	}
 });
 const renoteCollapsed = ref(
 	prefer.s.collapseRenotes && isRenote && (
