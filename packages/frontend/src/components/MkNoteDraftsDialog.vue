@@ -74,6 +74,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</div>
 							<div :class="$style.draftFooter">
 								<div :class="$style.draftVisibility">
+									<span v-if="draft.isNoteInYamiMode === true" :title="draft.visibility === 'public' ? `${i18n.ts._visibility['public']} (${i18n.ts._yami.yamiModeShort})` : i18n.ts._yami.yamiNote"><i class="ti ti-moon"></i></span>
 									<span :title="i18n.ts._visibility[draft.visibility]">
 										<i v-if="draft.visibility === 'public'" class="ti ti-world"></i>
 										<i v-else-if="draft.visibility === 'home'" class="ti ti-home"></i>

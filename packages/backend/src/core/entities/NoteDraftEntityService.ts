@@ -127,6 +127,7 @@ export class NoteDraftEntityService implements OnModuleInit {
 				allowRenoteToExternal: channel.allowRenoteToExternal,
 				userId: channel.userId,
 			} : undefined,
+			isNoteInYamiMode: noteDraft.isNoteInYamiMode,
 
 			...(opts.detail ? {
 				reply: noteDraft.replyId ? nullIfEntityNotFound(this.noteEntityService.pack(noteDraft.replyId, me, {

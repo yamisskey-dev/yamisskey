@@ -182,6 +182,7 @@ export const paramDef = {
 		replyId: { type: 'string', format: 'misskey:id', nullable: true },
 		renoteId: { type: 'string', format: 'misskey:id', nullable: true },
 		channelId: { type: 'string', format: 'misskey:id', nullable: true },
+		isNoteInYamiMode: { type: 'boolean', default: false },
 
 		// anyOf内にバリデーションを書いても最初の一つしかチェックされない
 		// See https://github.com/misskey-dev/misskey/pull/10082
@@ -244,6 +245,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				visibility: ps.visibility,
 				visibleUserIds: ps.visibleUserIds ?? [],
 				channelId: ps.channelId ?? undefined,
+				isNoteInYamiMode: ps.isNoteInYamiMode,
 			}).catch((err) => {
 				if (err instanceof IdentifiableError) {
 					switch (err.id) {

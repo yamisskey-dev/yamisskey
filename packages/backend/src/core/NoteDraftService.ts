@@ -30,6 +30,7 @@ export type NoteDraftOptions = {
 	hashtag?: string;
 	channelId?: MiChannel['id'] | null;
 	poll?: (IPoll & { expiredAfter?: number | null }) | null;
+	isNoteInYamiMode?: boolean;
 };
 
 @Injectable()
@@ -307,6 +308,7 @@ export class NoteDraftService {
 			visibleUserIds: data.visibleUserIds ?? [],
 			localOnly: data.localOnly,
 			reactionAcceptance: data.reactionAcceptance,
+			isNoteInYamiMode: data.isNoteInYamiMode ?? false,
 		} satisfies MiNoteDraft;
 
 		return appliedDraft;

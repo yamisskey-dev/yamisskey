@@ -562,9 +562,8 @@ const isFederationToggleDisabled = computed(() => {
 watch([visibility, visibleUsers], () => {
 	if (isPrivatePost.value) {
 		localOnly.value = true;
-	}
-	// DMの場合で、やみノートでない場合は連合設定を解除する
-	else if (visibility.value === 'specified' && visibleUsers.value.length > 0 && !isNoteInYamiMode.value) {
+	} else if (visibility.value === 'specified' && visibleUsers.value.length > 0 && !isNoteInYamiMode.value) {
+		// DMの場合で、やみノートでない場合は連合設定を解除する
 		localOnly.value = false;
 	}
 }, { deep: true, immediate: true });
@@ -1173,6 +1172,7 @@ async function saveServerDraft(clearLocal = false) {
 		quoteId: quoteId.value,
 		channelId: targetChannel.value ? targetChannel.value.id : undefined,
 		reactionAcceptance: reactionAcceptance.value,
+		isNoteInYamiMode: isNoteInYamiMode.value, // やみノート状態をサーバー下書きにも保存
 	}).then(() => {
 		if (clearLocal) {
 			clear();
@@ -1565,6 +1565,11 @@ function showDraftMenu(ev: MouseEvent) {
 				replyTargetNote.value = draft.reply;
 				reactionAcceptance.value = draft.reactionAcceptance;
 				if (draft.channel) targetChannel.value = draft.channel as unknown as Misskey.entities.Channel;
+
+				// やみノート状態を復元
+				if (!props.fixed && !parentIsYamiNote.value && $i.policies.canYamiNote) {
+					isNoteInYamiMode.value = draft.isNoteInYamiMode ?? false;
+				}
 
 				visibleUsers.value = [];
 				draft.visibleUserIds?.forEach(uid => {
