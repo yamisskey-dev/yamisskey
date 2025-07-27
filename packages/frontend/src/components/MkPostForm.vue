@@ -29,11 +29,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 						: props.fixed && (props.isInYamiTimeline || props.isInNormalTimeline)
 							? (isNoteInYamiMode ? i18n.ts._yami.fixedYamiNote : i18n.ts._yami.fixedNormalNote)
 							: (isNoteInYamiMode ? i18n.ts._yami.yamiNote : i18n.ts._yami.normalNote)"
-					:class="['_button', $style.headerRightItem, { [$style.headerRightItemActive]: isNoteInYamiMode || parentIsYamiNote }]"
+					:class="['_button', $style.headerRightItem, { [$style.active]: isNoteInYamiMode || parentIsYamiNote, [$style.danger]: !isNoteInYamiMode && !parentIsYamiNote }]"
 					:disabled="parentIsYamiNote || (props.fixed && (props.isInYamiTimeline || props.isInNormalTimeline))"
 					@click="toggleYamiMode"
 				>
-					<i class="ti" :class="isNoteInYamiMode || parentIsYamiNote ? 'ti-moon' : 'ti-users-group'"></i>
+					<i class="ti ti-moon"></i>
 				</button>
 
 				<!-- 既存の公開範囲ボタン -->
@@ -1872,6 +1872,10 @@ defineExpose({
 
 	&.warning {
 		color: var(--MI_THEME-warn);
+	}
+
+	&.active {
+		color: var(--MI_THEME-accent);
 	}
 }
 

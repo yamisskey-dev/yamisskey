@@ -182,8 +182,6 @@ export const PREF_DEF = definePreferences({
 			'announcements',
 			'channels',
 			'search',
-			'-',
-			'mode',
 		],
 	},
 	statusbars: {
