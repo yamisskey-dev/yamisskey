@@ -3815,6 +3815,14 @@ export interface Locale extends ILocale {
      */
     "makeReactionsPublicDescription": string;
     /**
+     * リアクションを公開する
+     */
+    "publicReactions": string;
+    /**
+     * ロック済み
+     */
+    "isLocked": string;
+    /**
      * クラシック
      */
     "classic": string;
