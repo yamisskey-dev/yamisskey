@@ -183,81 +183,24 @@ function toggleRealtimeMode(ev: MouseEvent) {
 function handleYamiModeClick(ev: MouseEvent) {
 	if (!$i) return;
 
-	const yamiModeClickBehavior = miLocalStorage.getItem('yamiModeClickBehavior');
+	const yamiModeClickBehavior = prefer.s.yamiModeClickBehavior;
 
 	if (yamiModeClickBehavior === 'menu') {
 		// メニュー方式
-		showYamiModeMenu(ev);
-	} else if (yamiModeClickBehavior === 'direct') {
+		os.popupMenu([{
+			type: 'label',
+			text: i18n.ts._yami.switchMode,
+		}, {
+			text: $i!.isInYamiMode ? i18n.ts._yami.switchToNormalMode : i18n.ts._yami.switchToYamiMode,
+			icon: $i!.isInYamiMode ? 'ti ti-moon-off' : 'ti ti-moon',
+			action: () => {
+				toggleYamiMode();
+			},
+		}], ev.currentTarget ?? ev.target);
+	} else {
 		// 直接切り替え方式
 		toggleYamiMode();
-	} else {
-		// 未設定の場合：初回設定ダイアログ
-		showYamiModeInitialDialog(ev);
 	}
-}
-
-function showYamiModeMenu(ev: MouseEvent) {
-	os.popupMenu([{
-		type: 'label',
-		text: i18n.ts._yami.switchMode,
-	}, {
-		text: $i!.isInYamiMode ? i18n.ts._yami.switchToNormalMode : i18n.ts._yami.switchToYamiMode,
-		icon: $i!.isInYamiMode ? 'ti ti-moon-off' : 'ti ti-moon',
-		action: () => {
-			toggleYamiMode();
-		},
-	}], ev.currentTarget ?? ev.target);
-}
-
-async function showYamiModeInitialDialog(ev: MouseEvent) {
-	// 動作方式を選択
-	const behaviorResult = await os.actions({
-		type: 'question',
-		title: i18n.ts._yami.switchMode,
-		text: i18n.ts._yami.switchModeButtonBehavior,
-		actions: [
-			{
-				value: 'menu' as const,
-				text: i18n.ts._yami.switchModeButtonMenu,
-				primary: true,
-			},
-			{
-				value: 'direct' as const,
-				text: i18n.ts._yami.switchModeButtonDirect,
-			},
-			{
-				value: 'cancel' as const,
-				text: i18n.ts.cancel,
-			},
-		],
-	});
-
-	if (behaviorResult.canceled || behaviorResult.result === 'cancel') return;
-
-	// 動作方式を保存
-	miLocalStorage.setItem('yamiModeClickBehavior', behaviorResult.result);
-
-	// 選択した方式で実行
-	if (behaviorResult.result === 'menu') {
-		showYamiModeMenu(ev);
-	} else {
-		toggleYamiMode();
-	}
-}
-
-async function performYamiModeSwitch() {
-	if (!$i) return;
-
-	os.apiWithDialog('i/update', {
-		isInYamiMode: !$i.isInYamiMode,
-	}).then(() => {
-		unisonReload();
-		// やみモードに入った場合は実績を解除
-		if (!$i!.isInYamiMode) {
-			claimAchievement('markedAsYamiModeUser');
-		}
-	});
 }
 
 async function toggleYamiMode() {

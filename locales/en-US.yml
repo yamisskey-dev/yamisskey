@@ -3180,11 +3180,11 @@ _yami:
   yamiNoteFederationWarning: 'Warning: Yami notes are only delivered to trusted instances, but may not be handled properly depending on the implementation of the remote instance. Please add only trusted instances.'
   switchToYamiMode: "Switch to Yami Mode"
   switchToNormalMode: "Switch to normal mode"
-  switchModeButtonBehavior: "Select Yami Mode switching button behavior"
+  switchModeButtonBehavior: "Yami Mode switching button behavior"
   switchModeButtonMenu: "Menu style (prevents accidental clicks)"
   switchModeButtonDirect: "Direct switching style (traditional)"
-  enableYamiModeConfirm: "Do you want to enable Yami Mode?"
-  disableYamiModeConfirm: "Do you want to disable Yami Mode?"
+  enableYamiModeConfirm: "Do you want to enable Yami Mode? You will be able to view other users' yami notes."
+  disableYamiModeConfirm: "Do you want to disable Yami Mode? You will no longer be able to view other users' yami notes."
 _followRequest:
   recieved: "Received request"
   sent: "Sent request"

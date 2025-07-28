@@ -631,4 +631,7 @@ export const PREF_DEF = definePreferences({
 	nicknameMap: {
 		default: {} as Record<string, string>,
 	},
+	yamiModeClickBehavior: {
+		default: 'menu' as 'menu' | 'direct',
+	},
 });
