@@ -49,7 +49,9 @@ const props = withDefaults(defineProps<{
 }>(), {
 	autoLoad: true,
 	pullToRefresh: true,
-	withControl: true,
+	// デフォルトでソート機能と日付指定機能を無効化（プライバシー保護のため）
+	// 必要な箇所では明示的に withControl を指定する（withControl="true" は不要）
+	withControl: false,
 });
 
 useGlobalEvent('noteDeleted', (noteId) => {
