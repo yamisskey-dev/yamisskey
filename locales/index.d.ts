@@ -12508,7 +12508,7 @@ export interface Locale extends ILocale {
          */
         "switchToNormalMode": string;
         /**
-         * やみモード切り替えボタンの動作を選択してください
+         * やみモード切り替えボタンの動作
          */
         "switchModeButtonBehavior": string;
         /**
@@ -12516,15 +12516,15 @@ export interface Locale extends ILocale {
          */
         "switchModeButtonMenu": string;
         /**
-         * 直接切り替え方式（従来通り）
+         * 直接切り替え方式（ワンクリック）
          */
         "switchModeButtonDirect": string;
         /**
-         * やみモードを有効にしますか？
+         * やみモードを有効にしますか？他のユーザーのやみノートを閲覧できるようになります。
          */
         "enableYamiModeConfirm": string;
         /**
-         * やみモードを無効にしますか？
+         * やみモードを無効にしますか？他のユーザーのやみノートを閲覧できなくなります。
          */
         "disableYamiModeConfirm": string;
     };
