@@ -48,7 +48,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</MkSwitch>
 						</SearchMarker>
 
-						<SearchMarker v-if="$i && $i.policies.canYamiNote" :keywords="['yami', 'mode', 'button', 'behavior']">
+						<SearchMarker :keywords="['yami', 'mode', 'button', 'behavior']">
 							<MkPreferenceContainer k="yamiModeClickBehavior">
 								<MkRadios v-model="yamiModeClickBehavior">
 									<template #label><i class="ti ti-moon"></i> <SearchLabel>{{ i18n.ts._yami.switchModeButtonBehavior }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
