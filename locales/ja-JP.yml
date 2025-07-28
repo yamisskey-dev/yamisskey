@@ -3334,6 +3334,11 @@ _yami:
   yamiNoteFederationWarning: '警告: やみノートは信頼済みインスタンスにのみ配信されますが、リモートインスタンスの実装状況によっては適切に処理されない可能性があります。信頼できるインスタンスのみを追加してください。'
   switchToYamiMode: "やみモードに切り替え"
   switchToNormalMode: "通常モードに切り替え"
+  switchModeButtonBehavior: "やみモード切り替えボタンの動作を選択してください"
+  switchModeButtonMenu: "メニュー方式（誤クリック防止）"
+  switchModeButtonDirect: "直接切り替え方式（従来通り）"
+  enableYamiModeConfirm: "やみモードを有効にしますか？"
+  disableYamiModeConfirm: "やみモードを無効にしますか？"
 
 _remoteLookupErrors:
   _federationNotAllowed:

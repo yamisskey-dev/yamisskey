@@ -12507,6 +12507,26 @@ export interface Locale extends ILocale {
          * 通常モードに切り替え
          */
         "switchToNormalMode": string;
+        /**
+         * やみモード切り替えボタンの動作を選択してください
+         */
+        "switchModeButtonBehavior": string;
+        /**
+         * メニュー方式（誤クリック防止）
+         */
+        "switchModeButtonMenu": string;
+        /**
+         * 直接切り替え方式（従来通り）
+         */
+        "switchModeButtonDirect": string;
+        /**
+         * やみモードを有効にしますか？
+         */
+        "enableYamiModeConfirm": string;
+        /**
+         * やみモードを無効にしますか？
+         */
+        "disableYamiModeConfirm": string;
     };
     "_remoteLookupErrors": {
         "_federationNotAllowed": {
