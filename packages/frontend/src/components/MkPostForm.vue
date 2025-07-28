@@ -29,11 +29,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 						: props.fixed && (props.isInYamiTimeline || props.isInNormalTimeline)
 							? (isNoteInYamiMode ? i18n.ts._yami.fixedYamiNote : i18n.ts._yami.fixedNormalNote)
 							: (isNoteInYamiMode ? i18n.ts._yami.yamiNote : i18n.ts._yami.normalNote)"
-					:class="['_button', $style.headerRightItem, { [$style.headerRightItemActive]: isNoteInYamiMode || parentIsYamiNote }]"
+					:class="['_button', $style.headerRightItem, { [$style.active]: isNoteInYamiMode || parentIsYamiNote, [$style.danger]: !isNoteInYamiMode && !parentIsYamiNote }]"
 					:disabled="parentIsYamiNote || (props.fixed && (props.isInYamiTimeline || props.isInNormalTimeline))"
 					@click="toggleYamiMode"
 				>
-					<i class="ti" :class="isNoteInYamiMode || parentIsYamiNote ? 'ti-moon' : 'ti-users-group'"></i>
+					<i class="ti ti-moon"></i>
 				</button>
 
 				<!-- 既存の公開範囲ボタン -->
@@ -562,9 +562,8 @@ const isFederationToggleDisabled = computed(() => {
 watch([visibility, visibleUsers], () => {
 	if (isPrivatePost.value) {
 		localOnly.value = true;
-	}
-	// DMの場合で、やみノートでない場合は連合設定を解除する
-	else if (visibility.value === 'specified' && visibleUsers.value.length > 0 && !isNoteInYamiMode.value) {
+	} else if (visibility.value === 'specified' && visibleUsers.value.length > 0 && !isNoteInYamiMode.value) {
+		// DMの場合で、やみノートでない場合は連合設定を解除する
 		localOnly.value = false;
 	}
 }, { deep: true, immediate: true });
@@ -1173,6 +1172,7 @@ async function saveServerDraft(clearLocal = false) {
 		quoteId: quoteId.value,
 		channelId: targetChannel.value ? targetChannel.value.id : undefined,
 		reactionAcceptance: reactionAcceptance.value,
+		isNoteInYamiMode: isNoteInYamiMode.value, // やみノート状態をサーバー下書きにも保存
 	}).then(() => {
 		if (clearLocal) {
 			clear();
@@ -1566,6 +1566,11 @@ function showDraftMenu(ev: MouseEvent) {
 				reactionAcceptance.value = draft.reactionAcceptance;
 				if (draft.channel) targetChannel.value = draft.channel as unknown as Misskey.entities.Channel;
 
+				// やみノート状態を復元
+				if (!props.fixed && !parentIsYamiNote.value && $i.policies.canYamiNote) {
+					isNoteInYamiMode.value = draft.isNoteInYamiMode ?? false;
+				}
+
 				visibleUsers.value = [];
 				draft.visibleUserIds?.forEach(uid => {
 					if (!visibleUsers.value.some(u => u.id === uid)) {
@@ -1872,6 +1877,10 @@ defineExpose({
 
 	&.warning {
 		color: var(--MI_THEME-warn);
+	}
+
+	&.active {
+		color: var(--MI_THEME-accent);
 	}
 }
 

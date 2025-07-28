@@ -13,7 +13,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	@contextmenu.prevent.stop="menu"
 >
 	<MkReactionIcon style="pointer-events: none;" :class="prefer.s.limitWidthOfReaction ? $style.limitWidth : ''" :reaction="reaction" :emojiUrl="reactionEmojis[reaction.substring(1, reaction.length - 1)]"/>
-	<span v-if="!hideReactionCount" :class="$style.count">{{ count }}</span>
+	<span v-if="!props.hideReactionCount" :class="$style.count">{{ count }}</span>
 </button>
 </template>
 
@@ -46,6 +46,7 @@ const props = defineProps<{
 	myReaction: Misskey.entities.Note['myReaction'];
 	count: number;
 	isInitial: boolean;
+	hideReactionCount?: boolean;
 }>();
 
 const mock = inject(DI.mock, false);

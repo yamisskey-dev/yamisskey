@@ -182,8 +182,6 @@ export const PREF_DEF = definePreferences({
 			'announcements',
 			'channels',
 			'search',
-			'-',
-			'mode',
 		],
 	},
 	statusbars: {
@@ -535,7 +533,7 @@ export const PREF_DEF = definePreferences({
 		default: false,
 	},
 	hideReactionCount: {
-		default: 'self' as 'none' | 'self' | 'others' | 'all',
+		default: 'others' as 'none' | 'self' | 'others' | 'all',
 	},
 	customFont: {
 		default: 'kosugi-maru' as null | string,

@@ -1,7 +1,7 @@
 {
 	"name": "misskey",
-	"version": "2025.7.0-yami-1.9.6",
-  "codename": "nasubi",
+	"version": "2025.7.0-nayami-1.9.6",
+	"codename": "nasubi",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/yamisskey/yamisskey.git"

@@ -60,6 +60,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</div>
 							<div :class="$style.scheduleFooter">
 								<div :class="$style.scheduleVisibility">
+									<span v-if="item.note.isNoteInYamiMode === true" :title="item.note.visibility === 'public' ? `${i18n.ts._visibility['public']} (${i18n.ts._yami.yamiModeShort})` : i18n.ts._yami.yamiNote"><i class="ti ti-moon"></i></span>
 									<span :title="i18n.ts._visibility[item.note.visibility]">
 										<i v-if="item.note.visibility === 'public'" class="ti ti-world"></i>
 										<i v-else-if="item.note.visibility === 'home'" class="ti ti-home"></i>
