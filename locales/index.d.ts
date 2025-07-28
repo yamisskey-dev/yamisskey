@@ -12499,24 +12499,34 @@ export interface Locale extends ILocale {
          * 警告: やみノートは信頼済みインスタンスにのみ配信されますが、リモートインスタンスの実装状況によっては適切に処理されない可能性があります。信頼できるインスタンスのみを追加してください。
          */
         "yamiNoteFederationWarning": string;
-        "_yamiModeSwitcher": {
-            /**
-             * やみモードに切り替えますか？やみモードにすると、他人のやみノートを閲覧できるようになります
-             */
-            "enterYamiModeConfirm": string;
-            /**
-             * 通常モードに戻りますか？通常モードにすると、他人のやみノートを閲覧できなくなります
-             */
-            "exitYamiModeConfirm": string;
-            /**
-             * 通常モード
-             */
-            "normal": string;
-            /**
-             * やみモード
-             */
-            "yami": string;
-        };
+        /**
+         * やみモードに切り替え
+         */
+        "switchToYamiMode": string;
+        /**
+         * 通常モードに切り替え
+         */
+        "switchToNormalMode": string;
+        /**
+         * やみモード切り替えボタンの動作
+         */
+        "switchModeButtonBehavior": string;
+        /**
+         * メニュー方式（誤クリック防止）
+         */
+        "switchModeButtonMenu": string;
+        /**
+         * 直接切り替え方式（ワンクリック）
+         */
+        "switchModeButtonDirect": string;
+        /**
+         * やみモードを有効にしますか？他のユーザーのやみノートを閲覧できるようになります。
+         */
+        "enableYamiModeConfirm": string;
+        /**
+         * やみモードを無効にしますか？他のユーザーのやみノートを閲覧できなくなります。
+         */
+        "disableYamiModeConfirm": string;
     };
     "_remoteLookupErrors": {
         "_federationNotAllowed": {

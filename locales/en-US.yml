@@ -3178,11 +3178,13 @@ _yami:
   yamiNoteFederationTrustedInstances: 'Trusted Yami Mode Supported instances'
   yamiNoteFederationTrustedInstancesDescription: 'Enter the host names of the instances to which yami notes are to be delivered or viewed, separated by a new line.'
   yamiNoteFederationWarning: 'Warning: Yami notes are only delivered to trusted instances, but may not be handled properly depending on the implementation of the remote instance. Please add only trusted instances.'
-  _yamiModeSwitcher:
-    enterYamiModeConfirm: "Do you want to switch to Yami mode? If you switch to Yami mode, you will be able to view and post Yami notes"
-    exitYamiModeConfirm: "Do you want to go back to Normal mode? Once in Normal mode, you will no longer be able to view or post Yami notes."
-    normal: "Normal mode"
-    yami: "Yami mode"
+  switchToYamiMode: "Switch to Yami Mode"
+  switchToNormalMode: "Switch to normal mode"
+  switchModeButtonBehavior: "Yami Mode switching button behavior"
+  switchModeButtonMenu: "Menu style (prevents accidental clicks)"
+  switchModeButtonDirect: "Direct switching style (traditional)"
+  enableYamiModeConfirm: "Do you want to enable Yami Mode? You will be able to view other users' yami notes."
+  disableYamiModeConfirm: "Do you want to disable Yami Mode? You will no longer be able to view other users' yami notes."
 _followRequest:
   recieved: "Received request"
   sent: "Sent request"

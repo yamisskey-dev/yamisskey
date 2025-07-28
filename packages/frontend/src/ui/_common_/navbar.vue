@@ -11,8 +11,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button v-tooltip.noDelay.right="instance.name ?? i18n.ts.instance" class="_button" :class="$style.instance" @click="openInstanceMenu">
 				<img :src="instance.iconUrl || instance.faviconUrl || '/favicon.ico'" alt="" :class="$style.instanceIcon" style="viewTransitionName: navbar-serverIcon;"/>
 			</button>
-			<button v-if="!iconOnly && $i" v-tooltip.noDelay.right="i18n.ts._yami.switchMode" class="_button" :class="[$style.yamiMode, $i.isInYamiMode ? $style.on : null]" @click="toggleYamiMode">
-				<i class="ti ti-moon ti-fw"></i>
+			<button v-if="!iconOnly && $i" v-tooltip.noDelay.right="$i.isInYamiMode ? i18n.ts._yami.switchToNormalMode : i18n.ts._yami.switchToYamiMode" class="_button" :class="[$style.yamiMode, $i.isInYamiMode ? $style.on : null]" @click="handleYamiModeClick">
+				<i class="ti ti-fw" :class="$i.isInYamiMode ? 'ti-moon' : 'ti-moon-off'"></i>
 			</button>
 			<button v-if="!iconOnly" v-tooltip.noDelay.right="i18n.ts.realtimeMode" class="_button" :class="[$style.realtimeMode, store.r.realtimeMode.value ? $style.on : null]" @click="toggleRealtimeMode">
 				<i class="ti ti-bolt ti-fw"></i>
@@ -57,8 +57,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button v-if="showWidgetButton" class="_button" :class="[$style.widget]" @click="() => emit('widgetButtonClick')">
 				<i class="ti ti-apps ti-fw"></i>
 			</button>
-			<button v-if="iconOnly && $i" v-tooltip.noDelay.right="i18n.ts._yami.switchMode" class="_button" :class="[$style.yamiMode, $i.isInYamiMode ? $style.on : null]" @click="toggleYamiMode">
-				<i class="ti ti-moon ti-fw"></i>
+			<button v-if="iconOnly && $i" v-tooltip.noDelay.right="$i.isInYamiMode ? i18n.ts._yami.switchToNormalMode : i18n.ts._yami.switchToYamiMode" class="_button" :class="[$style.yamiMode, $i.isInYamiMode ? $style.on : null]" @click="handleYamiModeClick">
+				<i class="ti ti-fw" :class="$i.isInYamiMode ? 'ti-moon' : 'ti-moon-off'"></i>
 			</button>
 			<button v-if="iconOnly" v-tooltip.noDelay.right="i18n.ts.realtimeMode" class="_button" :class="[$style.realtimeMode, store.r.realtimeMode.value ? $style.on : null]" @click="toggleRealtimeMode">
 				<i class="ti ti-bolt ti-fw"></i>
@@ -180,6 +180,29 @@ function toggleRealtimeMode(ev: MouseEvent) {
 	}], ev.currentTarget ?? ev.target);
 }
 
+function handleYamiModeClick(ev: MouseEvent) {
+	if (!$i) return;
+
+	const yamiModeClickBehavior = prefer.s.yamiModeClickBehavior;
+
+	if (yamiModeClickBehavior === 'menu') {
+		// メニュー方式
+		os.popupMenu([{
+			type: 'label',
+			text: i18n.ts._yami.switchMode,
+		}, {
+			text: $i!.isInYamiMode ? i18n.ts._yami.switchToNormalMode : i18n.ts._yami.switchToYamiMode,
+			icon: $i!.isInYamiMode ? 'ti ti-moon-off' : 'ti ti-moon',
+			action: () => {
+				toggleYamiMode();
+			},
+		}], ev.currentTarget ?? ev.target);
+	} else {
+		// 直接切り替え方式
+		toggleYamiMode();
+	}
+}
+
 async function toggleYamiMode() {
 	if (!$i) return;
 
@@ -191,7 +214,7 @@ async function toggleYamiMode() {
 			const confirm = await os.actions({
 				type: 'warning',
 				title: i18n.ts._yami.switchMode,
-				text: i18n.ts._yami._yamiModeSwitcher.exitYamiModeConfirm,
+				text: i18n.ts._yami.disableYamiModeConfirm,
 				actions: [
 					{
 						value: 'yes' as const,
@@ -230,7 +253,7 @@ async function toggleYamiMode() {
 			const confirm = await os.actions({
 				type: 'warning',
 				title: i18n.ts._yami.switchMode,
-				text: i18n.ts._yami._yamiModeSwitcher.enterYamiModeConfirm,
+				text: i18n.ts._yami.enableYamiModeConfirm,
 				actions: [
 					{
 						value: 'yes' as const,
