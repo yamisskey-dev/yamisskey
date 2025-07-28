@@ -77,6 +77,11 @@ export class MiNoteDraft {
 	})
 	public localOnly: boolean;
 
+	@Column('boolean', {
+		default: false,
+	})
+	public isNoteInYamiMode: boolean;
+
 	@Column('varchar', {
 		length: 64, nullable: true,
 	})

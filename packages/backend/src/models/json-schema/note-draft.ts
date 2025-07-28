@@ -167,5 +167,9 @@ export const packedNoteDraftSchema = {
 			optional: false, nullable: true,
 			enum: ['likeOnly', 'likeOnlyForRemote', 'nonSensitiveOnly', 'nonSensitiveOnlyForLocalLikeOnlyForRemote', null],
 		},
+		isNoteInYamiMode: {
+			type: 'boolean',
+			optional: true, nullable: false,
+		},
 	},
 } as const;

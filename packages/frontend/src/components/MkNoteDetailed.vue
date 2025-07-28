@@ -144,6 +144,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				:reactionEmojis="$appearNote.reactionEmojis"
 				:myReaction="$appearNote.myReaction"
 				:noteId="appearNote.id"
+				:hideReactionCount="hideReactionCount"
 				:maxNumber="16"
 				@mockUpdateMyReaction="emitUpdReaction"
 			/>
@@ -352,8 +353,8 @@ const hideReactionCount = computed(() => {
 	switch (prefer.s.hideReactionCount) {
 		case 'none': return false;
 		case 'all': return true;
-		case 'self': return props.note.userId === $i?.id;
-		case 'others': return props.note.userId !== $i?.id;
+		case 'self': return appearNote.userId === $i.id;
+		case 'others': return appearNote.userId !== $i.id;
 		default: return false;
 	}
 });
