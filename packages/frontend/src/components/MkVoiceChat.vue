@@ -9,35 +9,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div :class="$style.header">
 			<div :class="$style.title">
 				<i class="ti ti-microphone"></i>
-				<span v-if="!editingTitle && sessionTitle">{{ sessionTitle }}</span>
-				<span v-else-if="!editingTitle">{{ i18n.ts.voiceChat }}</span>
-				<input
-					v-if="editingTitle"
-					v-model="titleInput"
-					:class="$style.titleInput"
-					:placeholder="i18n.ts.voiceChatTitlePlaceholder"
-					@keyup.enter="saveTitle"
-					@keyup.escape="cancelEditTitle"
-				/>
-				<button
-					v-if="!editingTitle && !isConnected"
-					:class="$style.editTitleButton"
-					@click="startEditTitle"
-				>
-					<i class="ti ti-pencil"></i>
-				</button>
-				<div v-if="editingTitle" :class="$style.titleActions">
-					<button :class="$style.titleActionButton" @click="saveTitle">
-						<i class="ti ti-check"></i>
-					</button>
-					<button :class="$style.titleActionButton" @click="cancelEditTitle">
-						<i class="ti ti-x"></i>
-					</button>
-				</div>
+				<span v-if="roomInfo?.title">{{ roomInfo.title }}</span>
+				<span v-else>{{ i18n.ts.voiceChat }}</span>
 			</div>
 			<div :class="$style.headerActions">
 				<button
-					v-if="isConnected"
+					v-if="roomInfo?.status === 'active'"
 					:class="$style.inviteButton"
 					@click="showInviteModal = true"
 				>
@@ -49,8 +26,46 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</div>
 		</div>
 
-		<div v-if="!isConnected" :class="$style.joinSection">
-			<div :class="$style.joinTitle">{{ i18n.ts.joinVoiceChat }}</div>
+		<!-- Room Info Section -->
+		<div v-if="roomInfo && roomInfo.status === 'waiting'" :class="$style.roomInfo">
+			<div :class="$style.roomTitle">{{ roomInfo.title }}</div>
+			<div v-if="roomInfo.description" :class="$style.roomDescription">{{ roomInfo.description }}</div>
+			<div :class="$style.roomMeta">
+				<div :class="$style.hostInfo">
+					<i class="ti ti-crown"></i>
+					<span>{{ i18n.ts.voiceChatHost }}: {{ roomInfo.host?.name || roomInfo.host?.username }}</span>
+				</div>
+				<div :class="$style.participantInfo">
+					<i class="ti ti-users"></i>
+					<span>{{ roomInfo.participantCount }} {{ i18n.ts.voiceChatParticipants }}</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- Waiting Room State -->
+		<div v-if="roomInfo?.status === 'waiting'" :class="$style.waitingRoom">
+			<div v-if="roomInfo.isHost" :class="$style.hostControls">
+				<div :class="$style.waitingMessage">
+					{{ i18n.ts.voiceChatWaitingToStart }}
+				</div>
+				<MkButton primary rounded gradate @click="startSession">
+					<i class="ti ti-play"></i>
+					{{ i18n.ts.voiceChatStartSession }}
+				</MkButton>
+			</div>
+			<div v-else :class="$style.listenerWaiting">
+				<div :class="$style.waitingMessage">
+					{{ i18n.ts.voiceChatWaitingToStart }}
+				</div>
+				<div :class="$style.waitingIcon">
+					<i class="ti ti-clock"></i>
+				</div>
+			</div>
+		</div>
+
+		<!-- Active Session State -->
+		<div v-else-if="roomInfo?.status === 'active' && !isConnected" :class="$style.joinSection">
+			<div :class="$style.joinTitle">{{ i18n.ts.voiceChatJoinSession }}</div>
 			<div :class="$style.joinButtons">
 				<MkButton primary rounded @click="joinAsListener">
 					<i class="ti ti-volume"></i>
@@ -180,7 +195,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, watch } from 'vue';
 import MkButton from '@/components/MkButton.vue';
 import MkInput from '@/components/MkInput.vue';
 import MkAvatar from '@/components/global/MkAvatar.vue';
@@ -189,18 +204,18 @@ import { $i } from '@/i.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import * as os from '@/os.js';
 
-defineProps<{
+const props = defineProps<{
 	showVoiceChat: boolean;
+	roomId?: string;
 }>();
 
 const emit = defineEmits<{
 	closeVoiceChat: [];
 }>();
 
-// Title related state
-const sessionTitle = ref('');
-const editingTitle = ref(false);
-const titleInput = ref('');
+// Room and session state
+const roomInfo = ref<any>(null);
+const sessionId = ref<string | null>(null);
 
 // Invite related state
 const showInviteModal = ref(false);
@@ -212,7 +227,6 @@ const isConnected = ref(false);
 const isMuted = ref(false);
 const currentUserRole = ref<'speaker' | 'listener' | null>(null);
 const connectionError = ref<string | null>(null);
-const sessionId = ref<string | null>(null);
 
 // Sample data (this would come from real voice chat state)
 const speakers = ref([
@@ -230,11 +244,57 @@ const listeners = ref([]);
 let peerConnection: RTCPeerConnection | null = null;
 let localStream: MediaStream | null = null;
 
+// Initialize room info when component is shown
+watch(() => props.showVoiceChat, async (show) => {
+	if (show && props.roomId) {
+		await loadRoomInfo();
+	}
+});
+
+// Load room information
+async function loadRoomInfo() {
+	if (!props.roomId) return;
+
+	try {
+		roomInfo.value = await misskeyApi('voice-chat/get-room', {
+			roomId: props.roomId,
+		});
+	} catch (error) {
+		console.error('Failed to load room info:', error);
+		connectionError.value = 'Failed to load room information';
+	}
+}
+
+// Start session (host only)
+async function startSession() {
+	if (!props.roomId || !roomInfo.value?.isHost) return;
+
+	try {
+		const result = await misskeyApi('voice-chat/start-session', {
+			roomId: props.roomId,
+		});
+
+		sessionId.value = result.sessionId;
+		roomInfo.value.status = 'active';
+
+		os.alert({
+			type: 'success',
+			text: i18n.ts.voiceChatSessionStarted,
+		});
+	} catch (error) {
+		console.error('Failed to start session:', error);
+		os.alert({
+			type: 'error',
+			text: error.message || 'Failed to start session',
+		});
+	}
+}
+
 // Voice chat methods
 async function joinAsListener() {
 	try {
 		currentUserRole.value = 'listener';
-		await connectToVoiceChat(false);
+		await connectToVoiceChat('listener');
 	} catch (error) {
 		console.error('Failed to join as listener:', error);
 		connectionError.value = i18n.ts.failedToJoinVoiceChat;
@@ -244,23 +304,23 @@ async function joinAsListener() {
 async function joinAsSpeaker() {
 	try {
 		currentUserRole.value = 'speaker';
-		await connectToVoiceChat(true);
+		await connectToVoiceChat('speaker');
 	} catch (error) {
 		console.error('Failed to join as speaker:', error);
 		connectionError.value = i18n.ts.failedToJoinVoiceChat;
 	}
 }
 
-async function connectToVoiceChat(asSpeaker: boolean) {
+async function connectToVoiceChat(role: 'speaker' | 'listener') {
 	try {
-		// Set default title if not set
-		if (!sessionTitle.value) {
-			sessionTitle.value = `${$i?.name || $i?.username}'s voice chat`;
+		if (!props.roomId) {
+			throw new Error('No room ID provided');
 		}
 
-		// Create session
-		const sessionResponse = await misskeyApi('voice-chat/create-session', {
-			title: sessionTitle.value,
+		// Join session
+		const sessionResponse = await misskeyApi('voice-chat/join-session', {
+			roomId: props.roomId,
+			role: role,
 		});
 		sessionId.value = sessionResponse.sessionId;
 
@@ -284,7 +344,7 @@ async function connectToVoiceChat(asSpeaker: boolean) {
 			console.log('Received track:', event.track);
 		};
 
-		if (asSpeaker) {
+		if (role === 'speaker') {
 			// Get user media for speakers
 			localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -371,24 +431,6 @@ function cleanup() {
 	sessionId.value = null;
 }
 
-// Title editing methods
-function startEditTitle() {
-	titleInput.value = sessionTitle.value || '';
-	editingTitle.value = true;
-}
-
-function saveTitle() {
-	if (titleInput.value.trim()) {
-		sessionTitle.value = titleInput.value.trim();
-	}
-	editingTitle.value = false;
-}
-
-function cancelEditTitle() {
-	titleInput.value = '';
-	editingTitle.value = false;
-}
-
 // User search and invite methods
 async function searchUsers() {
 	if (inviteUserQuery.value.trim().length < 2) {
@@ -409,15 +451,15 @@ async function searchUsers() {
 }
 
 async function inviteUser(user) {
-	if (!sessionId.value || !sessionTitle.value) {
+	if (!props.roomId || !roomInfo.value?.title) {
 		return;
 	}
 
 	try {
 		await misskeyApi('voice-chat/invite-user', {
 			userId: user.id,
-			sessionId: sessionId.value,
-			sessionTitle: sessionTitle.value,
+			sessionId: props.roomId,
+			sessionTitle: roomInfo.value.title,
 		});
 
 		os.alert({
@@ -471,6 +513,72 @@ onUnmounted(() => {
 	justify-content: space-between;
 	padding: 16px 20px;
 	border-bottom: 1px solid var(--MI_THEME-divider);
+}
+
+.roomInfo {
+	padding: 20px;
+	border-bottom: 1px solid var(--MI_THEME-divider);
+	background: var(--MI_THEME-accentedBg);
+}
+
+.roomTitle {
+	font-size: 24px;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+
+.roomDescription {
+	color: var(--MI_THEME-fgTransparentWeak);
+	margin-bottom: 16px;
+	line-height: 1.5;
+}
+
+.roomMeta {
+	display: flex;
+	gap: 20px;
+	font-size: 14px;
+	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+.hostInfo, .participantInfo {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.waitingRoom {
+	padding: 40px 20px;
+	text-align: center;
+}
+
+.hostControls {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+}
+
+.listenerWaiting {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+}
+
+.waitingMessage {
+	font-size: 18px;
+	color: var(--MI_THEME-fgTransparentWeak);
+}
+
+.waitingIcon {
+	font-size: 48px;
+	color: var(--MI_THEME-accent);
+	animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+	0%, 100% { opacity: 0.5; }
+	50% { opacity: 1; }
 }
 
 .title {

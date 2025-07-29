@@ -41,7 +41,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 </PageWithHeader>
 
 <!-- Voice Chat Overlay -->
-<MkVoiceChat v-if="showVoiceChatOverlay" :showVoiceChat="showVoiceChatOverlay" @closeVoiceChat="showVoiceChatOverlay = false"/>
+<MkVoiceChat v-if="showVoiceChatOverlay" :showVoiceChat="showVoiceChatOverlay" :roomId="currentRoomId" @closeVoiceChat="closeVoiceChat"/>
+
+<!-- Create Room Modal -->
+<MkVoiceChatCreateRoom v-model="showCreateRoomModal" @roomCreated="onRoomCreated"/>
 </template>
 
 <script lang="ts" setup>
@@ -52,6 +55,7 @@ import type { BasicTimelineType } from '@/timelines.js';
 import MkStreamingNotesTimeline from '@/components/MkStreamingNotesTimeline.vue';
 import MkPostForm from '@/components/MkPostForm.vue';
 import MkVoiceChat from '@/components/MkVoiceChat.vue';
+import MkVoiceChatCreateRoom from '@/components/MkVoiceChatCreateRoom.vue';
 import * as os from '@/os.js';
 import { store } from '@/store.js';
 import { i18n } from '@/i18n.js';
@@ -71,6 +75,8 @@ const tlComponent = useTemplateRef('tlComponent');
 
 // Voice chat overlay state
 const showVoiceChatOverlay = ref(false);
+const showCreateRoomModal = ref(false);
+const currentRoomId = ref<string | null>(null);
 
 type TimelinePageSrc = BasicTimelineType | `list:${string}` | `channel:${string}`;
 
@@ -335,6 +341,18 @@ onActivated(() => {
 	switchTlIfNeeded();
 });
 
+// Voice chat methods
+function onRoomCreated(roomId: string) {
+	currentRoomId.value = roomId;
+	showCreateRoomModal.value = false;
+	showVoiceChatOverlay.value = true;
+}
+
+function closeVoiceChat() {
+	showVoiceChatOverlay.value = false;
+	currentRoomId.value = null;
+}
+
 const headerActions = computed(() => {
 	const tmp = [
 		// Voice chat button (only for logged in users)
@@ -342,7 +360,7 @@ const headerActions = computed(() => {
 			icon: 'ti ti-microphone',
 			text: i18n.ts.voiceChat,
 			handler: () => {
-				showVoiceChatOverlay.value = true;
+				showCreateRoomModal.value = true;
 			},
 		}] : [],
 		{
