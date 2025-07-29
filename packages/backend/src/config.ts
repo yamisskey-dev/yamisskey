@@ -118,6 +118,11 @@ type Source = {
 			enableQueryParamLogging?: boolean,
 		}
 	}
+
+	cloudflareRealtime?: {
+		appId: string;
+		appSecret: string;
+	};
 };
 
 export type Config = {
@@ -219,6 +224,11 @@ export type Config = {
 	} | undefined;
 
 	pidFile: string;
+
+	cloudflareRealtime: {
+		appId: string;
+		appSecret: string;
+	} | undefined;
 };
 
 export type FulltextSearchProvider = 'sqlLike' | 'sqlPgroonga' | 'meilisearch';
@@ -333,6 +343,7 @@ export function loadConfig(): Config {
 		import: config.import,
 		pidFile: config.pidFile,
 		logging: config.logging,
+		cloudflareRealtime: config.cloudflareRealtime,
 	};
 }
 

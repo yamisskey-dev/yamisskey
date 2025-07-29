@@ -80,6 +80,7 @@ export type RolePolicies = {
 	canViewCharts: boolean;
 	canEditCommunityRoles: boolean;
 	uploadableFileTypes: string[];
+	canUseVoiceChat: boolean;
 };
 
 export const DEFAULT_POLICIES: RolePolicies = {
@@ -137,6 +138,7 @@ export const DEFAULT_POLICIES: RolePolicies = {
 		'video/*',
 		'audio/*',
 	],
+	canUseVoiceChat: false,
 };
 
 @Injectable()

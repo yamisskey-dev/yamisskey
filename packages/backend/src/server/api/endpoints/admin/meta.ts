@@ -591,6 +591,18 @@ export const meta = {
 				type: 'boolean',
 				optional: false, nullable: false,
 			},
+			cloudflareRealtimeEnabled: {
+				type: 'boolean',
+				optional: false, nullable: false,
+			},
+			cloudflareRealtimeAppId: {
+				type: 'string',
+				optional: false, nullable: true,
+			},
+			cloudflareRealtimeAppSecret: {
+				type: 'string',
+				optional: false, nullable: true,
+			},
 		},
 	},
 } as const;
@@ -746,6 +758,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				proxyRemoteFiles: instance.proxyRemoteFiles,
 				signToActivityPubGet: instance.signToActivityPubGet,
 				allowExternalApRedirect: instance.allowExternalApRedirect,
+				cloudflareRealtimeEnabled: instance.cloudflareRealtimeEnabled ?? false,
+				cloudflareRealtimeAppId: instance.cloudflareRealtimeAppId,
+				cloudflareRealtimeAppSecret: instance.cloudflareRealtimeAppSecret,
 			};
 		});
 	}

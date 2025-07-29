@@ -441,3 +441,6 @@ export * as 'chat/read-all' from './endpoints/chat/read-all.js';
 export * as 'v2/admin/emoji/list' from './endpoints/v2/admin/emoji/list.js';
 export * as 'admin/approve-user' from './endpoints/admin/approve-user.js';
 export * as 'admin/reject-user' from './endpoints/admin/reject-user.js';
+export * as 'voice-chat/create-session' from './endpoints/voice-chat/create-session.js';
+export * as 'voice-chat/manage-tracks' from './endpoints/voice-chat/manage-tracks.js';
+export * as 'voice-chat/renegotiate' from './endpoints/voice-chat/renegotiate.js';

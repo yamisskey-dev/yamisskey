@@ -272,6 +272,33 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkFolder>
 
 			<MkFolder>
+				<template #icon><i class="ti ti-cloud"></i></template>
+				<template #label>{{ i18n.ts.cloudflareRealtimeConfiguration }}</template>
+				<template v-if="cloudflareForm.modified.value" #footer>
+					<MkFormFooter :form="cloudflareForm"/>
+				</template>
+
+				<div class="_gaps">
+					<MkSwitch v-model="cloudflareForm.state.cloudflareRealtimeEnabled">
+						<template #label>{{ i18n.ts.cloudflareRealtimeEnabled }}<span v-if="cloudflareForm.modifiedStates.cloudflareRealtimeEnabled" class="_modified">{{ i18n.ts.modified }}</span></template>
+						<template #caption>{{ i18n.ts.cloudflareRealtimeEnabledDescription }}</template>
+					</MkSwitch>
+
+					<template v-if="cloudflareForm.state.cloudflareRealtimeEnabled">
+						<MkInput v-model="cloudflareForm.state.cloudflareRealtimeAppId" type="text">
+							<template #label>{{ i18n.ts.cloudflareRealtimeAppId }}<span v-if="cloudflareForm.modifiedStates.cloudflareRealtimeAppId" class="_modified">{{ i18n.ts.modified }}</span></template>
+							<template #caption>{{ i18n.ts.cloudflareRealtimeAppIdDescription }}</template>
+						</MkInput>
+
+						<MkInput v-model="cloudflareForm.state.cloudflareRealtimeAppSecret" type="password">
+							<template #label>{{ i18n.ts.cloudflareRealtimeAppSecret }}<span v-if="cloudflareForm.modifiedStates.cloudflareRealtimeAppSecret" class="_modified">{{ i18n.ts.modified }}</span></template>
+							<template #caption>{{ i18n.ts.cloudflareRealtimeAppSecretDescription }}</template>
+						</MkInput>
+					</template>
+				</div>
+			</MkFolder>
+
+			<MkFolder>
 				<template #icon><i class="ti ti-ghost"></i></template>
 				<template #label>{{ i18n.ts.proxyAccount }}</template>
 				<template v-if="proxyAccountForm.modified.value" #footer>
@@ -412,6 +439,19 @@ const federationForm = useForm({
 		allowExternalApRedirect: state.allowExternalApRedirect,
 		cacheRemoteFiles: state.cacheRemoteFiles,
 		cacheRemoteSensitiveFiles: state.cacheRemoteSensitiveFiles,
+	});
+	fetchInstance(true);
+});
+
+const cloudflareForm = useForm({
+	cloudflareRealtimeEnabled: meta.cloudflareRealtimeEnabled,
+	cloudflareRealtimeAppId: meta.cloudflareRealtimeAppId ?? '',
+	cloudflareRealtimeAppSecret: meta.cloudflareRealtimeAppSecret ?? '',
+}, async (state) => {
+	await os.apiWithDialog('admin/update-meta', {
+		cloudflareRealtimeEnabled: state.cloudflareRealtimeEnabled,
+		cloudflareRealtimeAppId: state.cloudflareRealtimeAppId ?? null,
+		cloudflareRealtimeAppSecret: state.cloudflareRealtimeAppSecret ?? null,
 	});
 	fetchInstance(true);
 });

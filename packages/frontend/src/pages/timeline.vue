@@ -39,6 +39,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 	</template>
 </PageWithHeader>
+
+<!-- Voice Chat Overlay -->
+<MkVoiceChat v-if="showVoiceChatOverlay" :showVoiceChat="showVoiceChatOverlay" @closeVoiceChat="showVoiceChatOverlay = false"/>
 </template>
 
 <script lang="ts" setup>
@@ -48,6 +51,7 @@ import type { MenuItem } from '@/types/menu.js';
 import type { BasicTimelineType } from '@/timelines.js';
 import MkStreamingNotesTimeline from '@/components/MkStreamingNotesTimeline.vue';
 import MkPostForm from '@/components/MkPostForm.vue';
+import MkVoiceChat from '@/components/MkVoiceChat.vue';
 import * as os from '@/os.js';
 import { store } from '@/store.js';
 import { i18n } from '@/i18n.js';
@@ -64,6 +68,9 @@ import MkButton from '@/components/MkButton.vue';
 provide('shouldOmitHeaderTitle', true);
 
 const tlComponent = useTemplateRef('tlComponent');
+
+// Voice chat overlay state
+const showVoiceChatOverlay = ref(false);
 
 type TimelinePageSrc = BasicTimelineType | `list:${string}` | `channel:${string}`;
 
@@ -330,6 +337,14 @@ onActivated(() => {
 
 const headerActions = computed(() => {
 	const tmp = [
+		// Voice chat button (only for logged in users)
+		...$i ? [{
+			icon: 'ti ti-microphone',
+			text: i18n.ts.voiceChat,
+			handler: () => {
+				showVoiceChatOverlay.value = true;
+			},
+		}] : [],
 		{
 			icon: 'ti ti-dots',
 			text: i18n.ts.options,
@@ -380,7 +395,7 @@ const headerActions = computed(() => {
 		tmp.unshift({
 			icon: 'ti ti-refresh',
 			text: i18n.ts.reload,
-			handler: (ev: Event) => {
+			handler: () => {
 				tlComponent.value?.reloadTimeline();
 			},
 		});
