@@ -74,6 +74,6 @@ function createRole() {
 .roleGrid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-	grid-gap: var(--margin);
+	gap: var(--MI-margin);
 }
 </style>
