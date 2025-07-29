@@ -9,11 +9,44 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div :class="$style.header">
 			<div :class="$style.title">
 				<i class="ti ti-microphone"></i>
-				{{ i18n.ts.voiceChat }}
+				<span v-if="!editingTitle && sessionTitle">{{ sessionTitle }}</span>
+				<span v-else-if="!editingTitle">{{ i18n.ts.voiceChat }}</span>
+				<input
+					v-if="editingTitle"
+					v-model="titleInput"
+					:class="$style.titleInput"
+					:placeholder="i18n.ts.voiceChatTitlePlaceholder"
+					@keyup.enter="saveTitle"
+					@keyup.escape="cancelEditTitle"
+				/>
+				<button
+					v-if="!editingTitle && !isConnected"
+					:class="$style.editTitleButton"
+					@click="startEditTitle"
+				>
+					<i class="ti ti-pencil"></i>
+				</button>
+				<div v-if="editingTitle" :class="$style.titleActions">
+					<button :class="$style.titleActionButton" @click="saveTitle">
+						<i class="ti ti-check"></i>
+					</button>
+					<button :class="$style.titleActionButton" @click="cancelEditTitle">
+						<i class="ti ti-x"></i>
+					</button>
+				</div>
 			</div>
-			<button :class="$style.closeButton" @click="closeVoiceChat">
-				<i class="ti ti-x"></i>
-			</button>
+			<div :class="$style.headerActions">
+				<button
+					v-if="isConnected"
+					:class="$style.inviteButton"
+					@click="showInviteModal = true"
+				>
+					<i class="ti ti-user-plus"></i>
+				</button>
+				<button :class="$style.closeButton" @click="closeVoiceChat">
+					<i class="ti ti-x"></i>
+				</button>
+			</div>
 		</div>
 
 		<div v-if="!isConnected" :class="$style.joinSection">
@@ -108,16 +141,53 @@ SPDX-License-Identifier: AGPL-3.0-only
 			{{ connectionError }}
 		</div>
 	</div>
+
+	<!-- Invite Modal -->
+	<div v-if="showInviteModal" :class="$style.inviteModal" @click.self="showInviteModal = false">
+		<div :class="$style.inviteModalContent">
+			<div :class="$style.inviteModalHeader">
+				<h3>{{ i18n.ts.voiceChatInviteUsers }}</h3>
+				<button :class="$style.inviteModalClose" @click="showInviteModal = false">
+					<i class="ti ti-x"></i>
+				</button>
+			</div>
+			<div :class="$style.inviteModalBody">
+				<MkInput
+					v-model="inviteUserQuery"
+					:placeholder="i18n.ts.voiceChatInviteUsersPlaceholder"
+					@update:modelValue="searchUsers"
+				>
+					<template #prefix><i class="ti ti-search"></i></template>
+				</MkInput>
+				<div v-if="searchedUsers.length > 0" :class="$style.userSearchResults">
+					<div
+						v-for="user in searchedUsers"
+						:key="user.id"
+						:class="$style.userSearchResult"
+						@click="inviteUser(user)"
+					>
+						<MkAvatar :user="user" :class="$style.searchResultAvatar"/>
+						<div :class="$style.searchResultInfo">
+							<div :class="$style.searchResultName">{{ user.name || user.username }}</div>
+							<div :class="$style.searchResultUsername">@{{ user.username }}</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, onUnmounted } from 'vue';
 import MkButton from '@/components/MkButton.vue';
+import MkInput from '@/components/MkInput.vue';
 import MkAvatar from '@/components/global/MkAvatar.vue';
 import { i18n } from '@/i18n.js';
 import { $i } from '@/i.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
+import * as os from '@/os.js';
 
 defineProps<{
 	showVoiceChat: boolean;
@@ -127,11 +197,22 @@ const emit = defineEmits<{
 	closeVoiceChat: [];
 }>();
 
+// Title related state
+const sessionTitle = ref('');
+const editingTitle = ref(false);
+const titleInput = ref('');
+
+// Invite related state
+const showInviteModal = ref(false);
+const inviteUserQuery = ref('');
+const searchedUsers = ref([]);
+
 // Reactive state
 const isConnected = ref(false);
 const isMuted = ref(false);
 const currentUserRole = ref<'speaker' | 'listener' | null>(null);
 const connectionError = ref<string | null>(null);
+const sessionId = ref<string | null>(null);
 
 // Sample data (this would come from real voice chat state)
 const speakers = ref([
@@ -148,7 +229,6 @@ const listeners = ref([]);
 // WebRTC related
 let peerConnection: RTCPeerConnection | null = null;
 let localStream: MediaStream | null = null;
-let sessionId: string | null = null;
 
 // Voice chat methods
 async function joinAsListener() {
@@ -173,9 +253,16 @@ async function joinAsSpeaker() {
 
 async function connectToVoiceChat(asSpeaker: boolean) {
 	try {
+		// Set default title if not set
+		if (!sessionTitle.value) {
+			sessionTitle.value = `${$i?.name || $i?.username}'s voice chat`;
+		}
+
 		// Create session
-		const sessionResponse = await misskeyApi('voice-chat/create-session', {});
-		sessionId = sessionResponse.sessionId;
+		const sessionResponse = await misskeyApi('voice-chat/create-session', {
+			title: sessionTitle.value,
+		});
+		sessionId.value = sessionResponse.sessionId;
 
 		// Create peer connection
 		peerConnection = new RTCPeerConnection({
@@ -281,7 +368,72 @@ function cleanup() {
 		peerConnection = null;
 	}
 
-	sessionId = null;
+	sessionId.value = null;
+}
+
+// Title editing methods
+function startEditTitle() {
+	titleInput.value = sessionTitle.value || '';
+	editingTitle.value = true;
+}
+
+function saveTitle() {
+	if (titleInput.value.trim()) {
+		sessionTitle.value = titleInput.value.trim();
+	}
+	editingTitle.value = false;
+}
+
+function cancelEditTitle() {
+	titleInput.value = '';
+	editingTitle.value = false;
+}
+
+// User search and invite methods
+async function searchUsers() {
+	if (inviteUserQuery.value.trim().length < 2) {
+		searchedUsers.value = [];
+		return;
+	}
+
+	try {
+		const results = await misskeyApi('users/search', {
+			query: inviteUserQuery.value.trim(),
+			limit: 10,
+		});
+		searchedUsers.value = results;
+	} catch (error) {
+		console.error('Failed to search users:', error);
+		searchedUsers.value = [];
+	}
+}
+
+async function inviteUser(user) {
+	if (!sessionId.value || !sessionTitle.value) {
+		return;
+	}
+
+	try {
+		await misskeyApi('voice-chat/invite-user', {
+			userId: user.id,
+			sessionId: sessionId.value,
+			sessionTitle: sessionTitle.value,
+		});
+
+		os.alert({
+			type: 'success',
+			text: i18n.ts.voiceChatUserInvited,
+		});
+		showInviteModal.value = false;
+		inviteUserQuery.value = '';
+		searchedUsers.value = [];
+	} catch (error) {
+		console.error('Failed to invite user:', error);
+		os.alert({
+			type: 'error',
+			text: i18n.ts.voiceChatFailedToInvite,
+		});
+	}
 }
 
 onUnmounted(() => {
@@ -532,5 +684,170 @@ onUnmounted(() => {
 	color: var(--MI_THEME-error);
 	text-align: center;
 	border-top: 1px solid var(--MI_THEME-divider);
+}
+
+.headerActions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.titleInput {
+	background: var(--MI_THEME-inputBg);
+	border: 1px solid var(--MI_THEME-inputBorder);
+	border-radius: 6px;
+	padding: 4px 8px;
+	font-size: 16px;
+	color: var(--MI_THEME-fg);
+	max-width: 200px;
+}
+
+.editTitleButton {
+	background: none;
+	border: none;
+	color: var(--MI_THEME-accent);
+	cursor: pointer;
+	padding: 4px;
+	border-radius: 4px;
+	font-size: 14px;
+	margin-left: 8px;
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+	}
+}
+
+.titleActions {
+	display: flex;
+	gap: 4px;
+	margin-left: 8px;
+}
+
+.titleActionButton {
+	background: none;
+	border: none;
+	color: var(--MI_THEME-fg);
+	cursor: pointer;
+	padding: 4px;
+	border-radius: 4px;
+	font-size: 14px;
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+	}
+}
+
+.inviteButton {
+	background: var(--MI_THEME-accent);
+	color: white;
+	border: none;
+	border-radius: 50%;
+	width: 36px;
+	height: 36px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
+	transition: all 0.2s;
+
+	&:hover {
+		background: var(--MI_THEME-accentedBg);
+		transform: scale(1.05);
+	}
+}
+
+.inviteModal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.6);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 20000;
+}
+
+.inviteModalContent {
+	background: var(--MI_THEME-panel);
+	border-radius: 12px;
+	width: 90%;
+	max-width: 400px;
+	max-height: 70vh;
+	overflow: hidden;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.inviteModalHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--MI_THEME-divider);
+
+	h3 {
+		margin: 0;
+		font-size: 18px;
+		font-weight: 600;
+	}
+}
+
+.inviteModalClose {
+	background: none;
+	border: none;
+	color: var(--MI_THEME-fg);
+	cursor: pointer;
+	padding: 8px;
+	border-radius: 50%;
+	transition: background 0.2s;
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+	}
+}
+
+.inviteModalBody {
+	padding: 20px;
+}
+
+.userSearchResults {
+	margin-top: 16px;
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.userSearchResult {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: background 0.2s;
+
+	&:hover {
+		background: var(--MI_THEME-buttonHoverBg);
+	}
+}
+
+.searchResultAvatar {
+	width: 40px;
+	height: 40px;
+}
+
+.searchResultInfo {
+	flex: 1;
+}
+
+.searchResultName {
+	font-weight: 600;
+	margin-bottom: 2px;
+}
+
+.searchResultUsername {
+	color: var(--MI_THEME-fgTransparentWeak);
+	font-size: 14px;
 }
 </style>
