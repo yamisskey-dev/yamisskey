@@ -39,6 +39,7 @@ export default function(app: App) {
 	app.component('WidgetListenBrainz', defineAsyncComponent(() => import('./WidgetListenBrainz.vue')));
 	app.component('WidgetChat', defineAsyncComponent(() => import('./WidgetChat.vue')));
 	app.component('WidgetJitsiMeet', defineAsyncComponent(() => import('./WidgetJitsiMeet.vue')));
+	app.component('WidgetVoiceChat', defineAsyncComponent(() => import('./WidgetVoiceChat.vue')));
 }
 
 export const federationWidgets = [
@@ -80,4 +81,5 @@ export const widgets = [
 	'chat',
 	'activeUsers',
 	'jitsiMeet',
+	'voiceChat',
 ];

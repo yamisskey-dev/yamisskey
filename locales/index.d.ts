@@ -1279,6 +1279,154 @@ export interface Locale extends ILocale {
      */
     "startChat": string;
     /**
+     * 音声通話
+     */
+    "voiceChat": string;
+    /**
+     * 音声通話に参加
+     */
+    "joinVoiceChat": string;
+    /**
+     * リスナーとして参加
+     */
+    "joinAsListener": string;
+    /**
+     * スピーカーとして参加
+     */
+    "joinAsSpeaker": string;
+    /**
+     * スピーカー
+     */
+    "speakers": string;
+    /**
+     * リスナー
+     */
+    "listeners": string;
+    /**
+     * 音声通話への参加に失敗しました
+     */
+    "failedToJoinVoiceChat": string;
+    /**
+     * Cloudflare Realtime
+     */
+    "cloudflareRealtime": string;
+    /**
+     * Cloudflare Realtime設定
+     */
+    "cloudflareRealtimeConfiguration": string;
+    /**
+     * Cloudflare Realtime音声通話を有効にする
+     */
+    "cloudflareRealtimeEnabled": string;
+    /**
+     * Cloudflare Realtimeを使用した音声通話機能をユーザーが利用できるようにします。
+     */
+    "cloudflareRealtimeEnabledDescription": string;
+    /**
+     * Cloudflare アプリケーション ID
+     */
+    "cloudflareRealtimeAppId": string;
+    /**
+     * Cloudflare Realtimeのアプリケーション IDを入力してください。
+     */
+    "cloudflareRealtimeAppIdDescription": string;
+    /**
+     * Cloudflare アプリケーション シークレット
+     */
+    "cloudflareRealtimeAppSecret": string;
+    /**
+     * Cloudflare Realtimeのアプリケーション シークレットを入力してください。
+     */
+    "cloudflareRealtimeAppSecretDescription": string;
+    /**
+     * 音声通話タイトル
+     */
+    "voiceChatTitle": string;
+    /**
+     * 音声通話のタイトルを入力してください
+     */
+    "voiceChatTitlePlaceholder": string;
+    /**
+     * 音声セッションを作成
+     */
+    "voiceChatCreateSession": string;
+    /**
+     * ユーザーを招待
+     */
+    "voiceChatInviteUsers": string;
+    /**
+     * 招待するユーザーを検索...
+     */
+    "voiceChatInviteUsersPlaceholder": string;
+    /**
+     * ユーザーの招待に成功しました
+     */
+    "voiceChatUserInvited": string;
+    /**
+     * ユーザーの招待に失敗しました
+     */
+    "voiceChatFailedToInvite": string;
+    /**
+     * セッションタイトル
+     */
+    "voiceChatSessionTitle": string;
+    /**
+     * タイトルを編集
+     */
+    "voiceChatEditTitle": string;
+    /**
+     * タイトルを保存
+     */
+    "voiceChatSaveTitle": string;
+    /**
+     * キャンセル
+     */
+    "voiceChatCancelEdit": string;
+    /**
+     * 音声ルームを作成
+     */
+    "voiceChatCreateRoom": string;
+    /**
+     * セッションを開始
+     */
+    "voiceChatStartSession": string;
+    /**
+     * セッションに参加
+     */
+    "voiceChatJoinSession": string;
+    /**
+     * 音声ルームが作成されました
+     */
+    "voiceChatRoomCreated": string;
+    /**
+     * セッションが開始されました
+     */
+    "voiceChatSessionStarted": string;
+    /**
+     * ホストがセッションを開始するのを待っています
+     */
+    "voiceChatWaitingToStart": string;
+    /**
+     * ルームの説明
+     */
+    "voiceChatRoomDescription": string;
+    /**
+     * この音声チャットについて説明してください...
+     */
+    "voiceChatRoomDescriptionPlaceholder": string;
+    /**
+     * ホスト
+     */
+    "voiceChatHost": string;
+    /**
+     * 参加者
+     */
+    "voiceChatParticipants": string;
+    /**
+     * リスナー
+     */
+    "voiceChatListeners": string;
+    /**
      * {n}人が読みました
      */
     "nUsersRead": ParameterizedString<"n">;

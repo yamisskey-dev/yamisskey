@@ -39,12 +39,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 	</template>
 </PageWithHeader>
-
-<!-- Voice Chat Overlay -->
-<MkVoiceChat v-if="showVoiceChatOverlay" :showVoiceChat="showVoiceChatOverlay" :roomId="currentRoomId" @closeVoiceChat="closeVoiceChat"/>
-
-<!-- Create Room Modal -->
-<MkVoiceChatCreateRoom v-model="showCreateRoomModal" @roomCreated="onRoomCreated"/>
 </template>
 
 <script lang="ts" setup>
@@ -54,8 +48,6 @@ import type { MenuItem } from '@/types/menu.js';
 import type { BasicTimelineType } from '@/timelines.js';
 import MkStreamingNotesTimeline from '@/components/MkStreamingNotesTimeline.vue';
 import MkPostForm from '@/components/MkPostForm.vue';
-import MkVoiceChat from '@/components/MkVoiceChat.vue';
-import MkVoiceChatCreateRoom from '@/components/MkVoiceChatCreateRoom.vue';
 import * as os from '@/os.js';
 import { store } from '@/store.js';
 import { i18n } from '@/i18n.js';
@@ -72,12 +64,6 @@ import MkButton from '@/components/MkButton.vue';
 provide('shouldOmitHeaderTitle', true);
 
 const tlComponent = useTemplateRef('tlComponent');
-
-// Voice chat overlay state
-const showVoiceChatOverlay = ref(false);
-const showCreateRoomModal = ref(false);
-const currentRoomId = ref<string | null>(null);
-
 type TimelinePageSrc = BasicTimelineType | `list:${string}` | `channel:${string}`;
 
 const srcWhenNotSignin = ref<'local' | 'global'>(isAvailableBasicTimeline('local') ? 'local' : 'global');
@@ -315,19 +301,6 @@ function saveTlFilter(key: keyof typeof store.s.tl.filter, newValue: boolean) {
 	}
 }
 
-async function timetravel(): Promise<void> {
-	const { canceled, result: date } = await os.inputDate({
-		title: i18n.ts.date,
-	});
-	if (canceled) return;
-
-	tlComponent.value.timetravel(date);
-}
-
-function focus(): void {
-	tlComponent.value.focus();
-}
-
 function switchTlIfNeeded() {
 	if (isBasicTimeline(src.value) && !isAvailableBasicTimeline(src.value)) {
 		src.value = availableBasicTimelines()[0];
@@ -341,28 +314,8 @@ onActivated(() => {
 	switchTlIfNeeded();
 });
 
-// Voice chat methods
-function onRoomCreated(roomId: string) {
-	currentRoomId.value = roomId;
-	showCreateRoomModal.value = false;
-	showVoiceChatOverlay.value = true;
-}
-
-function closeVoiceChat() {
-	showVoiceChatOverlay.value = false;
-	currentRoomId.value = null;
-}
-
 const headerActions = computed(() => {
 	const tmp = [
-		// Voice chat button (only for logged in users)
-		...$i ? [{
-			icon: 'ti ti-microphone',
-			text: i18n.ts.voiceChat,
-			handler: () => {
-				showCreateRoomModal.value = true;
-			},
-		}] : [],
 		{
 			icon: 'ti ti-dots',
 			text: i18n.ts.options,
@@ -413,7 +366,7 @@ const headerActions = computed(() => {
 		tmp.unshift({
 			icon: 'ti ti-refresh',
 			text: i18n.ts.reload,
-			handler: () => {
+			handler: (ev: Event) => {
 				tlComponent.value?.reloadTimeline();
 			},
 		});
