@@ -1427,6 +1427,22 @@ export interface Locale extends ILocale {
      */
     "voiceChatListeners": string;
     /**
+     * マイクへのアクセスが拒否されました。ブラウザーの設定を確認してください。
+     */
+    "microphonePermissionDenied": string;
+    /**
+     * マイクが見つかりません
+     */
+    "microphoneNotFound": string;
+    /**
+     * マイクが他のアプリケーションで使用されています
+     */
+    "microphoneNotReadable": string;
+    /**
+     * マイクへのアクセスに失敗しました
+     */
+    "microphoneError": string;
+    /**
      * {n}人が読みました
      */
     "nUsersRead": ParameterizedString<"n">;

@@ -117,9 +117,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<i class="ti ti-volume"></i>
 						{{ i18n.ts.joinAsListener }}
 					</MkButton>
-					<MkButton primary rounded gradate @click="joinAsSpeaker">
-						<i class="ti ti-microphone"></i>
-						{{ i18n.ts.joinAsSpeaker }}
+					<MkButton :disabled="isRequestingMicPermission" primary rounded gradate @click="joinAsSpeaker">
+						<i v-if="isRequestingMicPermission" class="ti ti-loader"></i>
+						<i v-else class="ti ti-microphone"></i>
+						{{ isRequestingMicPermission ? (i18n.ts.requestingMicPermission || 'Requesting microphone permission...') : i18n.ts.joinAsSpeaker }}
 					</MkButton>
 				</div>
 			</div>
@@ -332,6 +333,8 @@ const isConnected = ref(false);
 const isMuted = ref(false);
 const currentUserRole = ref<'speaker' | 'listener' | null>(null);
 const connectionError = ref<string | null>(null);
+const microphonePermission = ref<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown');
+const isRequestingMicPermission = ref(false);
 
 // Sample data
 const speakers = ref<VoiceChatParticipant[]>($i ? [
@@ -347,6 +350,63 @@ const listeners = ref<VoiceChatParticipant[]>([]);
 // WebRTC related
 let peerConnection: RTCPeerConnection | null = null;
 let localStream: MediaStream | null = null;
+
+// Microphone permission management
+async function requestMicrophonePermission(): Promise<boolean> {
+	try {
+		isRequestingMicPermission.value = true;
+
+		// Check if we already have permission
+		if ('permissions' in navigator) {
+			try {
+				const permissionStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+				microphonePermission.value = permissionStatus.state;
+
+				if (permissionStatus.state === 'granted') {
+					return true;
+				} else if (permissionStatus.state === 'denied') {
+					connectionError.value = i18n.ts.microphonePermissionDenied;
+					return false;
+				}
+			} catch (error) {
+				console.warn('Permission API not supported or failed:', error);
+			}
+		}
+
+		// Request microphone access
+		try {
+			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			// Stop the tracks immediately as we just wanted to get permission
+			stream.getTracks().forEach(track => track.stop());
+			microphonePermission.value = 'granted';
+			return true;
+		} catch (error) {
+			console.error('Microphone permission denied:', error);
+			microphonePermission.value = 'denied';
+
+			if (error instanceof DOMException) {
+				switch (error.name) {
+					case 'NotAllowedError':
+						connectionError.value = i18n.ts.microphonePermissionDenied;
+						break;
+					case 'NotFoundError':
+						connectionError.value = i18n.ts.microphoneNotFound;
+						break;
+					case 'NotReadableError':
+						connectionError.value = i18n.ts.microphoneNotReadable;
+						break;
+					default:
+						connectionError.value = i18n.ts.microphoneError;
+				}
+			} else {
+				connectionError.value = i18n.ts.microphoneError;
+			}
+			return false;
+		}
+	} finally {
+		isRequestingMicPermission.value = false;
+	}
+}
 
 // Load active rooms
 async function loadActiveRooms() {
@@ -467,6 +527,12 @@ async function joinAsListener() {
 
 async function joinAsSpeaker() {
 	try {
+		// Request microphone permission first
+		const hasPermission = await requestMicrophonePermission();
+		if (!hasPermission) {
+			return; // Error message is already set in requestMicrophonePermission
+		}
+
 		currentUserRole.value = 'speaker';
 		await connectToVoiceChat('speaker');
 	} catch (error) {
@@ -656,13 +722,11 @@ onMounted(() => {
 	}
 });
 
-const widgetId = props.widget?.id ?? null;
-
 // Define widget
 defineExpose<WidgetComponentExpose>({
 	name,
 	configure,
-	id: widgetId,
+	id: props.widget ? props.widget.id : null,
 });
 </script>
 
@@ -672,7 +736,7 @@ defineExpose<WidgetComponentExpose>({
 }
 
 .roomsList {
-	max-height: 300px;
+	max-height: 600px;
 	overflow-y: auto;
 }
 
@@ -1233,5 +1297,19 @@ defineExpose<WidgetComponentExpose>({
 .searchResultUsername {
 	color: var(--MI_THEME-fgTransparentWeak);
 	font-size: 14px;
+}
+
+// Loader animation
+.ti-loader {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
 </style>
