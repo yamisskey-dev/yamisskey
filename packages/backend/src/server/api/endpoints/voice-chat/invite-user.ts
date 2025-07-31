@@ -6,7 +6,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { DI } from '@/di-symbols.js';
-import type { Config } from '@/config.js';
+import { MiMeta } from '@/models/Meta.js';
 import { RoleService } from '@/core/RoleService.js';
 import type { UsersRepository } from '@/models/_.js';
 import { NotificationService } from '@/core/NotificationService.js';
@@ -58,7 +58,7 @@ export const paramDef = {
 export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
 	constructor(
 		@Inject(DI.config)
-		private config: Config,
+		private config: MiMeta,
 
 		@Inject(DI.usersRepository)
 		private usersRepository: UsersRepository,
@@ -74,7 +74,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			}
 
 			// Check if Cloudflare Realtime is configured
-			if (!this.config.cloudflareRealtime?.appId || !this.config.cloudflareRealtime?.appSecret) {
+			if (!this.config.cloudflareRealtimeAppId || !this.config.cloudflareRealtimeAppSecret) {
 				throw new ApiError(meta.errors.notConfigured);
 			}
 

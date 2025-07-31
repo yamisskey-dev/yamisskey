@@ -1,60 +1,52 @@
 <!--
-SPDX-FileCopyrightText: hitalin
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<div :class="$style.widget">
-	<!-- Widget Header -->
-	<div :class="$style.header">
-		<h3 :class="$style.title">
-			<i class="ti ti-microphone"></i>
-			{{ i18n.ts.voiceChat }}
-		</h3>
-		<button
-			v-if="$i"
-			:class="$style.createButton"
-			:title="i18n.ts.voiceChatCreateRoom"
-			@click="showCreateRoomModal = true"
-		>
-			<i class="ti ti-plus"></i>
-		</button>
-	</div>
+<MkContainer :showHeader="widgetProps.showHeader" data-cy-mkw-voicechat class="mkw-voicechat">
+	<template #icon><i class="ti ti-microphone"></i></template>
+	<template #header>{{ i18n.ts._widgets.voiceChat }}</template>
+	<template #func="{ buttonStyleClass }">
+		<button v-if="$i" class="_button" :class="buttonStyleClass" @click="configure()"><i class="ti ti-settings"></i></button>
+	</template>
 
-	<!-- Active rooms list -->
-	<div v-if="activeRooms.length > 0" :class="$style.roomsList">
-		<div
-			v-for="room in activeRooms"
-			:key="room.id"
-			:class="$style.roomItem"
-			@click="joinRoom(room.id)"
-		>
-			<div :class="$style.roomInfo">
-				<div :class="$style.roomTitle">{{ room.title }}</div>
-				<div :class="$style.roomMeta">
-					<span :class="$style.participants">
-						<i class="ti ti-users"></i>
-						{{ room.participantCount }}
-					</span>
-					<span :class="$style.host">
-						<i class="ti ti-crown"></i>
-						{{ room.host?.name || room.host?.username }}
-					</span>
+	<div :class="$style.root">
+		<!-- Active rooms list -->
+		<div v-if="activeRooms.length > 0" :class="$style.roomsList">
+			<div
+				v-for="room in activeRooms"
+				:key="room.id"
+				:class="$style.roomItem"
+				@click="joinRoom(room.id)"
+			>
+				<div :class="$style.roomInfo">
+					<div :class="$style.roomTitle">{{ room.title }}</div>
+					<div :class="$style.roomMeta">
+						<span :class="$style.participants">
+							<i class="ti ti-users"></i>
+							{{ room.participantCount }}
+						</span>
+						<span :class="$style.host">
+							<i class="ti ti-crown"></i>
+							{{ room.host?.name || room.host?.username }}
+						</span>
+					</div>
 				</div>
+				<button :class="$style.joinButton">
+					<i class="ti ti-login"></i>
+				</button>
 			</div>
-			<button :class="$style.joinButton">
-				<i class="ti ti-login"></i>
-			</button>
 		</div>
-	</div>
 
-	<!-- No active rooms message -->
-	<div v-else :class="$style.emptyState">
-		<i class="ti ti-microphone-off"></i>
-		<p>{{ i18n.ts.noActiveVoiceRooms }}</p>
-		<MkButton v-if="$i" primary rounded @click="showCreateRoomModal = true">
-			{{ i18n.ts.voiceChatCreateRoom }}
-		</MkButton>
+		<!-- No active rooms message -->
+		<div v-else :class="$style.emptyState">
+			<i class="ti ti-microphone-off"></i>
+			<p>{{ i18n.ts.noActiveVoiceRooms }}</p>
+			<MkButton v-if="$i" primary rounded @click="openCreateRoomDialog">
+				{{ i18n.ts.voiceChatCreateRoom }}
+			</MkButton>
+		</div>
 	</div>
 
 	<!-- Voice Chat Overlay -->
@@ -246,90 +238,111 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</div>
 		</div>
 	</div>
-
-	<!-- Create Room Modal -->
-	<div v-if="showCreateRoomModal" :class="$style.createRoomOverlay" @click.self="showCreateRoomModal = false">
-		<div :class="$style.createRoomModal">
-			<div :class="$style.createRoomHeader">
-				<h2>{{ i18n.ts.voiceChatCreateRoom }}</h2>
-				<button :class="$style.closeButton" @click="showCreateRoomModal = false">
-					<i class="ti ti-x"></i>
-				</button>
-			</div>
-
-			<div :class="$style.createRoomBody">
-				<MkInput v-model="roomTitle" :placeholder="i18n.ts.voiceChatTitlePlaceholder" :maxlength="100">
-					<template #label>{{ i18n.ts.voiceChatTitle }}</template>
-				</MkInput>
-
-				<MkTextarea v-model="roomDescription" :placeholder="i18n.ts.voiceChatRoomDescriptionPlaceholder" :maxlength="500">
-					<template #label>{{ i18n.ts.voiceChatRoomDescription }}</template>
-				</MkTextarea>
-			</div>
-
-			<div :class="$style.createRoomFooter">
-				<MkButton @click="showCreateRoomModal = false">{{ i18n.ts.cancel }}</MkButton>
-				<MkButton :disabled="!roomTitle.trim() || creating" primary @click="createRoom">
-					<MkLoading v-if="creating" mini/>
-					{{ i18n.ts.voiceChatCreateRoom }}
-				</MkButton>
-			</div>
-		</div>
-	</div>
-</div>
+</MkContainer>
 </template>
 
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useWidgetPropsManager } from './widget.js';
+import type { WidgetComponentEmits, WidgetComponentExpose, WidgetComponentProps } from './widget.js';
+import type { GetFormResultType } from '@/utility/form.js';
+import type { entities } from 'misskey-js';
+import MkContainer from '@/components/MkContainer.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkInput from '@/components/MkInput.vue';
-import MkTextarea from '@/components/MkTextarea.vue';
-import MkLoading from '@/components/global/MkLoading.vue';
 import MkAvatar from '@/components/global/MkAvatar.vue';
 import { i18n } from '@/i18n.js';
 import { $i } from '@/i.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import * as os from '@/os.js';
 
+const name = 'voiceChat';
+
+const widgetPropsDef = {
+	showHeader: {
+		type: 'boolean' as const,
+		default: true,
+	},
+	autoRefresh: {
+		type: 'boolean' as const,
+		default: true,
+	},
+	refreshInterval: {
+		type: 'number' as const,
+		default: 30000,
+	},
+};
+
+type WidgetProps = GetFormResultType<typeof widgetPropsDef>;
+
+const props = defineProps<WidgetComponentProps<WidgetProps>>();
+const emit = defineEmits<WidgetComponentEmits<WidgetProps>>();
+
+const { widgetProps, configure } = useWidgetPropsManager(name,
+	widgetPropsDef,
+	props,
+	emit,
+);
+
+// Type definitions
+interface VoiceChatRoom {
+	id: string;
+	title: string;
+	description?: string;
+	participantCount: number;
+	host?: {
+		name?: string;
+		username: string;
+	};
+	status: 'waiting' | 'active' | 'ended';
+	createdAt: string;
+}
+
+interface VoiceChatParticipant {
+	id: string;
+	user: entities.User;
+	isSpeaking: boolean;
+	isMuted: boolean;
+}
+
 // Widget state
-const activeRooms = ref([]);
-const showCreateRoomModal = ref(false);
+const activeRooms = ref<VoiceChatRoom[]>([]);
 const showVoiceChatOverlay = ref(false);
 const currentRoomId = ref<string | null>(null);
 
-// Create room state
-const roomTitle = ref('');
-const roomDescription = ref('');
-const creating = ref(false);
-
 // Voice chat state
 const roomInfo = ref<{
+	id?: string;
 	title?: string;
 	description?: string;
 	status: 'waiting' | 'active';
-	host?: { name?: string; username: string };
+	host?: { id?: string; name?: string; username: string; avatarUrl?: string };
 	participantCount: number;
+	speakerCount?: number;
 	isHost: boolean;
+	isParticipant?: boolean;
+	isSpeaker?: boolean;
+	createdAt?: string;
 } | null>(null);
 const sessionId = ref<string | null>(null);
 const showInviteModal = ref(false);
 const inviteUserQuery = ref('');
-const searchedUsers = ref([]);
+const searchedUsers = ref<entities.User[]>([]);
 const isConnected = ref(false);
 const isMuted = ref(false);
 const currentUserRole = ref<'speaker' | 'listener' | null>(null);
 const connectionError = ref<string | null>(null);
 
 // Sample data
-const speakers = ref([
+const speakers = ref<VoiceChatParticipant[]>($i ? [
 	{
 		id: '1',
 		user: $i,
 		isSpeaking: false,
 		isMuted: false,
 	},
-]);
-const listeners = ref([]);
+] : []);
+const listeners = ref<VoiceChatParticipant[]>([]);
 
 // WebRTC related
 let peerConnection: RTCPeerConnection | null = null;
@@ -340,46 +353,58 @@ async function loadActiveRooms() {
 	if (!$i) return;
 
 	try {
-		const rooms = await misskeyApi('voice-chat/get-active-rooms', {});
+		const rooms = await misskeyApi('voice-chat/get-active-rooms', {}) as VoiceChatRoom[];
 		activeRooms.value = rooms;
 	} catch (error) {
 		console.error('Failed to load active rooms:', error);
 	}
 }
 
-// Create room
-async function createRoom() {
-	if (!roomTitle.value.trim() || creating.value) return;
+// Create room using dialog
+async function openCreateRoomDialog() {
+	if (!$i) return;
 
-	creating.value = true;
+	const dialogResult = await os.form(i18n.ts.voiceChatCreateRoom, {
+		title: {
+			type: 'string',
+			label: i18n.ts.voiceChatTitle,
+			placeholder: i18n.ts.voiceChatTitlePlaceholder,
+			required: true,
+		},
+		description: {
+			type: 'string',
+			label: i18n.ts.voiceChatRoomDescription,
+			placeholder: i18n.ts.voiceChatRoomDescriptionPlaceholder,
+			multiline: true,
+		},
+	});
+
+	if (dialogResult.canceled) {
+		return;
+	}
+
 	try {
 		const result = await misskeyApi('voice-chat/create-room', {
-			title: roomTitle.value.trim(),
-			description: roomDescription.value.trim() || undefined,
-		});
+			title: dialogResult.result.title.trim(),
+			description: dialogResult.result.description.trim() || undefined,
+		}) as { roomId: string };
 
 		os.alert({
 			type: 'success',
 			text: i18n.ts.voiceChatRoomCreated,
 		});
 
-		showCreateRoomModal.value = false;
-		roomTitle.value = '';
-		roomDescription.value = '';
-
 		// Join the created room
 		joinRoom(result.roomId);
 
 		// Reload active rooms
 		await loadActiveRooms();
-	} catch (error) {
+	} catch (error: unknown) {
 		console.error('Failed to create room:', error);
 		os.alert({
 			type: 'error',
-			text: error.message ?? 'Failed to create room',
+			text: error instanceof Error ? error.message : 'Failed to create room',
 		});
-	} finally {
-		creating.value = false;
 	}
 }
 
@@ -411,7 +436,7 @@ async function startSession() {
 	try {
 		const result = await misskeyApi('voice-chat/start-session', {
 			roomId: currentRoomId.value,
-		});
+		}) as { sessionId: string };
 
 		sessionId.value = result.sessionId;
 		roomInfo.value.status = 'active';
@@ -420,11 +445,11 @@ async function startSession() {
 			type: 'success',
 			text: i18n.ts.voiceChatSessionStarted,
 		});
-	} catch (error) {
+	} catch (error: unknown) {
 		console.error('Failed to start session:', error);
 		os.alert({
 			type: 'error',
-			text: error.message ?? 'Failed to start session',
+			text: error instanceof Error ? error.message : 'Failed to start session',
 		});
 	}
 }
@@ -460,10 +485,10 @@ async function connectToVoiceChat(role: 'speaker' | 'listener') {
 		const sessionResponse = await misskeyApi('voice-chat/join-session', {
 			roomId: currentRoomId.value,
 			role: role,
-		});
+		}) as { sessionId: string };
 		sessionId.value = sessionResponse.sessionId;
 
-		// Create peer connection
+		// Create peer connection (WebRTC setup remains the same for future implementation)
 		peerConnection = new RTCPeerConnection({
 			iceServers: [
 				{
@@ -510,7 +535,7 @@ async function connectToVoiceChat(role: 'speaker' | 'listener') {
 				kind: 'audio',
 				bidirectionalMediaStream: true,
 			}] : [],
-		});
+		}) as { sessionDescription?: RTCSessionDescriptionInit };
 
 		// Set remote description
 		if (response.sessionDescription) {
@@ -578,7 +603,7 @@ async function searchUsers() {
 		const results = await misskeyApi('users/search', {
 			query: inviteUserQuery.value.trim(),
 			limit: 10,
-		});
+		}) as entities.User[];
 		searchedUsers.value = results;
 	} catch (error) {
 		console.error('Failed to search users:', error);
@@ -586,7 +611,7 @@ async function searchUsers() {
 	}
 }
 
-async function inviteUser(user) {
+async function inviteUser(user: entities.User) {
 	if (!currentRoomId.value || !roomInfo.value?.title) {
 		return;
 	}
@@ -617,63 +642,33 @@ async function inviteUser(user) {
 // Initialize
 onMounted(() => {
 	loadActiveRooms();
-	// Refresh every 30 seconds
-	const interval = window.setInterval(loadActiveRooms, 30000);
-	onUnmounted(() => {
-		window.clearInterval(interval);
-		cleanup();
-	});
+	if (widgetProps.autoRefresh) {
+		// Refresh based on widget props
+		const interval = window.setInterval(loadActiveRooms, widgetProps.refreshInterval);
+		onUnmounted(() => {
+			window.clearInterval(interval);
+			cleanup();
+		});
+	} else {
+		onUnmounted(() => {
+			cleanup();
+		});
+	}
 });
 
+const widgetId = props.widget?.id ?? null;
+
 // Define widget
-defineExpose({
-	name: 'voiceChat',
-	configure: () => {},
+defineExpose<WidgetComponentExpose>({
+	name,
+	configure,
+	id: widgetId,
 });
 </script>
 
 <style lang="scss" module>
-.widget {
-	background: var(--MI_THEME-panel);
-	border-radius: 8px;
-	overflow: hidden;
-}
-
-.header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 12px 16px;
-	border-bottom: 1px solid var(--MI_THEME-divider);
-}
-
-.title {
-	margin: 0;
-	font-size: 14px;
-	font-weight: 600;
-	display: flex;
-	align-items: center;
-	gap: 6px;
-}
-
-.createButton {
-	background: var(--MI_THEME-accent);
-	color: white;
-	border: none;
-	border-radius: 50%;
-	width: 28px;
-	height: 28px;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 12px;
-	transition: all 0.2s;
-
-	&:hover {
-		background: var(--MI_THEME-accentedBg);
-		transform: scale(1.05);
-	}
+.root {
+	padding: 0;
 }
 
 .roomsList {
@@ -745,11 +740,14 @@ defineExpose({
 		font-size: 48px;
 		margin-bottom: 12px;
 		display: block;
+		color: var(--MI_THEME-accent);
+		opacity: 0.5;
 	}
 
 	p {
 		margin: 0 0 16px 0;
 		font-size: 14px;
+		line-height: 1.5;
 	}
 }
 

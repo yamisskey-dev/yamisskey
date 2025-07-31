@@ -6,7 +6,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { DI } from '@/di-symbols.js';
-import type { Config } from '@/config.js';
+import { MiMeta } from '@/models/Meta.js';
 import { RoleService } from '@/core/RoleService.js';
 import { ApiError } from '../../error.js';
 import { voiceChatRooms } from './create-room.js';
@@ -65,13 +65,13 @@ export const paramDef = {
 export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
 	constructor(
 		@Inject(DI.config)
-		private config: Config,
+		private config: MiMeta,
 
 		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			// Check if voice chat is configured
-			if (!this.config.cloudflareRealtime || !this.config.cloudflareRealtime.appId || !this.config.cloudflareRealtime.appSecret) {
+			if (!this.config.cloudflareRealtimeEnabled || !this.config.cloudflareRealtimeAppId || !this.config.cloudflareRealtimeAppSecret) {
 				throw new ApiError(meta.errors.notConfigured);
 			}
 
@@ -98,10 +98,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			}
 
 			// Create Cloudflare session
-			const response = await fetch(`https://rtc.live.cloudflare.com/v1/apps/${this.config.cloudflareRealtime.appId}/sessions/new`, {
+			const response = await fetch(`https://rtc.live.cloudflare.com/v1/apps/${this.config.cloudflareRealtimeAppId}/sessions/new`, {
 				method: 'POST',
 				headers: {
-					'Authorization': `Bearer ${this.config.cloudflareRealtime.appSecret}`,
+					'Authorization': `Bearer ${this.config.cloudflareRealtimeAppSecret}`,
 					'Content-Type': 'application/json',
 				},
 			});
@@ -118,7 +118,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			return {
 				sessionId: data.sessionId,
-				apiBase: `https://rtc.live.cloudflare.com/v1/apps/${this.config.cloudflareRealtime.appId}`,
+				apiBase: `https://rtc.live.cloudflare.com/v1/apps/${this.config.cloudflareRealtimeAppId}`,
 				roomId: ps.roomId,
 			};
 		});

@@ -2663,6 +2663,7 @@ _widgets:
   listenBrainz: "listenBrainz"
   chat: "チャット"
   jitsiMeet: "Jitsi Meet"
+  voiceChat: "ボイスチャット"
 
 _cw:
   hide: "隠す"

@@ -2568,6 +2568,7 @@ _widgets:
   listenBrainz: "ListenBrainz"
   chat: "Chat"
   jitsiMeet: "Jitsi Meet"
+  voiceChat: "Voice Chat"
 _cw:
   hide: "Hide"
   show: "Show content"

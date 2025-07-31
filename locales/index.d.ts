@@ -10154,6 +10154,10 @@ export interface Locale extends ILocale {
          * Jitsi Meet
          */
         "jitsiMeet": string;
+        /**
+         * ボイスチャット
+         */
+        "voiceChat": string;
     };
     "_cw": {
         /**
