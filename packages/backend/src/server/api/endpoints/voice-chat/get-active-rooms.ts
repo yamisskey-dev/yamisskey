@@ -9,6 +9,7 @@ import { DI } from '@/di-symbols.js';
 import { MiMeta } from '@/models/Meta.js';
 import type { UsersRepository } from '@/models/_.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
+import { RoleService } from '@/core/RoleService.js';
 import { ApiError } from '../../error.js';
 import { voiceChatRooms } from './create-room.js';
 
@@ -26,6 +27,11 @@ export const meta = {
 	},
 
 	errors: {
+		permissionDenied: {
+			message: 'Permission denied.',
+			code: 'PERMISSION_DENIED',
+			id: 'e2b3c8f0-7e5a-4f0d-9f1e-2e8f3e4d5c6b',
+		},
 		notConfigured: {
 			message: 'Voice chat is not configured.',
 			code: 'NOT_CONFIGURED',
@@ -43,18 +49,25 @@ export const paramDef = {
 @Injectable()
 export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
 	constructor(
-		@Inject(DI.config)
-		private config: MiMeta,
+		@Inject(DI.meta)
+		private serverSettings: MiMeta,
 
 		@Inject(DI.usersRepository)
 		private usersRepository: UsersRepository,
 
 		private userEntityService: UserEntityService,
+		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			// Check if voice chat is configured
-			if (!this.config.cloudflareRealtimeEnabled || !this.config.cloudflareRealtimeAppId || !this.config.cloudflareRealtimeAppSecret) {
+			if (!this.serverSettings.cloudflareRealtimeEnabled || !this.serverSettings.cloudflareRealtimeAppId || !this.serverSettings.cloudflareRealtimeAppSecret) {
 				throw new ApiError(meta.errors.notConfigured);
+			}
+
+			// Check user permissions
+			const policies = await this.roleService.getUserPolicies(me.id);
+			if (!policies.canUseVoiceChat) {
+				throw new ApiError(meta.errors.permissionDenied);
 			}
 
 			// Get all active rooms (waiting or active status)

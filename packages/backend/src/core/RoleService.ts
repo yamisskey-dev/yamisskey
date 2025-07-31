@@ -138,7 +138,7 @@ export const DEFAULT_POLICIES: RolePolicies = {
 		'video/*',
 		'audio/*',
 	],
-	canUseVoiceChat: false,
+	canUseVoiceChat: true,
 };
 
 @Injectable()
@@ -486,6 +486,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 				}
 				return [...set];
 			}),
+			canUseVoiceChat: calc('canUseVoiceChat', vs => vs.some(v => v === true)),
 		};
 	}
 

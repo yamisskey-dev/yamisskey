@@ -63,15 +63,15 @@ const voiceChatRooms = new Map<string, {
 @Injectable()
 export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
 	constructor(
-		@Inject(DI.config)
-		private config: MiMeta,
+		@Inject(DI.meta)
+		private serverSettings: MiMeta,
 
 		private roleService: RoleService,
 		private idService: IdService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			// Check if voice chat is configured
-			if (!this.config.cloudflareRealtimeEnabled || !this.config.cloudflareRealtimeAppId || !this.config.cloudflareRealtimeAppSecret) {
+			if (!this.serverSettings.cloudflareRealtimeEnabled || !this.serverSettings.cloudflareRealtimeAppId || !this.serverSettings.cloudflareRealtimeAppSecret) {
 				throw new ApiError(meta.errors.notConfigured);
 			}
 

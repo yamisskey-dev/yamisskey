@@ -8411,6 +8411,10 @@ export interface Locale extends ILocale {
              * ファイルによっては種別を判定できないことがあります。そのようなファイルを許可する場合は {x} を指定に追加してください。
              */
             "uploadableFileTypes_caption2": ParameterizedString<"x">;
+            /**
+             * ボイスチャットを許可
+             */
+            "canUseVoiceChat": string;
         };
         "_condition": {
             /**

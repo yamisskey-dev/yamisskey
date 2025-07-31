@@ -56,14 +56,14 @@ export const paramDef = {
 @Injectable()
 export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
 	constructor(
-		@Inject(DI.config)
-		private config: MiMeta,
+		@Inject(DI.meta)
+		private serverSettings: MiMeta,
 
 		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			// Check if voice chat is configured
-			if (!this.config.cloudflareRealtimeEnabled || !this.config.cloudflareRealtimeAppId || !this.config.cloudflareRealtimeAppSecret) {
+			if (!this.serverSettings.cloudflareRealtimeEnabled || !this.serverSettings.cloudflareRealtimeAppId || !this.serverSettings.cloudflareRealtimeAppSecret) {
 				throw new ApiError(meta.errors.notConfigured);
 			}
 
@@ -74,10 +74,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			}
 
 			// Send renegotiation request to Cloudflare Realtime API
-			const response = await fetch(`https://rtc.live.cloudflare.com/v1/apps/${this.config.cloudflareRealtimeAppId}/sessions/${ps.sessionId}/renegotiate`, {
+			const response = await fetch(`https://rtc.live.cloudflare.com/v1/apps/${this.serverSettings.cloudflareRealtimeAppId}/sessions/${ps.sessionId}/renegotiate`, {
 				method: 'PUT',
 				headers: {
-					'Authorization': `Bearer ${this.config.cloudflareRealtimeAppSecret}`,
+					'Authorization': `Bearer ${this.serverSettings.cloudflareRealtimeAppSecret}`,
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({

@@ -57,8 +57,8 @@ export const paramDef = {
 @Injectable()
 export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
 	constructor(
-		@Inject(DI.config)
-		private config: MiMeta,
+		@Inject(DI.meta)
+		private serverSettings: MiMeta,
 
 		@Inject(DI.usersRepository)
 		private usersRepository: UsersRepository,
@@ -74,7 +74,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			}
 
 			// Check if Cloudflare Realtime is configured
-			if (!this.config.cloudflareRealtimeAppId || !this.config.cloudflareRealtimeAppSecret) {
+			if (!this.serverSettings.cloudflareRealtimeAppId || !this.serverSettings.cloudflareRealtimeAppSecret) {
 				throw new ApiError(meta.errors.notConfigured);
 			}
 

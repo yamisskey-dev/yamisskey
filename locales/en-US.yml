@@ -2123,6 +2123,7 @@ _role:
     uploadableFileTypes: "Uploadable file types"
     uploadableFileTypes_caption: "Specifies the allowed MIME/file types. Multiple MIME types can be specified by separating them with a new line, and wildcards can be specified with an asterisk (*). (e.g., image/*)"
     uploadableFileTypes_caption2: "Some files types might fail to be detected. To allow such files, add {x} to the specification."
+    canUseVoiceChat: "Allow Voice chat"
   _condition:
     roleAssignedTo: "Assigned to manual roles"
     isLocal: "Local user"

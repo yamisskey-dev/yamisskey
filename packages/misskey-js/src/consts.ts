@@ -118,6 +118,7 @@ export const permissions = [
 	'write:chat',
 	'read:chat',
 	'write:voice-chat',
+	'read:voice-chat',
 	'read:achievements',
 	'read:announcements',
 	'read:stats',

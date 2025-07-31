@@ -60,14 +60,14 @@ export const paramDef = {
 @Injectable()
 export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
 	constructor(
-		@Inject(DI.config)
-		private config: MiMeta,
+		@Inject(DI.meta)
+		private serverSettings: MiMeta,
 
 		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			// Check if voice chat is configured
-			if (!this.config.cloudflareRealtimeEnabled || !this.config.cloudflareRealtimeAppId || !this.config.cloudflareRealtimeAppSecret) {
+			if (!this.serverSettings.cloudflareRealtimeEnabled || !this.serverSettings.cloudflareRealtimeAppId || !this.serverSettings.cloudflareRealtimeAppSecret) {
 				throw new ApiError(meta.errors.notConfigured);
 			}
 
@@ -100,7 +100,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			return {
 				sessionId: room.sessionId,
-				apiBase: `https://rtc.live.cloudflare.com/v1/apps/${this.config.cloudflareRealtimeAppId}`,
+				apiBase: `https://rtc.live.cloudflare.com/v1/apps/${this.serverSettings.cloudflareRealtimeAppId}`,
 				roomId: ps.roomId,
 				role: ps.role,
 				isHost: room.hostId === me.id,
