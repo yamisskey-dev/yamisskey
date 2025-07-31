@@ -11,6 +11,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button v-tooltip.noDelay.right="instance.name ?? i18n.ts.instance" class="_button" :class="$style.instance" @click="openInstanceMenu">
 				<img :src="instance.iconUrl || instance.faviconUrl || '/favicon.ico'" alt="" :class="$style.instanceIcon" style="viewTransitionName: navbar-serverIcon;"/>
 			</button>
+			<button v-if="!iconOnly && $i" v-tooltip.noDelay.right="$i.isInYamiMode ? i18n.ts._yami.switchToNormalMode : i18n.ts._yami.switchToYamiMode" class="_button" :class="[$style.yamiMode, $i.isInYamiMode ? $style.on : null]" @click="handleYamiModeClick">
+				<i class="ti ti-fw" :class="$i.isInYamiMode ? 'ti-moon' : 'ti-moon-off'"></i>
+			</button>
 			<button v-if="!iconOnly" v-tooltip.noDelay.right="i18n.ts.realtimeMode" class="_button" :class="[$style.realtimeMode, store.r.realtimeMode.value ? $style.on : null]" @click="toggleRealtimeMode">
 				<i class="ti ti-bolt ti-fw"></i>
 			</button>
@@ -53,6 +56,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div :class="$style.bottom">
 			<button v-if="showWidgetButton" class="_button" :class="[$style.widget]" @click="() => emit('widgetButtonClick')">
 				<i class="ti ti-apps ti-fw"></i>
+			</button>
+			<button v-if="iconOnly && $i" v-tooltip.noDelay.right="$i.isInYamiMode ? i18n.ts._yami.switchToNormalMode : i18n.ts._yami.switchToYamiMode" class="_button" :class="[$style.yamiMode, $i.isInYamiMode ? $style.on : null]" @click="handleYamiModeClick">
+				<i class="ti ti-fw" :class="$i.isInYamiMode ? 'ti-moon' : 'ti-moon-off'"></i>
 			</button>
 			<button v-if="iconOnly" v-tooltip.noDelay.right="i18n.ts.realtimeMode" class="_button" :class="[$style.realtimeMode, store.r.realtimeMode.value ? $style.on : null]" @click="toggleRealtimeMode">
 				<i class="ti ti-bolt ti-fw"></i>
@@ -112,6 +118,9 @@ import { useRouter } from '@/router.js';
 import { prefer } from '@/preferences.js';
 import { openAccountMenu as openAccountMenu_ } from '@/accounts.js';
 import { $i } from '@/i.js';
+import { miLocalStorage } from '@/local-storage.js';
+import { unisonReload } from '@/utility/unison-reload.js';
+import { claimAchievement } from '@/utility/achievements.js';
 
 const router = useRouter();
 
@@ -169,6 +178,115 @@ function toggleRealtimeMode(ev: MouseEvent) {
 			window.location.reload();
 		},
 	}], ev.currentTarget ?? ev.target);
+}
+
+function handleYamiModeClick(ev: MouseEvent) {
+	if (!$i) return;
+
+	const yamiModeClickBehavior = prefer.s.yamiModeClickBehavior;
+
+	if (yamiModeClickBehavior === 'menu') {
+		// メニュー方式
+		os.popupMenu([{
+			type: 'label',
+			text: i18n.ts._yami.switchMode,
+		}, {
+			text: $i!.isInYamiMode ? i18n.ts._yami.switchToNormalMode : i18n.ts._yami.switchToYamiMode,
+			icon: $i!.isInYamiMode ? 'ti ti-moon-off' : 'ti ti-moon',
+			action: () => {
+				toggleYamiMode();
+			},
+		}], ev.currentTarget ?? ev.target);
+	} else {
+		// 直接切り替え方式
+		toggleYamiMode();
+	}
+}
+
+async function toggleYamiMode() {
+	if (!$i) return;
+
+	if ($i.isInYamiMode) {
+		// 通常モードに戻す
+		const neverShowExitYamiModeInfo = miLocalStorage.getItem('neverShowExitYamiModeInfo');
+
+		if (neverShowExitYamiModeInfo !== 'true') {
+			const confirm = await os.actions({
+				type: 'warning',
+				title: i18n.ts._yami.switchMode,
+				text: i18n.ts._yami.disableYamiModeConfirm,
+				actions: [
+					{
+						value: 'yes' as const,
+						text: i18n.ts.ok,
+						primary: true,
+					},
+					{
+						value: 'neverShow' as const,
+						text: `${i18n.ts.ok} (${i18n.ts.neverShow})`,
+						danger: true,
+					},
+					{
+						value: 'cancel' as const,
+						text: i18n.ts.cancel,
+					},
+				],
+			});
+
+			if (confirm.canceled || confirm.result === 'cancel') return;
+
+			if (confirm.result === 'neverShow') {
+				miLocalStorage.setItem('neverShowExitYamiModeInfo', 'true');
+			}
+		}
+
+		os.apiWithDialog('i/update', {
+			isInYamiMode: false,
+		}).then(() => {
+			unisonReload();
+		});
+	} else {
+		// やみモードに入る
+		const neverShowEnterYamiModeInfo = miLocalStorage.getItem('neverShowEnterYamiModeInfo');
+
+		if (neverShowEnterYamiModeInfo !== 'true') {
+			const confirm = await os.actions({
+				type: 'warning',
+				title: i18n.ts._yami.switchMode,
+				text: i18n.ts._yami.enableYamiModeConfirm,
+				actions: [
+					{
+						value: 'yes' as const,
+						text: i18n.ts.ok,
+						primary: true,
+					},
+					{
+						value: 'neverShow' as const,
+						text: `${i18n.ts.ok} (${i18n.ts.neverShow})`,
+						danger: true,
+					},
+					{
+						value: 'cancel' as const,
+						text: i18n.ts.cancel,
+					},
+				],
+			});
+
+			if (confirm.canceled || confirm.result === 'cancel') return;
+
+			if (confirm.result === 'neverShow') {
+				miLocalStorage.setItem('neverShowEnterYamiModeInfo', 'true');
+			}
+		}
+
+		os.apiWithDialog('i/update', {
+			isInYamiMode: true,
+		}).then(() => {
+			unisonReload();
+			// やみモードに入った実績を解除
+			claimAchievement('markedAsYamiModeUser');
+		});
+	}
 }
 
 function openAccountMenu(ev: MouseEvent) {
@@ -421,6 +539,7 @@ function menuEdit() {
     background-position: center center;
     -webkit-mask-image: linear-gradient(0deg, rgba(0,0,0,0) 15%, rgba(0,0,0,0.75) 100%);
     mask-image: linear-gradient(0deg, rgba(0,0,0,0) 15%, rgba(0,0,0,0.75) 100%);
+		pointer-events: none;
 	}
 
 	.instance {
@@ -439,6 +558,16 @@ function menuEdit() {
 		display: inline-block;
 		width: var(--top-height);
 		margin-left: auto;
+
+		&.on {
+			color: var(--MI_THEME-accent);
+		}
+	}
+
+	.yamiMode {
+		display: inline-block;
+		width: var(--top-height);
+		margin-left: 16px;
 
 		&.on {
 			color: var(--MI_THEME-accent);
@@ -675,6 +804,18 @@ function menuEdit() {
 	}
 
 	.realtimeMode {
+		display: block;
+		position: relative;
+		width: 100%;
+		height: 52px;
+		text-align: center;
+
+		&.on {
+			color: var(--MI_THEME-accent);
+		}
+	}
+
+	.yamiMode {
 		display: block;
 		position: relative;
 		width: 100%;

@@ -117,6 +117,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				:reactionEmojis="$appearNote.reactionEmojis"
 				:myReaction="$appearNote.myReaction"
 				:noteId="appearNote.id"
+				:hideReactionCount="hideReactionCount"
 				:maxNumber="16"
 				@mockUpdateMyReaction="emitUpdReaction"
 			>
@@ -312,6 +313,15 @@ const canRenote = computed(() => {
 	// 既存の条件
 	return ['public', 'home'].includes(appearNote.visibility) ||
     (appearNote.visibility === 'followers' && appearNote.userId === $i?.id);
+});
+const hideReactionCount = computed(() => {
+	switch (prefer.s.hideReactionCount) {
+		case 'none': return false;
+		case 'all': return true;
+		case 'self': return appearNote.userId === $i.id;
+		case 'others': return appearNote.userId !== $i.id;
+		default: return false;
+	}
 });
 const renoteCollapsed = ref(
 	prefer.s.collapseRenotes && isRenote && (
@@ -733,7 +743,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 	}
 
 	&:hover > .article > .main > .footer > .footerButton {
-		opacity: 1;
+		color: var(--MI_THEME-fg);
 	}
 
 	&.showActionsOnlyHover {
@@ -1008,7 +1018,7 @@ function emitUpdReaction(emoji: string, delta: number) {
 .footerButton {
 	margin: 0;
 	padding: 8px;
-	opacity: 0.7;
+	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%); // opacityなど不透明度で表現するとレンダリングパフォーマンスに影響するので通常の色の混合で代用
 
 	&:not(:last-child) {
 		margin-right: 28px;
@@ -1022,7 +1032,6 @@ function emitUpdReaction(emoji: string, delta: number) {
 .footerButtonCount {
 	display: inline;
 	margin: 0 0 0 8px;
-	opacity: 0.7;
 }
 
 @container (max-width: 580px) {

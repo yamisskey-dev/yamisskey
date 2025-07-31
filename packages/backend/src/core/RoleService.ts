@@ -80,6 +80,8 @@ export type RolePolicies = {
 	canViewCharts: boolean;
 	canEditCommunityRoles: boolean;
 	uploadableFileTypes: string[];
+	noteDraftLimit: number;
+	watermarkAvailable: boolean;
 	canUseVoiceChat: boolean;
 };
 
@@ -138,6 +140,8 @@ export const DEFAULT_POLICIES: RolePolicies = {
 		'video/*',
 		'audio/*',
 	],
+	noteDraftLimit: 10,
+	watermarkAvailable: true,
 	canUseVoiceChat: true,
 };
 
@@ -486,6 +490,8 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 				}
 				return [...set];
 			}),
+			noteDraftLimit: calc('noteDraftLimit', vs => Math.max(...vs)),
+			watermarkAvailable: calc('watermarkAvailable', vs => vs.some(v => v === true)),
 			canUseVoiceChat: calc('canUseVoiceChat', vs => vs.some(v => v === true)),
 		};
 	}

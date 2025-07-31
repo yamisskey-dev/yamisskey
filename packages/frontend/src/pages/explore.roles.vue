@@ -4,29 +4,31 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-<div class="_gaps_m">
-	<MkFoldableSection>
-		<template #header>{{ i18n.ts._role.manual + " " + i18n.ts.roles }}</template>
-		<div :class="$style.roleGrid">
-			<MkRolePreview v-for="role in rolesManual" :key="role.id" :role="role" :forModeration="false"/>
-		</div>
-	</MkFoldableSection>
-	<MkFoldableSection>
-		<template #header>{{ i18n.ts._role.conditional + " " + i18n.ts.roles }}</template>
-		<div :class="$style.roleGrid">
-			<MkRolePreview v-for="role in rolesConditional" :key="role.id" :role="role" :forModeration="false"/>
-		</div>
-	</MkFoldableSection>
-	<MkFoldableSection>
-		<template #header>{{ i18n.ts.community + " " + i18n.ts.roles }}</template>
-		<div :class="$style.roleGrid">
-			<MkRolePreview v-for="role in rolesCommunity" :key="role.id" :role="role" :forModeration="false"/>
-		</div>
-	</MkFoldableSection>
-	<!-- 権限がある場合のみ表示 -->
-	<MkButton v-if="canEditCommunityRoles" primary rounded @click="createRole">
-		<i class="ti ti-plus"></i> {{ i18n.ts._role.new }}
-	</MkButton>
+<div class="_spacer" style="--MI_SPACER-w: 1200px;">
+	<div class="_gaps_m">
+		<MkFoldableSection>
+			<template #header>{{ i18n.ts._role.manual + " " + i18n.ts.roles }}</template>
+			<div :class="$style.roleGrid">
+				<MkRolePreview v-for="role in rolesManual" :key="role.id" :role="role" :forModeration="false"/>
+			</div>
+		</MkFoldableSection>
+		<MkFoldableSection>
+			<template #header>{{ i18n.ts._role.conditional + " " + i18n.ts.roles }}</template>
+			<div :class="$style.roleGrid">
+				<MkRolePreview v-for="role in rolesConditional" :key="role.id" :role="role" :forModeration="false"/>
+			</div>
+		</MkFoldableSection>
+		<MkFoldableSection>
+			<template #header>{{ i18n.ts.community + " " + i18n.ts.roles }}</template>
+			<div :class="$style.roleGrid">
+				<MkRolePreview v-for="role in rolesCommunity" :key="role.id" :role="role" :forModeration="false"/>
+			</div>
+		</MkFoldableSection>
+		<!-- 権限がある場合のみ表示 -->
+		<MkButton v-if="canEditCommunityRoles" primary rounded @click="createRole">
+			<i class="ti ti-plus"></i> {{ i18n.ts._role.new }}
+		</MkButton>
+	</div>
 </div>
 </template>
 
@@ -74,6 +76,6 @@ function createRole() {
 .roleGrid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-	grid-gap: var(--margin);
+	gap: var(--MI-margin);
 }
 </style>

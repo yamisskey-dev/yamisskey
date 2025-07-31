@@ -41,6 +41,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</MkRadios>
 						</SearchMarker>
 
+						<SearchMarker :keywords="['yami', 'mode', 'button', 'behavior']">
+							<MkPreferenceContainer k="yamiModeClickBehavior">
+								<MkRadios v-model="yamiModeClickBehavior">
+									<template #label><i class="ti ti-moon"></i> <SearchLabel>{{ i18n.ts._yami.switchModeButtonBehavior }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+									<option value="menu">{{ i18n.ts._yami.switchModeButtonMenu }}</option>
+									<option value="direct">{{ i18n.ts._yami.switchModeButtonDirect }}</option>
+								</MkRadios>
+							</MkPreferenceContainer>
+						</SearchMarker>
+
 						<SearchMarker :keywords="['realtimemode']">
 							<MkSwitch v-model="realtimeMode">
 								<template #label><i class="ti ti-bolt"></i> <SearchLabel>{{ i18n.ts.realtimeMode }}</SearchLabel></template>
@@ -110,6 +120,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkPreferenceContainer>
 							</SearchMarker>
 
+							<!--
 							<SearchMarker :keywords="['auto', 'load', 'auto', 'more', 'scroll']">
 								<MkPreferenceContainer k="enableInfiniteScroll">
 									<MkSwitch v-model="enableInfiniteScroll">
@@ -117,6 +128,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 									</MkSwitch>
 								</MkPreferenceContainer>
 							</SearchMarker>
+							-->
 						</div>
 
 						<SearchMarker :keywords="['emoji', 'style', 'native', 'system', 'fluent', 'twemoji']">
@@ -1206,6 +1218,7 @@ const hideLocalTimeLine = prefer.model('hideLocalTimeLine');
 const hideSocialTimeLine = prefer.model('hideSocialTimeLine');
 const hideGlobalTimeLine = prefer.model('hideGlobalTimeLine');
 const nicknameEnabled = prefer.model('nicknameEnabled');
+const yamiModeClickBehavior = prefer.model('yamiModeClickBehavior');
 
 const fontSize = ref(miLocalStorage.getItem('fontSize'));
 const useSystemFont = ref(miLocalStorage.getItem('useSystemFont') != null);
