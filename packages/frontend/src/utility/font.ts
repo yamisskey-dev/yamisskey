@@ -81,6 +81,11 @@ export const fontList = {
 		fontFamily: 'Kosugi Maru',
 		importUrl: 'https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap',
 	},
+	'kiwi-maru': {
+		name: 'Kiwi Maru',
+		fontFamily: 'Kiwi Maru',
+		importUrl: 'https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@300&display=swap',
+	},
 	'hachi-maru-pop': {
 		name: 'Hachi Maru Pop',
 		fontFamily: 'Hachi Maru Pop',
@@ -106,6 +111,26 @@ export const fontList = {
 		fontFamily: 'DotGothic16',
 		importUrl: 'https://fonts.googleapis.com/css2?family=DotGothic16&display=swap',
 	},
+	'tegaki-zatsu': {
+		name: '手書き雑フォント',
+		fontFamily: '手書き雑フォント',
+		importUrl: null,
+		customCss: `@font-face {
+            font-family: '手書き雑フォント';
+            src: url('https://cdn.leafscape.be/tegaki_zatsu/851tegaki_zatsu_web.woff2') format("woff2");
+            font-display: swap;
+        }`,
+	},
+	'seto-font': {
+		name: '瀬戸フォント',
+		fontFamily: '瀬戸フォント',
+		importUrl: null,
+		customCss: `@font-face {
+            font-family: '瀬戸フォント';
+            src: url('https://cdn.leafscape.be/setofont/setofont_web.woff2') format("woff2");
+            font-display: swap;
+        }`,
+	},
 };
 
 export function applyFont(fontname: null | string) {
@@ -130,6 +155,17 @@ export function applyFont(fontname: null | string) {
 		style.innerHTML = `
             body {
                 font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            }
+        `;
+		return;
+	}
+
+	// カスタムCSSが定義されている場合（@font-face など）
+	if ('customCss' in font && font.customCss) {
+		style.innerHTML = `
+            ${font.customCss}
+            body {
+                font-family: '${font.fontFamily}', 'Hiragino Maru Gothic Pro', 'BIZ UDGothic', Roboto, HelveticaNeue, Arial, sans-serif;
             }
         `;
 		return;
