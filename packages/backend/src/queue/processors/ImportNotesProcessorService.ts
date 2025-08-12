@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: syuilo and misskey-project
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
 import * as fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
 import * as crypto from 'node:crypto';
@@ -17,8 +22,8 @@ import { ApNoteService } from '@/core/activitypub/models/ApNoteService.js';
 import { extractApHashtagObjects } from '@/core/activitypub/models/tag.js';
 import { IdService } from '@/core/IdService.js';
 import type { Config } from '@/config.js';
-import { QueueLoggerService } from '../QueueLoggerService.js';
 import { withRetry } from '@/misc/retry.js';
+import { QueueLoggerService } from '../QueueLoggerService.js';
 import type * as Bull from 'bullmq';
 import type { DbNoteImportToDbJobData, DbNoteImportJobData, DbNoteWithParentImportToDbJobData } from '../types.js';
 
@@ -79,7 +84,7 @@ export class ImportNotesProcessorService {
 	}
 
 	@bindThis
-	private downloadUrl(url: string, path:string): Promise<{filename: string}> {
+	private downloadUrl(url: string, path: string): Promise<{ filename: string }> {
 		return this.downloadService.downloadUrl(url, path, { operationTimeout: this.config.import?.downloadTimeout, maxSize: this.config.import?.maxFileSize });
 	}
 
@@ -141,7 +146,7 @@ export class ImportNotesProcessorService {
 	}
 
 	@bindThis
-	private parseTwitterFile(str : string) : { tweet: object }[] {
+	private parseTwitterFile(str: string): { tweet: object }[] {
 		const jsonStr = str.replace(/^\s*window\.YTD\.tweets\.part0\s*=\s*/, '');
 
 		try {
@@ -192,7 +197,7 @@ export class ImportNotesProcessorService {
 						maxAttempts: 3,
 						delayMs: 2000,
 						logger: this.logger,
-					}
+					},
 				);
 			} catch (e) {
 				if (e instanceof Error || typeof e === 'string') {
@@ -229,7 +234,7 @@ export class ImportNotesProcessorService {
 						maxAttempts: 3,
 						delayMs: 2000,
 						logger: this.logger,
-					}
+					},
 				);
 			} catch (e) {
 				if (e instanceof Error || typeof e === 'string') {
@@ -269,7 +274,7 @@ export class ImportNotesProcessorService {
 						maxAttempts: 3,
 						delayMs: 2000,
 						logger: this.logger,
-					}
+					},
 				);
 			} catch (e) {
 				if (e instanceof Error || typeof e === 'string') {
@@ -334,7 +339,7 @@ export class ImportNotesProcessorService {
 						maxAttempts: 3,
 						delayMs: 2000,
 						logger: this.logger,
-					}
+					},
 				);
 			} catch (e) {
 				if (e instanceof Error || typeof e === 'string') {
@@ -393,7 +398,7 @@ export class ImportNotesProcessorService {
 								maxAttempts: 3,
 								delayMs: 2000,
 								logger: this.logger,
-							}
+							},
 						);
 					} catch (e) {
 						this.logger.error(e instanceof Error ? e : new Error(e as string));
