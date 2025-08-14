@@ -10279,6 +10279,7 @@ export type components = {
             localOnly?: boolean;
             /** @enum {string|null} */
             reactionAcceptance: 'likeOnly' | 'likeOnlyForRemote' | 'nonSensitiveOnly' | 'nonSensitiveOnlyForLocalLikeOnlyForRemote' | null;
+            isNoteInYamiMode?: boolean;
         };
         NoteReaction: {
             /**
@@ -37288,6 +37289,8 @@ export interface operations {
                     renoteId?: string | null;
                     /** Format: misskey:id */
                     channelId?: string | null;
+                    /** @default false */
+                    isNoteInYamiMode?: boolean;
                     text?: string | null;
                     fileIds?: string[];
                     poll?: {
@@ -37548,6 +37551,8 @@ export interface operations {
                     renoteId?: string | null;
                     /** Format: misskey:id */
                     channelId?: string | null;
+                    /** @default false */
+                    isNoteInYamiMode?: boolean;
                     text?: string | null;
                     fileIds?: string[];
                     poll?: {
