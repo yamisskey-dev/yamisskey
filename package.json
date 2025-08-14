@@ -4,7 +4,7 @@
 	"codename": "nasubi",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/yamisskey/yamisskey.git"
+		"url": "https://github.com/yamisskey-dev/yamisskey.git"
 	},
 	"packageManager": "pnpm@10.13.1",
 	"workspaces": [
