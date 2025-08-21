@@ -48,7 +48,7 @@ export async function withRetry<T>(
 			return await operation();
 		} catch (error) {
 			lastError = error instanceof Error ? error : new Error(String(error));
-			
+
 			if (attempt === maxAttempts) {
 				logger?.error(`Operation failed after ${maxAttempts} attempts`, { error: lastError });
 				throw new RetryError(
@@ -59,16 +59,15 @@ export async function withRetry<T>(
 			}
 
 			logger?.warn(`Operation failed (attempt ${attempt}/${maxAttempts}), retrying in ${currentDelay}ms`, { error: lastError });
-			
+
 			// 最大遅延時間を制限（DoS攻撃防止）
 			const maxDelay = 30000; // 30秒
 			currentDelay = Math.min(currentDelay, maxDelay);
-			
+
 			await new Promise(resolve => setTimeout(resolve, currentDelay));
 			currentDelay *= backoffMultiplier;
 		}
 	}
-
 	// この行は到達しないはずだが、型安全性のため
 	throw new Error('Unexpected end of retry loop');
-} 
+}
