@@ -18,6 +18,7 @@ import type {
 } from './autogen/models.js';
 
 export const notificationTypes = ['note', 'follow', 'unfollow', 'mention', 'reply', 'renote', 'quote', 'reaction', 'pollVote', 'pollEnded', 'blocked', 'unblocked', 'receiveFollowRequest', 'followRequestAccepted', 'groupInvited', 'app', 'roleAssigned', 'chatRoomInvitationReceived', 'achievementEarned', 'scheduledNoteFailed', 'scheduledNotePosted'] as const;
+
 export const noteVisibilities = ['public', 'home', 'followers', 'specified'] as const;
 
 export const mutedNoteReasons = ['word', 'manual', 'spam', 'other'] as const;
