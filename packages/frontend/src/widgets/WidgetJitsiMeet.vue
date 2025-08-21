@@ -289,7 +289,7 @@ const startMeeting = async () => {
 		meetingStarted.value = true;
 		await nextTick();
 
-		setTimeout(async () => {
+		window.setTimeout(async () => {
 			try {
 				const displayName = $i?.name || $i?.username || 'Anonymous';
 				const email = $i?.email || null;

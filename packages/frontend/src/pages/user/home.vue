@@ -278,7 +278,7 @@ const editModerationNote = ref(false);
 let listenbrainzdata = false;
 if (props.user.listenbrainz) {
 	try {
-		const response = await fetch(`https://api.listenbrainz.org/1/user/${props.user.listenbrainz}/playing-now`, {
+		const response = await window.fetch(`https://api.listenbrainz.org/1/user/${props.user.listenbrainz}/playing-now`, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',

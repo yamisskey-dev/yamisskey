@@ -230,7 +230,7 @@ const connectStream = () => {
 
 	// 接続エラーや切断時の再接続ロジック
 	connection.value.on('_disconnected_', () => {
-		setTimeout(() => {
+		window.setTimeout(() => {
 			connectStream();
 		}, 3000); // 3秒後に再接続を試みる
 	});
@@ -263,7 +263,7 @@ function muteMember(user) {
 			});
 		} else {
 			// 即時にミュート状態を反映（非同期でない場合やPromiseを返さない場合）
-			setTimeout(() => {
+			window.setTimeout(() => {
 				userMutings.value.add(user.id);
 				activeUsers.value = activeUsers.value.filter(u => u.id !== user.id);
 			}, 100); // 少し遅延を入れて、ミュート処理の完了を待つ
