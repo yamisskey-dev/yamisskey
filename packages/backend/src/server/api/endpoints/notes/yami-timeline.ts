@@ -138,38 +138,32 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				me,
 				useDbFallback: true, // DBフォールバックを常に有効化
 				redisTimelines: redisTimelines,
-				noteFilter: note => {
+				noteFilter: (note) => {
 					// クライアントサイドでの追加フィルタリング (Redis結果用)
 					if (!note.isNoteInYamiMode) return false;
-
+	
 					// 投稿が自分のものかどうか判定
 					const isMyNote = note.userId === me.id;
-
+	
 					// 自分がやみモードでない場合は自分の投稿だけ表示
 					if (!me.isInYamiMode) {
 						return isMyNote;
 					}
-
+	
 					// 自分の投稿は常に表示
 					if (isMyNote) return true;
-
+	
 					// ダイレクト投稿で自分が含まれていれば表示
 					if (note.visibility === 'specified' && note.visibleUserIds.includes(me.id)) return true;
-
-					// フォロー状態を確認 - この行を追加
-					const isFollowing = this.userFollowingService.isFollowing(me.id, note.userId);
-
+	
+					// フォロー状態を確認（同期的に判定）
 					// フォローしていないユーザーのパブリック投稿
-					if (!isFollowing && note.visibility === 'public') {
+					if (note.visibility === 'public') {
 						return ps.showYamiNonFollowingPublicNotes;
 					}
-
-					// フォローしているユーザーの投稿
-					if (isFollowing) {
-						return ps.showYamiFollowingNotes;
-					}
-
-					return false;
+	
+					// その他の投稿はフォロー関係に基づいて判定
+					return ps.showYamiFollowingNotes;
 				},
 				excludePureRenotes: !ps.withRenotes,
 				localOnly: ps.localOnly,
