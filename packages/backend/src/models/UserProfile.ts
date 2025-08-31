@@ -141,6 +141,12 @@ export class MiUserProfile {
 	})
 	public hideProfileFiles: boolean;
 
+	@Column('boolean', {
+		default: true,
+		comment: 'Whether to hide registration date from others.',
+	})
+	public hideRegistrationDate: boolean;
+
 	@Column('varchar', {
 		length: 128, nullable: true,
 	})
