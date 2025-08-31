@@ -1,4 +1,18 @@
 # DIFFRENCE
+## Unreleased
+
+### Feat
+- 自動リリースフローのテスト
+
+### Enhance
+- GitHub Actionsワークフローの設定完了
+
+### Client
+-
+
+### Server
+-
+
 ## 2024.10.1-yami-1.3.8
 ### Feat
 - 最終アクティブでコンディショナルなロールを制御可能に (cherry-pick: pwpspace)
