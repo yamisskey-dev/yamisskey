@@ -46,23 +46,19 @@ jobs:
           STABLE_BRANCH: ${{ vars.STABLE_BRANCH }}
 
   merge:
-    uses: yamisskey-dev/release-manager-actions/.github/workflows/merge.yml@v2-yamisskey
+    uses: misskey-dev/release-manager-actions/.github/workflows/merge.yml@v2
     needs: get-pr
     if: ${{ needs.get-pr.outputs.pr_number != '' && inputs.merge == true }}
     with:
       pr_number: ${{ needs.get-pr.outputs.pr_number }}
       user: 'github-actions[bot]'
       package_jsons_to_rewrite: ${{ vars.PACKAGE_JSONS_TO_REWRITE }}
-      changelog_file: 'DIFFERENCE.md'
       # Text to prepend to the changelog
       # The first line must be `## Unreleased`
       changes_template: |
         ## Unreleased
 
-        ### Feat
-        -
-
-        ### Enhance
+        ### General
         -
 
         ### Client
@@ -78,14 +74,13 @@ jobs:
       RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
   create-prerelease:
-    uses: yamisskey-dev/release-manager-actions/.github/workflows/create-prerelease.yml@v2-yamisskey
+    uses: misskey-dev/release-manager-actions/.github/workflows/create-prerelease.yml@v2
     needs: get-pr
     if: ${{ needs.get-pr.outputs.pr_number != '' && inputs.merge != true  }}
     with:
       pr_number: ${{ needs.get-pr.outputs.pr_number }}
       user: 'github-actions[bot]'
       package_jsons_to_rewrite: ${{ vars.PACKAGE_JSONS_TO_REWRITE }}
-      changelog_file: 'DIFFERENCE.md'
       use_external_app_to_release: ${{ vars.USE_RELEASE_APP == 'true' }}
       indent: ${{ vars.INDENT }}
       draft_prerelease_channel: alpha
@@ -97,41 +92,29 @@ jobs:
       RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
   create-target:
-    uses: yamisskey-dev/release-manager-actions/.github/workflows/create-target.yml@v2-yamisskey
+    uses: misskey-dev/release-manager-actions/.github/workflows/create-target.yml@v2
     needs: get-pr
     if: ${{ needs.get-pr.outputs.pr_number == '' }}
     with:
       user: 'github-actions[bot]'
-      changelog_file: 'DIFFERENCE.md'
       # The script for version increment.
       # process.env.CURRENT_VERSION: The current version.
       #
-      # Yamisskey versioning (yyyy.MM.patch-[na|mu]yami-x.x.x or yyyy.MM.patch-yami-x.x.x) example
+      # Misskey calender versioning (yyyy.MM.patch) example
       version_increment_script: |
-        const currentVersion = process.env.CURRENT_VERSION;
-        
-        // 拡張Yamisskeyバージョン形式に対応 (Misskeyプレリリース識別子も考慮)
-        // パターン: 2024.11.0[-alpha.1]-[na|mu]yami-1.0.0
-        const yamisskeyMatch = currentVersion.match(/^(\d+\.\d+\.\d+)(-(?:alpha|beta|rc)\.\d+)?-(na|mu)?yami-(\d+)\.(\d+)\.(\d+)(-(?:alpha|beta|rc)\.\d+)?$/);
-        
-        if (yamisskeyMatch) {
-          const [, baseVersion, basePrerelease, prefix, yMajor, yMinor, yPatch, yamisskeyPrerelease] = yamisskeyMatch;
-          const prereleaseStr = basePrerelease || ''; // Misskeyベースのプレリリース識別子を保持
-          
-          // プレフィックス変換ロジック
-          if (prefix === 'mu') {
-            // muyami → nayami (Misskeyプレリリース識別子とYamisskeyバージョンは保持)
-            return `${baseVersion}${prereleaseStr}-nayami-${yMajor}.${yMinor}.${yPatch}`;
-          } else if (prefix === 'na') {
-            // nayami → yami (Misskeyプレリリース識別子とYamisskeyバージョンは保持)
-            return `${baseVersion}${prereleaseStr}-yami-${yMajor}.${yMinor}.${yPatch}`;
-          } else {
-            // yamiの場合、エラーまたはそのまま返す（通常ここには来ない）
-            throw new Error(`Cannot increment yami version: ${currentVersion}`);
-          }
+        const now = new Date();
+        const year = now.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'Asia/Tokyo' });
+        const month = now.toLocaleDateString('en-US', { month: 'numeric', timeZone: 'Asia/Tokyo' });
+        const [major, minor, _patch] = process.env.CURRENT_VERSION.split('.');
+        const patch = Number(_patch.split('-')[0]);
+        if (Number.isNaN(patch)) {
+          console.error('Invalid patch version', year, month, process.env.CURRENT_VERSION, major, minor, _patch);
+          throw new Error('Invalid patch version');
+        }
+        if (year !== major || month !== minor) {
+          return `${year}.${month}.0`;
         } else {
-          // Yamisskeyバージョン形式でない場合はエラー
-          throw new Error(`Invalid Yamisskey version format: ${currentVersion}`);
+          return `${major}.${minor}.${patch + 1}`;
         }
       ##Semver example
       #version_increment_script: |
@@ -144,8 +127,8 @@ jobs:
       #    return `${major}.${minor}.${Number(patch) + 1}`;
       #  }
       package_jsons_to_rewrite: ${{ vars.PACKAGE_JSONS_TO_REWRITE }}
-      use_external_app_to_release: true
-      indent: "\t"
+      use_external_app_to_release: ${{ vars.USE_RELEASE_APP == 'true' }}
+      indent: ${{ vars.INDENT }}
       stable_branch: ${{ vars.STABLE_BRANCH }}
       draft_prerelease_channel: alpha
     secrets:
