@@ -1,5 +1,5 @@
 # DIFFRENCE
-## Unreleased
+## 2025.7.0-yami-1.9.11
 
 ### Feat
 - ユーザー登録日のプライバシーオプション追加
