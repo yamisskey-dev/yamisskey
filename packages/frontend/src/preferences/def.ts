@@ -563,7 +563,7 @@ export const PREF_DEF = definePreferences({
 		default: false,
 	},
 	defaultIsNoteInYamiMode: {
-		default: false,
+		default: true,
 	},
 	showYamiNonFollowingPublicNotes: {
 		default: false,
