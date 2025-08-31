@@ -55,6 +55,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkSwitch>
 		</SearchMarker>
 
+		<SearchMarker :keywords="['registration', 'date', 'hide', 'visibility']">
+			<MkSwitch v-model="hideRegistrationDate" @update:modelValue="save()">
+				<template #label><SearchLabel>{{ i18n.ts.hideRegistrationDate }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+				<template #caption><SearchKeyword>{{ i18n.ts.hideRegistrationDateDescription }}</SearchKeyword></template>
+			</MkSwitch>
+		</SearchMarker>
+
 		<SearchMarker :keywords="['following', 'visibility']">
 			<MkSelect v-model="followingVisibility" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.followingVisibility }}</SearchLabel></template>
@@ -295,6 +302,7 @@ const hideSearchResult = ref($i.hideSearchResult);
 const publicReactions = ref($i.publicReactions);
 const hideActivity = ref($i.hideActivity);
 const hideProfileFiles = ref($i.hideProfileFiles);
+const hideRegistrationDate = ref($i.hideRegistrationDate);
 const notesVisibility = ref($i.notesVisibility);
 const followingVisibility = ref($i.followingVisibility);
 const followersVisibility = ref($i.followersVisibility);
@@ -328,7 +336,7 @@ watch([makeNotesFollowersOnlyBefore, makeNotesHiddenBefore], () => {
 
 // 選択されているリスト情報を取得する
 const selectedList = computed(() => {
-	if (!activeStatusVisibility.value?.type === 'list' || !activeStatusVisibility.value?.userListId) return null;
+	if (activeStatusVisibility.value?.type !== 'list' || !activeStatusVisibility.value?.userListId) return null;
 	return userLists.value.find(list => list.id === activeStatusVisibility.value.userListId) || null;
 });
 
@@ -390,6 +398,7 @@ function save() {
 		publicReactions: !!publicReactions.value,
 		hideActivity: !!hideActivity.value,
 		hideProfileFiles: !!hideProfileFiles.value,
+		hideRegistrationDate: !!hideRegistrationDate.value,
 		notesVisibility: notesVisibility.value,
 		followingVisibility: followingVisibility.value,
 		followersVisibility: followersVisibility.value,
