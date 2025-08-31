@@ -145,7 +145,7 @@ jobs:
       #  }
       package_jsons_to_rewrite: ${{ vars.PACKAGE_JSONS_TO_REWRITE }}
       use_external_app_to_release: true
-      indent: ${{ vars.INDENT }}
+      indent: "\t"
       stable_branch: ${{ vars.STABLE_BRANCH }}
       draft_prerelease_channel: alpha
     secrets:
