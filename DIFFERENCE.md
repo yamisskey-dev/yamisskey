@@ -2,16 +2,17 @@
 ## Unreleased
 
 ### Feat
-- 自動リリースフローのテスト
+- ユーザー登録日のプライバシーオプション追加
+- Yamisskey自動リリースフロー実装
 
 ### Enhance
-- GitHub Actionsワークフローの設定完了
+- やみノートが投稿できる時にデフォルトでやみノートで投稿する機能を有効化
 
 ### Client
--
+- フロントエンドESLintエラーを解決してCI準拠
 
 ### Server
--
+- 'unfollow'通知タイプをautogen/typesと関連型定義に追加
 
 ## 2024.10.1-yami-1.3.8
 ### Feat
