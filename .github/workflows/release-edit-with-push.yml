@@ -3,9 +3,9 @@ name: "Release Manager: sync changelog with PR"
 on:
   push:
     branches:
-      - develop
+      - muyami
     paths:
-      - 'CHANGELOG.md'
+      - 'DIFFERENCE.md'
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -29,14 +29,15 @@ jobs:
           STABLE_BRANCH: ${{ vars.STABLE_BRANCH }}
       - name: Get target version
         if: steps.get_pr.outputs.pr_number != ''
-        uses: misskey-dev/release-manager-actions/.github/actions/get-target-version@v2
+        uses: yamisskey-dev/release-manager-actions/.github/actions/get-target-version@v2-yamisskey
         id: v
-      # CHANGELOG.mdの内容を取得
+      # DIFFERENCE.mdの内容を取得
       - name: Get changelog
         if: steps.get_pr.outputs.pr_number != ''
-        uses: misskey-dev/release-manager-actions/.github/actions/get-changelog@v2
+        uses: yamisskey-dev/release-manager-actions/.github/actions/get-changelog@v2-yamisskey
         with:
           version: ${{ steps.v.outputs.target_version }}
+          changelog_file: 'DIFFERENCE.md'
         id: changelog
       # PRのnotesを更新
       - name: Update PR
