@@ -72,18 +72,70 @@ jobs:
           # 差分のサイズ制限（200行まで）
           head -200 pr_diff.txt > pr_diff_limited.txt
 
-          # シンプルなレビューメッセージを作成
+          # 差分が空の場合は終了
+          if [ ! -s pr_diff_limited.txt ]; then
+            echo "No diff found, skipping review"
+            exit 0
+          fi
+
+          # PRのタイトルと説明を取得
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --json title --jq '.title')
+          PR_BODY=$(gh pr view "$PR_NUMBER" --json body --jq '.body')
+
+          # Claude APIに送信するプロンプトを作成
+          cat > claude_prompt.txt << 'PROMPT_EOF'
+          あなたはYamisskey（Misskeyフォーク）のコードレビュー専門のエンジニアです。以下のPRの差分を詳細にレビューし、具体的で建設的なフィードバックを提供してください。
+
+          レビュー観点：
+          1. セキュリティの問題
+          2. パフォーマンスの問題
+          3. バグの可能性
+          4. コードの品質と可読性
+          5. Yamisskey/Misskeyの設計パターンとの整合性
+          6. TypeScript/JavaScript/Vue.jsのベストプラクティス
+
+          問題がない場合は「問題なし」と記載してください。
+
+          PR情報：
+          PROMPT_EOF
+
+          echo "タイトル: $PR_TITLE" >> claude_prompt.txt
+          echo "" >> claude_prompt.txt
+          echo "説明:" >> claude_prompt.txt
+          echo "$PR_BODY" >> claude_prompt.txt
+          echo "" >> claude_prompt.txt
+          echo "差分:" >> claude_prompt.txt
+          cat pr_diff_limited.txt >> claude_prompt.txt
+
+          # Claude APIを呼び出してレビューを取得
+          API_URL="https://api.anthropic.com/v1/messages"
+          REVIEW_RESULT=$(curl -s -X POST "$API_URL" \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -d "{
+              \"model\": \"claude-3-5-sonnet-20241022\",
+              \"max_tokens\": 4000,
+              \"messages\": [
+                {
+                  \"role\": \"user\",
+                  \"content\": $(jq -Rs . claude_prompt.txt)
+                }
+              ]
+            }" | jq -r '.content[0].text // "レビューの取得に失敗しました"')
+
+          # レビューコメントを作成
           echo "## 🤖 Claude-Sonnet-4 Code Review" > comment.md
           echo "" >> comment.md
-          echo "PRの差分を確認しました。" >> comment.md
-          echo "Yamisskeyのコードレビューを実行します。" >> comment.md
-          echo "" >> comment.md
           echo "**レビュー対象:** PR #$PR_NUMBER" >> comment.md
-          echo "**モデル:** Claude-Sonnet-4-20250514" >> comment.md
+          echo "**モデル:** Claude-3.5-Sonnet-20241022" >> comment.md
+          echo "" >> comment.md
+          echo "### レビュー結果" >> comment.md
+          echo "" >> comment.md
+          echo "$REVIEW_RESULT" >> comment.md
           echo "" >> comment.md
           echo "---" >> comment.md
-          echo "*AI によるコードレビューです。" >> comment.md
-          echo "参考程度にご活用ください。*" >> comment.md
+          echo "*AI によるコードレビューです。参考程度にご活用ください。*" >> comment.md
 
           # PRにコメント
           gh pr comment "$PR_NUMBER" --body-file comment.md
