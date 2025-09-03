@@ -8,6 +8,11 @@ on:
         description: 'MERGE RELEASE BRANCH TO MAIN'
         default: false
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   check-branch:
     runs-on: ubuntu-latest
@@ -31,8 +36,6 @@ jobs:
     uses: yamisskey-dev/release-manager-actions/.github/workflows/create-target.yml@v2-yamisskey
     with:
       difference_path: 'DIFFERENCE.md'
-      package_jsons_to_rewrite: '["package.json"]'
-      indent: 2
     secrets:
       RELEASE_APP_ID: ${{ secrets.RELEASE_APP_ID }}
       RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
