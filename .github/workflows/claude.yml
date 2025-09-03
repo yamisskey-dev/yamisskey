@@ -20,8 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
       id-token: write
     steps:
       - name: Checkout repository
@@ -29,8 +29,50 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run Claude PR Action
-        uses: anthropics/claude-code-action@beta
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          timeout_minutes: "60"
+      - name: Debug Event
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Comment body: ${{ github.event.comment.body }}"
+          echo "PR number: ${{ github.event.pull_request.number || github.event.issue.number }}"
+
+      - name: Run Claude Code Review
+        if: contains(github.event.comment.body, '@claude')
+        run: |
+          # PRの差分を取得
+          if [ "${{ github.event.issue.pull_request }}" != "null" ]; then
+            pr_number="${{ github.event.issue.number }}"
+            echo "Processing PR #$pr_number"
+            
+            # PRの差分を取得
+            gh pr diff $pr_number > pr_diff.txt
+            
+            # Claude APIを呼び出し
+            curl -X POST "https://api.anthropic.com/v1/messages" \
+              -H "Content-Type: application/json" \
+              -H "x-api-key: ${{ secrets.ANTHROPIC_API_KEY }}" \
+              -d '{
+                "model": "claude-3-sonnet-20240229",
+                "max_tokens": 2000,
+                "messages": [
+                  {
+                    "role": "user",
+                    "content": "以下のYamisskeyのPRをコードレビューしてください。セキュリティ、パフォーマンス、コード品質の観点から問題点を指摘してください。日本語で回答してください：\n\n```diff\n$(cat pr_diff.txt | head -200)\n```"
+                  }
+                ]
+              }' > claude_response.json
+            
+            # レスポンスを解析してコメント
+            review_content=$(jq -r '.content[0].text // "レビューに失敗しました"' claude_response.json)
+            
+            # PRにコメント
+            gh pr comment $pr_number --body "## 🤖 Claude Code Review
+
+$review_content
+
+---
+*AI によるコードレビューです。参考程度にご活用ください。*"
+          else
+            echo "This is not a PR comment"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
