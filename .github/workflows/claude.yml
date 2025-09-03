@@ -10,6 +10,8 @@ name: Claude PR Assistant
     types: [opened, assigned]
   pull_request_review:
     types: [submitted]
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
   claude-code-action:
@@ -21,7 +23,9 @@ jobs:
       (github.event_name == 'pull_request_review' &&
        contains(github.event.review.body, '@claude')) ||
       (github.event_name == 'issues' &&
-       contains(github.event.issue.body, '@claude'))
+       contains(github.event.issue.body, '@claude')) ||
+      (github.event_name == 'pull_request' &&
+       contains(github.event.pull_request.body, '@claude'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,9 +44,13 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PR_URL: ${{ github.event.issue.pull_request }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           echo "event_name=$EVENT_NAME" >> $GITHUB_OUTPUT
-          if [ "$PR_URL" != "null" ] && [ "$PR_URL" != "" ]; then
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            echo "is_pr=true" >> $GITHUB_OUTPUT
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          elif [ "$PR_URL" != "null" ] && [ "$PR_URL" != "" ]; then
             echo "is_pr=true" >> $GITHUB_OUTPUT
             echo "pr_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
           else
