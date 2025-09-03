@@ -1,17 +1,29 @@
 ---
-name: Claude PR Assistant
+name: Claude PR Assistant (DISABLED - API Credit Required)
+
+# ワークフロー無効化 - Claude API クレジット不足のため
+# Claude Maxプランとは別にClaude APIのクレジット購入が必要
+# 有効化するには以下の'on'セクションのコメントを外してください
+
+# 'on':
+#   issue_comment:
+#     types: [created]
+#   pull_request_review_comment:
+#     types: [created]
+#   issues:
+#     types: [opened, assigned]
+#   pull_request_review:
+#     types: [submitted]
+#   pull_request:
+#     types: [opened, synchronize]
 
 'on':
-  issue_comment:
-    types: [created]
-  pull_request_review_comment:
-    types: [created]
-  issues:
-    types: [opened, assigned]
-  pull_request_review:
-    types: [submitted]
-  pull_request:
-    types: [opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      enable_claude:
+        description: 'Enable Claude workflow (requires API credits)'
+        required: false
+        default: 'false'
 
 jobs:
   claude-code-action:
