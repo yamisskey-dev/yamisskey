@@ -120,10 +120,10 @@ jobs:
 
           console.log(`DEBUG: Parsed - baseVersion: ${baseVersion}, extension: ${yMajor}.${yMinor}.${yPatch}`);
 
-          // nayami → yami プレフィックス変換
-          const incrementedVersion = `${baseVersion}-yami-${yMajor}.${yMinor}.${Number(yPatch) + 1}`;
-          console.log(`DEBUG: Incremented version: ${incrementedVersion}`);
-          return incrementedVersion;
+          // nayami → yami プレフィックス変換（パッチバージョンはそのまま）
+          const convertedVersion = `${baseVersion}-yami-${yMajor}.${yMinor}.${yPatch}`;
+          console.log(`DEBUG: Converted version: ${convertedVersion}`);
+          return convertedVersion;
         } else {
           // nayamiバージョン形式以外はエラー
           throw new Error(`Only nayami version format supported: ${currentVersion}. Expected format: yyyy.MM.patch-nayami-x.y.z`);
