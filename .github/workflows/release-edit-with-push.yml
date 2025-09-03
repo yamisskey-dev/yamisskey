@@ -3,9 +3,9 @@ name: "Release Manager: sync changelog with PR"
 on:
   push:
     branches:
-      - develop
+      - nayami
     paths:
-      - 'CHANGELOG.md'
+      - 'DIFFERENCE.md'
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

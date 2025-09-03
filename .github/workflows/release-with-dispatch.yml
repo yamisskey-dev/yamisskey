@@ -31,8 +31,26 @@ permissions:
   pull-requests: write
 
 jobs:
+  check-branch:
+    runs-on: ubuntu-latest
+    outputs:
+      is_nayami: ${{ steps.check.outputs.is_nayami }}
+    steps:
+      - name: Check if branch is nayami
+        id: check
+        run: |
+          if [ "${{ github.ref_name }}" = "nayami" ]; then
+            echo "is_nayami=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_nayami=false" >> $GITHUB_OUTPUT
+            echo "::error::This workflow only supports nayami branch. Current branch: ${{ github.ref_name }}"
+            exit 1
+          fi
+
   get-pr:
     runs-on: ubuntu-latest
+    needs: check-branch
+    if: ${{ needs.check-branch.outputs.is_nayami == 'true' }}
     outputs:
       pr_number: ${{ steps.get_pr.outputs.pr_number }}
     steps:
@@ -45,8 +63,8 @@ jobs:
 
   merge:
     uses: yamisskey-dev/release-manager-actions/.github/workflows/merge.yml@v2-yamisskey
-    needs: get-pr
-    if: ${{ needs.get-pr.outputs.pr_number != '' && inputs.merge == true }}
+    needs: [check-branch, get-pr]
+    if: ${{ needs.check-branch.outputs.is_nayami == 'true' && needs.get-pr.outputs.pr_number != '' && inputs.merge == true }}
     with:
       pr_number: ${{ needs.get-pr.outputs.pr_number }}
       user: 'github-actions[bot]'
@@ -74,8 +92,8 @@ jobs:
 
   create-prerelease:
     uses: yamisskey-dev/release-manager-actions/.github/workflows/create-prerelease.yml@v2-yamisskey
-    needs: get-pr
-    if: ${{ needs.get-pr.outputs.pr_number != '' && inputs.merge != true  }}
+    needs: [check-branch, get-pr]
+    if: ${{ needs.check-branch.outputs.is_nayami == 'true' && needs.get-pr.outputs.pr_number != '' && inputs.merge != true  }}
     with:
       pr_number: ${{ needs.get-pr.outputs.pr_number }}
       user: 'github-actions[bot]'
@@ -93,8 +111,8 @@ jobs:
 
   create-target:
     uses: yamisskey-dev/release-manager-actions/.github/workflows/create-target.yml@v2-yamisskey
-    needs: get-pr
-    if: ${{ needs.get-pr.outputs.pr_number == '' }}
+    needs: [check-branch, get-pr]
+    if: ${{ needs.check-branch.outputs.is_nayami == 'true' && needs.get-pr.outputs.pr_number == '' }}
     with:
       user: 'github-actions[bot]'
       difference_path: 'DIFFERENCE.md'
