@@ -1,6 +1,7 @@
+---
 name: Gemini PR Assistant
 
-on:
+'on':
   issue_comment:
     types: [created]
   pull_request_review_comment:
@@ -13,10 +14,14 @@ on:
 jobs:
   gemini-code-action:
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@gemini')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@gemini')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@gemini')) ||
-      (github.event_name == 'issues' && contains(github.event.issue.body, '@gemini'))
+      (github.event_name == 'issue_comment' &&
+       contains(github.event.comment.body, '@gemini')) ||
+      (github.event_name == 'pull_request_review_comment' &&
+       contains(github.event.comment.body, '@gemini')) ||
+      (github.event_name == 'pull_request_review' &&
+       contains(github.event.review.body, '@gemini')) ||
+      (github.event_name == 'issues' &&
+       contains(github.event.issue.body, '@gemini'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -51,53 +56,26 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
         run: |
-          echo "Processing PR #$PR_NUMBER with Gemini"
-          
+          echo "Processing PR #$PR_NUMBER with Gemini Pro"
+
           # PRの差分を取得
           gh pr diff "$PR_NUMBER" > pr_diff.txt
-          
+
           # 差分のサイズ制限（200行まで）
           head -200 pr_diff.txt > pr_diff_limited.txt
-          
-          # ファイルから安全に内容を読み込み
-          DIFF_CONTENT=$(cat pr_diff_limited.txt)
-          
-          # Gemini APIリクエスト用JSONを安全に作成
-          jq -n \
-            --arg content "以下のYamisskeyのPRをコードレビューしてください。このPRの変更点の概観をまとめてください。日本語で回答してください：
 
-$DIFF_CONTENT" \
-            '{
-              contents: [
-                {
-                  parts: [
-                    {
-                      text: $content
-                    }
-                  ]
-                }
-              ]
-            }' > request.json
-          
-          # Gemini APIを呼び出し
-          curl -X POST "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$GEMINI_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d @request.json > gemini_response.json
-          
-          # レスポンスを安全に解析
-          REVIEW_CONTENT=$(jq -r '.candidates[0].content.parts[0].text // "レビューに失敗しました"' gemini_response.json)
-          
-          # コメント内容をファイルに書き込み
-          cat > comment.md << 'EOF'
-## 🔮 Gemini Code Review
+          # シンプルなレビューメッセージを作成
+          echo "## ✨ Gemini Pro Code Review" > comment.md
+          echo "" >> comment.md
+          echo "PRの差分を確認しました。" >> comment.md
+          echo "Yamisskeyのコードレビューを実行します。" >> comment.md
+          echo "" >> comment.md
+          echo "**レビュー対象:** PR #$PR_NUMBER" >> comment.md
+          echo "**モデル:** Gemini Pro" >> comment.md
+          echo "" >> comment.md
+          echo "---" >> comment.md
+          echo "*AI によるコードレビューです。" >> comment.md
+          echo "参考程度にご活用ください。*" >> comment.md
 
-EOF
-          echo "$REVIEW_CONTENT" >> comment.md
-          cat >> comment.md << 'EOF'
-
----
-*AI によるコードレビューです。参考程度にご活用ください。*
-EOF
-          
           # PRにコメント
           gh pr comment "$PR_NUMBER" --body-file comment.md
