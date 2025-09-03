@@ -107,6 +107,10 @@ const updateWidget = (id, data) => {
 	emit('updateWidget', { id, data });
 };
 
+function isLink(element: HTMLElement): boolean {
+	return element.tagName === 'A' || element.closest('a') !== null;
+}
+
 function onContextmenu(widget: Widget, ev: MouseEvent) {
 	const element = ev.target as HTMLElement | null;
 	if (element && isLink(element)) return;

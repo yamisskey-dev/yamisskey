@@ -43,16 +43,17 @@ jobs:
           echo "pr_number=$(gh pr list --limit 1 --search "head:$GITHUB_REF_NAME base:$STABLE_BRANCH is:open" --json number  --jq '.[] | .number')" >> $GITHUB_OUTPUT
         id: get_pr
         env:
-          STABLE_BRANCH: ${{ vars.STABLE_BRANCH }}
+          STABLE_BRANCH: 'master'
 
   merge:
-    uses: misskey-dev/release-manager-actions/.github/workflows/merge.yml@v2
+    uses: yamisskey-dev/release-manager-actions/.github/workflows/merge.yml@v2-yamisskey
     needs: get-pr
     if: ${{ needs.get-pr.outputs.pr_number != '' && inputs.merge == true }}
     with:
       pr_number: ${{ needs.get-pr.outputs.pr_number }}
       user: 'github-actions[bot]'
-      package_jsons_to_rewrite: ${{ vars.PACKAGE_JSONS_TO_REWRITE }}
+      package_jsons_to_rewrite: 'package.json'
+      difference_path: 'DIFFERENCE.md'
       # Text to prepend to the changelog
       # The first line must be `## Unreleased`
       changes_template: |
@@ -68,68 +69,69 @@ jobs:
         -
 
       use_external_app_to_release: ${{ vars.USE_RELEASE_APP == 'true' }}
-      indent: ${{ vars.INDENT }}
+      indent: '\t'
+      stable_branch: 'master'
     secrets:
       RELEASE_APP_ID: ${{ secrets.RELEASE_APP_ID }}
       RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
   create-prerelease:
-    uses: misskey-dev/release-manager-actions/.github/workflows/create-prerelease.yml@v2
+    uses: yamisskey-dev/release-manager-actions/.github/workflows/create-prerelease.yml@v2-yamisskey
     needs: get-pr
     if: ${{ needs.get-pr.outputs.pr_number != '' && inputs.merge != true  }}
     with:
       pr_number: ${{ needs.get-pr.outputs.pr_number }}
       user: 'github-actions[bot]'
-      package_jsons_to_rewrite: ${{ vars.PACKAGE_JSONS_TO_REWRITE }}
+      package_jsons_to_rewrite: 'package.json'
+      difference_path: 'DIFFERENCE.md'
       use_external_app_to_release: ${{ vars.USE_RELEASE_APP == 'true' }}
-      indent: ${{ vars.INDENT }}
+      indent: '\t'
       draft_prerelease_channel: alpha
       ready_start_prerelease_channel: beta
       prerelease_channel: ${{ inputs.start-rc && 'rc' || '' }}
       reset_number_on_channel_change: true
+      stable_branch: 'master'
     secrets:
       RELEASE_APP_ID: ${{ secrets.RELEASE_APP_ID }}
       RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
   create-target:
-    uses: misskey-dev/release-manager-actions/.github/workflows/create-target.yml@v2
+    uses: yamisskey-dev/release-manager-actions/.github/workflows/create-target.yml@v2-yamisskey
     needs: get-pr
     if: ${{ needs.get-pr.outputs.pr_number == '' }}
     with:
       user: 'github-actions[bot]'
+      difference_path: 'DIFFERENCE.md'
       # The script for version increment.
       # process.env.CURRENT_VERSION: The current version.
       #
-      # Misskey calender versioning (yyyy.MM.patch) example
+      # Yamisskey versioning (nayami → yami only)
       version_increment_script: |
-        const now = new Date();
-        const year = now.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'Asia/Tokyo' });
-        const month = now.toLocaleDateString('en-US', { month: 'numeric', timeZone: 'Asia/Tokyo' });
-        const [major, minor, _patch] = process.env.CURRENT_VERSION.split('.');
-        const patch = Number(_patch.split('-')[0]);
-        if (Number.isNaN(patch)) {
-          console.error('Invalid patch version', year, month, process.env.CURRENT_VERSION, major, minor, _patch);
-          throw new Error('Invalid patch version');
-        }
-        if (year !== major || month !== minor) {
-          return `${year}.${month}.0`;
+        const currentVersion = process.env.CURRENT_VERSION;
+
+        console.log(`DEBUG: Current version: ${currentVersion}`);
+
+        // nayamiバージョン形式のみをサポート (-nayami-x.x.x)
+        const nayamiMatch = currentVersion.match(/^(\d+\.\d+\.\d+)-nayami-(\d+)\.(\d+)\.(\d+)$/);
+        console.log(`DEBUG: Nayami match result:`, nayamiMatch);
+
+        if (nayamiMatch) {
+          const [, baseVersion, yMajor, yMinor, yPatch] = nayamiMatch;
+
+          console.log(`DEBUG: Parsed - baseVersion: ${baseVersion}, extension: ${yMajor}.${yMinor}.${yPatch}`);
+
+          // nayami → yami プレフィックス変換
+          const incrementedVersion = `${baseVersion}-yami-${yMajor}.${yMinor}.${Number(yPatch) + 1}`;
+          console.log(`DEBUG: Incremented version: ${incrementedVersion}`);
+          return incrementedVersion;
         } else {
-          return `${major}.${minor}.${patch + 1}`;
+          // nayamiバージョン形式以外はエラー
+          throw new Error(`Only nayami version format supported: ${currentVersion}. Expected format: yyyy.MM.patch-nayami-x.y.z`);
         }
-      ##Semver example
-      #version_increment_script: |
-      #  const [major, minor, patch] = process.env.CURRENT_VERSION.split('.');
-      #  if ("${{ inputs.version_increment_type }}" === "major") {
-      #    return `${Number(major) + 1}.0.0`;
-      #  } else if ("${{ inputs.version_increment_type }}" === "minor") {
-      #    return `${major}.${Number(minor) + 1}.0`;
-      #  } else {
-      #    return `${major}.${minor}.${Number(patch) + 1}`;
-      #  }
-      package_jsons_to_rewrite: ${{ vars.PACKAGE_JSONS_TO_REWRITE }}
+      package_jsons_to_rewrite: 'package.json'
       use_external_app_to_release: ${{ vars.USE_RELEASE_APP == 'true' }}
-      indent: ${{ vars.INDENT }}
-      stable_branch: ${{ vars.STABLE_BRANCH }}
+      indent: '\t'
+      stable_branch: 'master'
       draft_prerelease_channel: alpha
     secrets:
       RELEASE_APP_ID: ${{ secrets.RELEASE_APP_ID }}

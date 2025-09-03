@@ -553,6 +553,9 @@ export const PREF_DEF = definePreferences({
 	hideProfileFiles: {
 		default: true,
 	},
+	hideRegistrationDate: {
+		default: true,
+	},
 	autoRejectFollowRequest: {
 		default: false,
 	},
@@ -563,7 +566,7 @@ export const PREF_DEF = definePreferences({
 		default: false,
 	},
 	defaultIsNoteInYamiMode: {
-		default: false,
+		default: true,
 	},
 	showYamiNonFollowingPublicNotes: {
 		default: false,

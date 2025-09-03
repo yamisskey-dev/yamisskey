@@ -116,18 +116,15 @@ class YamiTimelineChannel extends Channel {
 			// 自分の投稿は常に表示
 			if (isMyNote) {
 				shouldDisplay = true;
-			}
-			// 自分宛てのダイレクト投稿は常に表示
-			else if (note.visibility === 'specified' && note.visibleUserIds?.includes(this.user!.id)) {
+			} else if (note.visibility === 'specified' && note.visibleUserIds?.includes(this.user!.id)) {
+				// 自分宛てのダイレクト投稿は常に表示
 				shouldDisplay = true;
-			}
-			// フォロー中のユーザーの投稿 - showYamiFollowingNotesで制御
-			else if (Object.hasOwn(this.following, note.userId)) {
+			} else if (Object.hasOwn(this.following, note.userId)) {
+				// フォロー中のユーザーの投稿 - showYamiFollowingNotesで制御
 				shouldDisplay = this.showYamiFollowingNotes;
-			}
-			// フォローしていないユーザーのパブリック投稿 - showYamiNonFollowingPublicNotesで制御
-			// リモートインスタンスからのやみノートも含める
-			else if (note.visibility === 'public') {
+			} else if (note.visibility === 'public') {
+				// フォローしていないユーザーのパブリック投稿 - showYamiNonFollowingPublicNotesで制御
+				// リモートインスタンスからのやみノートも含める
 				shouldDisplay = this.showYamiNonFollowingPublicNotes;
 			}
 

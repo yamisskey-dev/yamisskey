@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: hitalin and yamisskey-project
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
 import { prefer } from '@/preferences.js';
 
 const seenNotes: string[] = [];

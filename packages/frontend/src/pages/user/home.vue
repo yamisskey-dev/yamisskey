@@ -121,7 +121,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 								<dt class="name"><i class="ti ti-cake ti-fw"></i> {{ i18n.ts.birthday }}</dt>
 								<dd class="value">{{ user.birthday.replace('-', '/').replace('-', '/') }} ({{ i18n.tsx.yearsOld({ age }) }})</dd>
 							</dl>
-							<dl class="field">
+							<dl v-if="user.createdAt" class="field">
 								<dt class="name"><i class="ti ti-calendar ti-fw"></i> {{ i18n.ts.registeredDate }}</dt>
 								<dd class="value">{{ dateString(user.createdAt) }} (<MkTime :time="user.createdAt"/>)</dd>
 							</dl>
@@ -278,7 +278,7 @@ const editModerationNote = ref(false);
 let listenbrainzdata = false;
 if (props.user.listenbrainz) {
 	try {
-		const response = await fetch(`https://api.listenbrainz.org/1/user/${props.user.listenbrainz}/playing-now`, {
+		const response = await window.fetch(`https://api.listenbrainz.org/1/user/${props.user.listenbrainz}/playing-now`, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',

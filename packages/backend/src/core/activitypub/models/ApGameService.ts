@@ -127,7 +127,7 @@ export class ApGameService {
 			user: await this.userEntityService.pack(fromUser, targetUser),
 		});
 	}
-	public async reversiIdFromUUID(game_session_id:string) :Promise<string|null> {
+	public async reversiIdFromUUID(game_session_id: string): Promise<string | null> {
 		//キャッシュにあればそれ
 		const cache = await this.redisClient.get(`reversi:federationId:${game_session_id}`);
 		if (cache) {

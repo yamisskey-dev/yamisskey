@@ -6408,6 +6408,14 @@ export interface Locale extends ILocale {
      */
     "hideProfileFilesDescription": string;
     /**
+     * 登録日を非公開にする
+     */
+    "hideRegistrationDate": string;
+    /**
+     * 自分のプロフィールから登録日を非表示にします。
+     */
+    "hideRegistrationDateDescription": string;
+    /**
      * 誰がリアクションをしたのかを非表示にする
      */
     "hideReactionUsers": string;
