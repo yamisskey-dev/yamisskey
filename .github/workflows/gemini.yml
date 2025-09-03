@@ -72,18 +72,78 @@ jobs:
           # 差分のサイズ制限（200行まで）
           head -200 pr_diff.txt > pr_diff_limited.txt
 
-          # シンプルなレビューメッセージを作成
+          # 差分が空の場合は終了
+          if [ ! -s pr_diff_limited.txt ]; then
+            echo "No diff found, skipping review"
+            exit 0
+          fi
+
+          # PRのタイトルと説明を取得
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --json title --jq '.title')
+          PR_BODY=$(gh pr view "$PR_NUMBER" --json body --jq '.body')
+
+          # Gemini APIに送信するプロンプトを作成
+          cat > gemini_prompt.txt << 'PROMPT_EOF'
+          あなたはYamisskey（Misskeyフォーク）のコードレビュー専門のエンジニアです。以下のPRの差分を詳細にレビューし、具体的で建設的なフィードバックを提供してください。
+
+          レビュー観点：
+          1. セキュリティの問題
+          2. パフォーマンスの問題
+          3. バグの可能性
+          4. コードの品質と可読性
+          5. Yamisskey/Misskeyの設計パターンとの整合性
+          6. TypeScript/JavaScript/Vue.jsのベストプラクティス
+
+          問題がない場合は「問題なし」と記載してください。
+
+          PR情報：
+          PROMPT_EOF
+
+          echo "タイトル: $PR_TITLE" >> gemini_prompt.txt
+          echo "" >> gemini_prompt.txt
+          echo "説明:" >> gemini_prompt.txt
+          echo "$PR_BODY" >> gemini_prompt.txt
+          echo "" >> gemini_prompt.txt
+          echo "差分:" >> gemini_prompt.txt
+          cat pr_diff_limited.txt >> gemini_prompt.txt
+
+          # プロンプトをJSONエスケープ
+          ESCAPED_PROMPT=$(jq -Rs . gemini_prompt.txt)
+
+          # Gemini APIを呼び出してレビューを取得
+          API_URL="https://generativelanguage.googleapis.com"
+          API_PATH="/v1beta/models/gemini-1.5-pro:generateContent"
+          FULL_URL="${API_URL}${API_PATH}?key=$GEMINI_API_KEY"
+          REVIEW_RESULT=$(curl -s -X POST "$FULL_URL" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"contents\": [
+                {
+                  \"parts\": [
+                    {
+                      \"text\": $ESCAPED_PROMPT
+                    }
+                  ]
+                }
+              ],
+              \"generationConfig\": {
+                \"maxOutputTokens\": 4000,
+                \"temperature\": 0.3
+              }
+            }" | jq -r '.candidates[0].content.parts[0].text // "レビュー取得失敗"')
+
+          # レビューコメントを作成
           echo "## ✨ Gemini Pro Code Review" > comment.md
           echo "" >> comment.md
-          echo "PRの差分を確認しました。" >> comment.md
-          echo "Yamisskeyのコードレビューを実行します。" >> comment.md
-          echo "" >> comment.md
           echo "**レビュー対象:** PR #$PR_NUMBER" >> comment.md
-          echo "**モデル:** Gemini Pro" >> comment.md
+          echo "**モデル:** Gemini-1.5-Pro" >> comment.md
+          echo "" >> comment.md
+          echo "### レビュー結果" >> comment.md
+          echo "" >> comment.md
+          echo "$REVIEW_RESULT" >> comment.md
           echo "" >> comment.md
           echo "---" >> comment.md
-          echo "*AI によるコードレビューです。" >> comment.md
-          echo "参考程度にご活用ください。*" >> comment.md
+          echo "*AI によるコードレビューです。参考程度にご活用ください。*" >> comment.md
 
           # PRにコメント
           gh pr comment "$PR_NUMBER" --body-file comment.md
