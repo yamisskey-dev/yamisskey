@@ -1,5 +1,5 @@
 # DIFFRENCE
-## Unreleased
+## 2025.7.0-nayami-1.9.12
 
 ### Feat
 - リリースワークフローを Yamisskey フォークと nayami→yami フローに移行
