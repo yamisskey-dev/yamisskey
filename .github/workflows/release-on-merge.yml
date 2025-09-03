@@ -1,0 +1,116 @@
+name: "Release on Master Merge"
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+    types: [closed]
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event.pull_request.merged == true && contains(github.event.pull_request.title, 'Release:'))
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Get current version
+        id: version
+        run: |
+          current_version=$(jq -r '.version' package.json)
+          echo "current_version=$current_version" >> $GITHUB_OUTPUT
+          echo "Current master version: $current_version"
+          
+          # yamiバージョン形式チェック
+          if [[ "$current_version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-yami-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "✅ Valid yami version format"
+            echo "is_yami=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Not a yami version format, skipping release"
+            echo "is_yami=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if tag already exists
+        id: tag_check
+        if: steps.version.outputs.is_yami == 'true'
+        run: |
+          if git tag --list | grep -q "^${{ steps.version.outputs.current_version }}$"; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Tag ${{ steps.version.outputs.current_version }} already exists"
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+            echo "✅ Tag ${{ steps.version.outputs.current_version }} does not exist"
+          fi
+
+      - name: Get difference
+        id: difference
+        if: steps.version.outputs.is_yami == 'true' && steps.tag_check.outputs.tag_exists == 'false'
+        run: |
+          if [ -f DIFFERENCE.md ]; then
+            # DIFFERENCE.mdから対応するバージョンのセクションを抽出
+            version="${{ steps.version.outputs.current_version }}"
+            
+            # Unreleasedセクションの内容を取得（AI Code Review Requestセクションを含む）
+            unreleased_content=$(awk '/^## Unreleased/,/^## [0-9]/ {
+              if (/^## [0-9]/) exit
+              if (!/^## Unreleased/) print
+            }' DIFFERENCE.md)
+            
+            if [ -n "$unreleased_content" ]; then
+              difference="## $version\n\n$unreleased_content"
+            else
+              difference="## $version\n\n### Changes\n- See DIFFERENCE.md for detailed changes"
+            fi
+            
+            # GitHubの出力形式に合わせてエスケープ
+            {
+              echo "difference<<EOF"
+              echo "$difference"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+          else
+            {
+              echo "difference<<EOF"
+              echo "## ${{ steps.version.outputs.current_version }}"
+              echo ""
+              echo "### Changes"
+              echo "- Release ${{ steps.version.outputs.current_version }}"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create tag
+        if: steps.version.outputs.is_yami == 'true' && steps.tag_check.outputs.tag_exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.current_version }}" -m "Release ${{ steps.version.outputs.current_version }}"
+          git push origin "${{ steps.version.outputs.current_version }}"
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.is_yami == 'true' && steps.tag_check.outputs.tag_exists == 'false'
+        run: |
+          gh release create "${{ steps.version.outputs.current_version }}" \
+            --title "Release ${{ steps.version.outputs.current_version }}" \
+            --notes "${{ steps.difference.outputs.difference }}" \
+            --target master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        if: steps.version.outputs.is_yami == 'true' && steps.tag_check.outputs.tag_exists == 'false'
+        run: |
+          echo "🎉 Successfully created release: ${{ steps.version.outputs.current_version }}"
+          echo "📋 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.current_version }}"

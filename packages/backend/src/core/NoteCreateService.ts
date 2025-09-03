@@ -1375,14 +1375,12 @@ export class NoteCreateService implements OnApplicationShutdown {
 						if (note.fileIds.length > 0) {
 							this.fanoutTimelineService.push(`homeTimelineWithFiles:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
 						}
-					}
-				}
-				// チャンネル設定がtrueの場合、投稿者をフォローしているユーザーにも配信
-				else if (channel && userFollowerIds.has(following.followerId)) {
-					if (shouldPush('homeTimeline')) {
-						this.fanoutTimelineService.push(`homeTimeline:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax, r);
-						if (note.fileIds.length > 0) {
-							this.fanoutTimelineService.push(`homeTimelineWithFiles:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
+					} else if (channel && userFollowerIds.has(following.followerId)) {
+						if (shouldPush('homeTimeline')) {
+							this.fanoutTimelineService.push(`homeTimeline:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax, r);
+							if (note.fileIds.length > 0) {
+								this.fanoutTimelineService.push(`homeTimelineWithFiles:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
+							}
 						}
 					}
 				}

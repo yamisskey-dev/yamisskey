@@ -1,0 +1,34 @@
+name: Security Review (DISABLED - API Credit Required)
+
+# ワークフロー無効化 - Claude API クレジット不足のため
+# Claude Code Security Review Action も Claude API クレジットが必要
+# 有効化するには以下の'on'セクションのコメントを外してください
+
+permissions:
+  pull-requests: write  # Needed for leaving PR comments
+  contents: read
+
+# on:
+#   pull_request:
+
+on:
+  workflow_dispatch:
+    inputs:
+      enable_security_review:
+        description: 'Enable security review (requires API credits)'
+        required: false
+        default: 'false'
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
+
+      - uses: anthropics/claude-code-security-review@main
+        with:
+          comment-pr: true
+          claude-api-key: ${{ secrets.ANTHROPIC_API_KEY }}

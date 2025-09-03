@@ -41,14 +41,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</MkRadios>
 						</SearchMarker>
 
-						<SearchMarker :keywords="['realtimemode']">
-							<MkSwitch v-model="realtimeMode">
-								<template #label><i class="ti ti-bolt"></i> <SearchLabel>{{ i18n.ts.realtimeMode }}</SearchLabel></template>
-								<template #caption><SearchKeyword>{{ i18n.ts._settings.realtimeMode_description }}</SearchKeyword></template>
-							</MkSwitch>
-						</SearchMarker>
-
-						<SearchMarker v-if="$i && $i.policies.canYamiNote" :keywords="['yami', 'mode', 'button', 'behavior']">
+						<SearchMarker :keywords="['yami', 'mode', 'button', 'behavior']">
 							<MkPreferenceContainer k="yamiModeClickBehavior">
 								<MkRadios v-model="yamiModeClickBehavior">
 									<template #label><i class="ti ti-moon"></i> <SearchLabel>{{ i18n.ts._yami.switchModeButtonBehavior }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
@@ -56,6 +49,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 									<option value="direct">{{ i18n.ts._yami.switchModeButtonDirect }}</option>
 								</MkRadios>
 							</MkPreferenceContainer>
+						</SearchMarker>
+
+						<SearchMarker :keywords="['realtimemode']">
+							<MkSwitch v-model="realtimeMode">
+								<template #label><i class="ti ti-bolt"></i> <SearchLabel>{{ i18n.ts.realtimeMode }}</SearchLabel></template>
+								<template #caption><SearchKeyword>{{ i18n.ts._settings.realtimeMode_description }}</SearchKeyword></template>
+							</MkSwitch>
 						</SearchMarker>
 
 						<MkDisableSection :disabled="realtimeMode">

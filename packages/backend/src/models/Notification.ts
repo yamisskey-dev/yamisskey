@@ -21,11 +21,6 @@ export type MiNotification = {
 	id: string;
 	createdAt: string;
 	notifierId: MiUser['id'];
-} | { // フォロー解除
-	type: 'unfollow';
-	id: string;
-	createdAt: string;
-	notifierId: MiUser['id'];
 } | {
 	type: 'unfollow';
 	id: string;

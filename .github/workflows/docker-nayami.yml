@@ -1,13 +1,13 @@
-name: Publish Docker image (develop)
+name: Publish Docker image (nayami)
 
 on:
   push:
     branches:
-      - develop
+      - nayami
   workflow_dispatch:
 
 env:
-  REGISTRY_IMAGE: misskey/misskey
+  REGISTRY_IMAGE: yamisskey/yamisskey
 
 jobs:
   # see https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
@@ -20,7 +20,7 @@ jobs:
         platform:
           - linux/amd64
           - linux/arm64
-    if: github.repository == 'misskey-dev/misskey'
+    if: github.repository == 'yamisskey-dev/yamisskey'
     steps:
       - name: Prepare
         run: |
@@ -81,8 +81,8 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:develop \
+          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:nayami \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:develop
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:nayami

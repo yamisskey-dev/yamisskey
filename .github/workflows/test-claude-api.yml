@@ -1,0 +1,75 @@
+---
+name: Test Claude API
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_message:
+        description: 'テストメッセージ（省略可）'
+        required: false
+        default: 'Hello Claude, please respond with a simple greeting.'
+
+jobs:
+  test-claude:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Test Claude API Connection
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TEST_MESSAGE: ${{ github.event.inputs.test_message }}
+        run: |
+          echo "Testing Claude API with new key..."
+          echo "API Key available: ${ANTHROPIC_API_KEY:+YES}"
+          echo "API Key prefix: ${ANTHROPIC_API_KEY:0:20}..."
+          
+          # シンプルなテストメッセージ
+          TEST_PROMPT="${TEST_MESSAGE:-Hello Claude, please respond with a simple greeting in Japanese.}"
+          
+          # Claude APIテスト
+          API_RESPONSE=$(curl -s -w "HTTP_STATUS:%{http_code}" -X POST "https://api.anthropic.com/v1/messages" \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -d "{
+              \"model\": \"claude-3-5-sonnet-20241022\",
+              \"max_tokens\": 100,
+              \"messages\": [
+                {
+                  \"role\": \"user\",
+                  \"content\": \"$TEST_PROMPT\"
+                }
+              ]
+            }")
+          
+          # HTTPステータスコードを抽出
+          HTTP_STATUS=$(echo "$API_RESPONSE" | grep -o "HTTP_STATUS:[0-9]*" | cut -d: -f2)
+          API_BODY=$(echo "$API_RESPONSE" | sed 's/HTTP_STATUS:[0-9]*$//')
+          
+          echo "HTTP Status: $HTTP_STATUS"
+          
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ SUCCESS: Claude API is working!"
+            RESPONSE_TEXT=$(echo "$API_BODY" | jq -r '.content[0].text // "Failed to parse response"')
+            echo "Claude Response: $RESPONSE_TEXT"
+            echo ""
+            echo "🎉 新しいAPIキーは正常に動作しています！"
+            echo "YamisskeyのAIレビューシステムで使用可能です。"
+          else
+            echo "❌ FAILED: Claude API test failed"
+            echo "Response body: $API_BODY"
+            ERROR_MSG=$(echo "$API_BODY" | jq -r '.error.message // "Unknown error"')
+            echo "Error: $ERROR_MSG"
+            echo ""
+            echo "🔧 APIキーの確認が必要です:"
+            echo "1. GitHub Secrets の ANTHROPIC_API_KEY が正しく設定されているか"
+            echo "2. APIキーが有効で期限切れでないか"
+            echo "3. Claude Console でAPIキーの状態を確認"
+            exit 1
+          fi

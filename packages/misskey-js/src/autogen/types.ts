@@ -10279,6 +10279,7 @@ export type components = {
             localOnly?: boolean;
             /** @enum {string|null} */
             reactionAcceptance: 'likeOnly' | 'likeOnlyForRemote' | 'nonSensitiveOnly' | 'nonSensitiveOnlyForLocalLikeOnlyForRemote' | null;
+            isNoteInYamiMode?: boolean;
         };
         NoteReaction: {
             /**
@@ -10518,6 +10519,16 @@ export type components = {
             createdAt: string;
             /** @enum {string} */
             type: 'test';
+        } | {
+            /** Format: id */
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** @enum {string} */
+            type: 'unfollow';
+            user: components['schemas']['UserLite'];
+            /** Format: id */
+            userId: string;
         } | {
             /** Format: id */
             id: string;
@@ -35130,6 +35141,7 @@ export interface operations {
                     publicReactions?: boolean;
                     hideActivity?: boolean;
                     hideProfileFiles?: boolean;
+                    hideRegistrationDate?: boolean;
                     carefulBot?: boolean;
                     autoAcceptFollowed?: boolean;
                     autoRejectFollowRequest?: boolean;
@@ -37288,6 +37300,8 @@ export interface operations {
                     renoteId?: string | null;
                     /** Format: misskey:id */
                     channelId?: string | null;
+                    /** @default false */
+                    isNoteInYamiMode?: boolean;
                     text?: string | null;
                     fileIds?: string[];
                     poll?: {
@@ -37548,6 +37562,8 @@ export interface operations {
                     renoteId?: string | null;
                     /** Format: misskey:id */
                     channelId?: string | null;
+                    /** @default false */
+                    isNoteInYamiMode?: boolean;
                     text?: string | null;
                     fileIds?: string[];
                     poll?: {
