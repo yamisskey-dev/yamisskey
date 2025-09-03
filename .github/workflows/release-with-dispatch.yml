@@ -68,7 +68,6 @@ jobs:
     with:
       pr_number: ${{ needs.get-pr.outputs.pr_number }}
       user: 'github-actions[bot]'
-      package_jsons_to_rewrite: 'package.json'
       difference_path: 'DIFFERENCE.md'
       # Text to prepend to the changelog
       # The first line must be `## Unreleased`
@@ -97,7 +96,6 @@ jobs:
     with:
       pr_number: ${{ needs.get-pr.outputs.pr_number }}
       user: 'github-actions[bot]'
-      package_jsons_to_rewrite: 'package.json'
       difference_path: 'DIFFERENCE.md'
       use_external_app_to_release: ${{ vars.USE_RELEASE_APP == 'true' }}
       indent: '\t'
@@ -116,33 +114,6 @@ jobs:
     with:
       user: 'github-actions[bot]'
       difference_path: 'DIFFERENCE.md'
-      # The script for version increment.
-      # process.env.CURRENT_VERSION: The current version.
-      #
-      # Yamisskey versioning (nayami → yami only)
-      version_increment_script: |
-        const currentVersion = process.env.CURRENT_VERSION;
-
-        console.log(`DEBUG: Current version: ${currentVersion}`);
-
-        // nayamiバージョン形式のみをサポート (-nayami-x.x.x)
-        const nayamiMatch = currentVersion.match(/^(\d+\.\d+\.\d+)-nayami-(\d+)\.(\d+)\.(\d+)$/);
-        console.log(`DEBUG: Nayami match result:`, nayamiMatch);
-
-        if (nayamiMatch) {
-          const [, baseVersion, yMajor, yMinor, yPatch] = nayamiMatch;
-
-          console.log(`DEBUG: Parsed - baseVersion: ${baseVersion}, extension: ${yMajor}.${yMinor}.${yPatch}`);
-
-          // nayami → yami プレフィックス変換（パッチバージョンはそのまま）
-          const convertedVersion = `${baseVersion}-yami-${yMajor}.${yMinor}.${yPatch}`;
-          console.log(`DEBUG: Converted version: ${convertedVersion}`);
-          return convertedVersion;
-        } else {
-          // nayamiバージョン形式以外はエラー
-          throw new Error(`Only nayami version format supported: ${currentVersion}. Expected format: yyyy.MM.patch-nayami-x.y.z`);
-        }
-      package_jsons_to_rewrite: 'package.json'
       use_external_app_to_release: ${{ vars.USE_RELEASE_APP == 'true' }}
       indent: '\t'
       draft_prerelease_channel: alpha
