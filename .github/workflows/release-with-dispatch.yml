@@ -8,14 +8,6 @@ on:
         description: 'MERGE RELEASE BRANCH TO MAIN'
         default: false
 
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-
 jobs:
   check-branch:
     runs-on: ubuntu-latest
@@ -33,73 +25,32 @@ jobs:
             exit 1
           fi
 
-  get-pr:
-    runs-on: ubuntu-latest
+  create-release-pr:
     needs: check-branch
     if: ${{ needs.check-branch.outputs.is_nayami == 'true' }}
-    outputs:
-      pr_number: ${{ steps.get_pr.outputs.pr_number }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Get PRs
-        run: |
-          echo "pr_number=$(gh pr list --limit 1 --search "head:$GITHUB_REF_NAME base:master is:open" --json number  --jq '.[] | .number')" >> $GITHUB_OUTPUT
-        id: get_pr
-
-  create-release-pr:
-    runs-on: ubuntu-latest
-    needs: [check-branch, get-pr]
-    if: ${{ needs.check-branch.outputs.is_nayami == 'true' && needs.get-pr.outputs.pr_number == '' }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Get current version and convert to yami
-        id: version
-        run: |
-          current_version=$(jq -r '.version' package.json)
-          echo "current_version=$current_version" >> $GITHUB_OUTPUT
-          
-          # nayami → yami変換
-          if [[ "$current_version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-nayami-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            base_version="${BASH_REMATCH[1]}"
-            ext_version="${BASH_REMATCH[2]}"
-            yami_version="${base_version}-yami-${ext_version}"
-            echo "yami_version=$yami_version" >> $GITHUB_OUTPUT
-            echo "✅ Version conversion: $current_version → $yami_version"
-          else
-            echo "❌ Invalid version format: $current_version"
-            exit 1
-          fi
-          
-      - name: Create Release PR (no release, PR only)
-        run: |
-          gh pr create \
-            --title "Release: ${{ steps.version.outputs.yami_version }}" \
-            --body "## Release Notes
-
-          **Release Version**: \`${{ steps.version.outputs.yami_version }}\`
-          
-          **⚠️ Manual Steps Required**:
-          1. Edit package.json to change version from \`${{ steps.version.outputs.current_version }}\` to \`${{ steps.version.outputs.yami_version }}\`
-          2. Resolve any other conflicts if present
-          3. Merge when ready
-          4. **Release will be created automatically when this PR is merged to master**
-
-          ### Changes
-          - See DIFFERENCE.md for detailed changes
-          " \
-            --base master \
-            --head nayami
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: yamisskey-dev/release-manager-actions/.github/workflows/create-target.yml@v2-yamisskey
+    with:
+      difference_path: 'DIFFERENCE.md'
+      package_jsons_to_rewrite: '["package.json"]'
+      indent: 2
+    secrets:
+      RELEASE_APP_ID: ${{ secrets.RELEASE_APP_ID }}
+      RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
   merge-release-pr:
     runs-on: ubuntu-latest
-    needs: [check-branch, get-pr]
-    if: ${{ needs.check-branch.outputs.is_nayami == 'true' && needs.get-pr.outputs.pr_number != '' && inputs.merge == true }}
+    needs: check-branch
+    if: ${{ needs.check-branch.outputs.is_nayami == 'true' && inputs.merge == true }}
     steps:
       - uses: actions/checkout@v4
-      - name: Merge Release PR
+      - name: Get and merge PR
         run: |
-          gh pr merge ${{ needs.get-pr.outputs.pr_number }} --merge
+          pr_number=$(gh pr list --limit 1 --search "head:$GITHUB_REF_NAME base:master is:open" --json number --jq '.[] | .number')
+          if [ -n "$pr_number" ]; then
+            gh pr merge $pr_number --merge
+          else
+            echo "No open PR found to merge"
+            exit 1
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
