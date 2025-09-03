@@ -37,13 +37,11 @@ jobs:
       pr_number: ${{ steps.get_pr.outputs.pr_number }}
     steps:
       - uses: actions/checkout@v4
-      # headが$GITHUB_REF_NAME, baseが$STABLE_BRANCHかつopenのPRを1つ取得
+      # headが$GITHUB_REF_NAME, baseがmasterかつopenのPRを1つ取得
       - name: Get PRs
         run: |
-          echo "pr_number=$(gh pr list --limit 1 --search "head:$GITHUB_REF_NAME base:$STABLE_BRANCH is:open" --json number  --jq '.[] | .number')" >> $GITHUB_OUTPUT
+          echo "pr_number=$(gh pr list --limit 1 --search "head:$GITHUB_REF_NAME base:master is:open" --json number  --jq '.[] | .number')" >> $GITHUB_OUTPUT
         id: get_pr
-        env:
-          STABLE_BRANCH: 'master'
 
   merge:
     uses: yamisskey-dev/release-manager-actions/.github/workflows/merge.yml@v2-yamisskey
@@ -70,7 +68,6 @@ jobs:
 
       use_external_app_to_release: ${{ vars.USE_RELEASE_APP == 'true' }}
       indent: '\t'
-      stable_branch: 'master'
     secrets:
       RELEASE_APP_ID: ${{ secrets.RELEASE_APP_ID }}
       RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
@@ -90,7 +87,6 @@ jobs:
       ready_start_prerelease_channel: beta
       prerelease_channel: ${{ inputs.start-rc && 'rc' || '' }}
       reset_number_on_channel_change: true
-      stable_branch: 'master'
     secrets:
       RELEASE_APP_ID: ${{ secrets.RELEASE_APP_ID }}
       RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
@@ -131,7 +127,6 @@ jobs:
       package_jsons_to_rewrite: 'package.json'
       use_external_app_to_release: ${{ vars.USE_RELEASE_APP == 'true' }}
       indent: '\t'
-      stable_branch: 'master'
       draft_prerelease_channel: alpha
     secrets:
       RELEASE_APP_ID: ${{ secrets.RELEASE_APP_ID }}
