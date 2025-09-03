@@ -109,7 +109,13 @@ jobs:
 
           # Claude APIを呼び出してレビューを取得
           API_URL="https://api.anthropic.com/v1/messages"
-          REVIEW_RESULT=$(curl -s -X POST "$API_URL" \
+          
+          # デバッグ情報を出力
+          echo "Debug: API Key available: ${ANTHROPIC_API_KEY:+YES}"
+          echo "Debug: Prompt file size: $(wc -c < claude_prompt.txt) bytes"
+          
+          # APIリクエストを実行
+          API_RESPONSE=$(curl -s -w "HTTP_STATUS:%{http_code}" -X POST "$API_URL" \
             -H "Content-Type: application/json" \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
@@ -122,7 +128,20 @@ jobs:
                   \"content\": $(jq -Rs . claude_prompt.txt)
                 }
               ]
-            }" | jq -r '.content[0].text // "レビューの取得に失敗しました"')
+            }")
+          
+          # HTTPステータスコードを抽出
+          HTTP_STATUS=$(echo "$API_RESPONSE" | grep -o "HTTP_STATUS:[0-9]*" | cut -d: -f2)
+          API_BODY=$(echo "$API_RESPONSE" | sed 's/HTTP_STATUS:[0-9]*$//')
+          
+          echo "Debug: HTTP Status: $HTTP_STATUS"
+          
+          if [ "$HTTP_STATUS" = "200" ]; then
+            REVIEW_RESULT=$(echo "$API_BODY" | jq -r '.content[0].text // "レスポンス解析失敗"')
+          else
+            ERROR_MSG=$(echo "$API_BODY" | jq -r '.error.message // "不明なエラー"')
+            REVIEW_RESULT="API呼び出しエラー (HTTP $HTTP_STATUS): $ERROR_MSG"
+          fi
 
           # レビューコメントを作成
           echo "## 🤖 Claude-Sonnet-4 Code Review" > comment.md
