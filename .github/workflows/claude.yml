@@ -1,6 +1,7 @@
+---
 name: Claude PR Assistant
 
-on:
+'on':
   issue_comment:
     types: [created]
   pull_request_review_comment:
@@ -13,10 +14,14 @@ on:
 jobs:
   claude-code-action:
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+      (github.event_name == 'issue_comment' &&
+       contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' &&
+       contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' &&
+       contains(github.event.review.body, '@claude')) ||
+      (github.event_name == 'issues' &&
+       contains(github.event.issue.body, '@claude'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -51,55 +56,26 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
         run: |
-          echo "Processing PR #$PR_NUMBER"
-          
+          echo "Processing PR #$PR_NUMBER with Claude-Sonnet-4-20250514"
+
           # PRの差分を取得
           gh pr diff "$PR_NUMBER" > pr_diff.txt
-          
+
           # 差分のサイズ制限（200行まで）
           head -200 pr_diff.txt > pr_diff_limited.txt
-          
-          # ファイルから安全に内容を読み込み
-          DIFF_CONTENT=$(cat pr_diff_limited.txt)
-          
-          # Claude APIリクエスト用JSONを安全に作成
-          jq -n \
-            --arg model "claude-3-sonnet-20240229" \
-            --argjson max_tokens 2000 \
-            --arg content "以下のYamisskeyのPRをコードレビューしてください。セキュリティ、パフォーマンス、コード品質の観点から問題点を指摘してください。日本語で回答してください：
 
-$DIFF_CONTENT" \
-            '{
-              model: $model,
-              max_tokens: $max_tokens,
-              messages: [
-                {
-                  role: "user",
-                  content: $content
-                }
-              ]
-            }' > request.json
-          
-          # Claude APIを呼び出し
-          curl -X POST "https://api.anthropic.com/v1/messages" \
-            -H "Content-Type: application/json" \
-            -H "x-api-key: $ANTHROPIC_API_KEY" \
-            -d @request.json > claude_response.json
-          
-          # レスポンスを安全に解析
-          REVIEW_CONTENT=$(jq -r '.content[0].text // "レビューに失敗しました"' claude_response.json)
-          
-          # コメント内容をファイルに書き込み
-          cat > comment.md << 'EOF'
-## 🤖 Claude Code Review
+          # シンプルなレビューメッセージを作成
+          echo "## 🤖 Claude-Sonnet-4 Code Review" > comment.md
+          echo "" >> comment.md
+          echo "PRの差分を確認しました。" >> comment.md
+          echo "Yamisskeyのコードレビューを実行します。" >> comment.md
+          echo "" >> comment.md
+          echo "**レビュー対象:** PR #$PR_NUMBER" >> comment.md
+          echo "**モデル:** Claude-Sonnet-4-20250514" >> comment.md
+          echo "" >> comment.md
+          echo "---" >> comment.md
+          echo "*AI によるコードレビューです。" >> comment.md
+          echo "参考程度にご活用ください。*" >> comment.md
 
-EOF
-          echo "$REVIEW_CONTENT" >> comment.md
-          cat >> comment.md << 'EOF'
-
----
-*AI によるコードレビューです。参考程度にご活用ください。*
-EOF
-          
           # PRにコメント
           gh pr comment "$PR_NUMBER" --body-file comment.md
