@@ -1,4 +1,28 @@
 # DIFFRENCE
+## Unreleased
+
+### Feat
+- リリースワークフローを Yamisskey フォークと nayami→yami フローに移行
+- ユーザー登録日プライバシーオプション追加
+
+### Enhance
+- やみノートが投稿できる時にデフォルトでやみノートで投稿する設定を有効化
+- フォロー解除通知の型定義を追加
+- フロントエンド ESLint エラーを修正
+- yamisskey-timeline Promise バグを修正
+
+### Chore
+- GitHub Actions ワークフローを yamisskey repository 用に更新
+- Docker ワークフローを yamisskey 用に更新
+- カスタムフォントリストに新しいフォント追加
+- SPDX ライセンスヘッダーを追加
+- やみモード切り替えボタンの設定表示を改善
+
+### Fix
+- muyami ブランチでバージョン名プレフィックスが nayami になっていた問題を修正
+- CI コンプライアンス用の各種修正
+- Repository URL を実際の GitHub organization 名に修正
+
 ## 2024.10.1-yami-1.3.8
 ### Feat
 - 最終アクティブでコンディショナルなロールを制御可能に (cherry-pick: pwpspace)
