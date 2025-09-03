@@ -114,7 +114,13 @@ jobs:
           API_URL="https://generativelanguage.googleapis.com"
           API_PATH="/v1beta/models/gemini-1.5-pro:generateContent"
           FULL_URL="${API_URL}${API_PATH}?key=$GEMINI_API_KEY"
-          REVIEW_RESULT=$(curl -s -X POST "$FULL_URL" \
+          
+          # デバッグ情報を出力
+          echo "Debug: API Key available: ${GEMINI_API_KEY:+YES}"
+          echo "Debug: Prompt file size: $(wc -c < gemini_prompt.txt) bytes"
+          
+          # APIリクエストを実行
+          API_RESPONSE=$(curl -s -w "HTTP_STATUS:%{http_code}" -X POST "$FULL_URL" \
             -H "Content-Type: application/json" \
             -d "{
               \"contents\": [
@@ -130,7 +136,20 @@ jobs:
                 \"maxOutputTokens\": 4000,
                 \"temperature\": 0.3
               }
-            }" | jq -r '.candidates[0].content.parts[0].text // "レビュー取得失敗"')
+            }")
+          
+          # HTTPステータスコードを抽出
+          HTTP_STATUS=$(echo "$API_RESPONSE" | grep -o "HTTP_STATUS:[0-9]*" | cut -d: -f2)
+          API_BODY=$(echo "$API_RESPONSE" | sed 's/HTTP_STATUS:[0-9]*$//')
+          
+          echo "Debug: HTTP Status: $HTTP_STATUS"
+          
+          if [ "$HTTP_STATUS" = "200" ]; then
+            REVIEW_RESULT=$(echo "$API_BODY" | jq -r '.candidates[0].content.parts[0].text // "レスポンス解析失敗"')
+          else
+            ERROR_MSG=$(echo "$API_BODY" | jq -r '.error.message // "不明なエラー"')
+            REVIEW_RESULT="API呼び出しエラー (HTTP $HTTP_STATUS): $ERROR_MSG"
+          fi
 
           # レビューコメントを作成
           echo "## ✨ Gemini Pro Code Review" > comment.md
