@@ -29,50 +29,77 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Debug Event
+      - name: Validate Event
+        id: validate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_URL: ${{ github.event.issue.pull_request }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "Comment body: ${{ github.event.comment.body }}"
-          echo "PR number: ${{ github.event.pull_request.number || github.event.issue.number }}"
+          echo "event_name=$EVENT_NAME" >> $GITHUB_OUTPUT
+          if [ "$PR_URL" != "null" ] && [ "$PR_URL" != "" ]; then
+            echo "is_pr=true" >> $GITHUB_OUTPUT
+            echo "pr_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          else
+            echo "is_pr=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Run Claude Code Review
-        if: contains(github.event.comment.body, '@claude')
-        run: |
-          # PRの差分を取得
-          if [ "${{ github.event.issue.pull_request }}" != "null" ]; then
-            pr_number="${{ github.event.issue.number }}"
-            echo "Processing PR #$pr_number"
-            
-            # PRの差分を取得
-            gh pr diff $pr_number > pr_diff.txt
-            
-            # Claude APIを呼び出し
-            curl -X POST "https://api.anthropic.com/v1/messages" \
-              -H "Content-Type: application/json" \
-              -H "x-api-key: ${{ secrets.ANTHROPIC_API_KEY }}" \
-              -d '{
-                "model": "claude-3-sonnet-20240229",
-                "max_tokens": 2000,
-                "messages": [
-                  {
-                    "role": "user",
-                    "content": "以下のYamisskeyのPRをコードレビューしてください。セキュリティ、パフォーマンス、コード品質の観点から問題点を指摘してください。日本語で回答してください：\n\n```diff\n$(cat pr_diff.txt | head -200)\n```"
-                  }
-                ]
-              }' > claude_response.json
-            
-            # レスポンスを解析してコメント
-            review_content=$(jq -r '.content[0].text // "レビューに失敗しました"' claude_response.json)
-            
-            # PRにコメント
-            gh pr comment $pr_number --body "## 🤖 Claude Code Review
-
-$review_content
-
----
-*AI によるコードレビューです。参考程度にご活用ください。*"
-          else
-            echo "This is not a PR comment"
-          fi
+        if: steps.validate.outputs.is_pr == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
+        run: |
+          echo "Processing PR #$PR_NUMBER"
+          
+          # PRの差分を取得
+          gh pr diff "$PR_NUMBER" > pr_diff.txt
+          
+          # 差分のサイズ制限（200行まで）
+          head -200 pr_diff.txt > pr_diff_limited.txt
+          
+          # ファイルから安全に内容を読み込み
+          DIFF_CONTENT=$(cat pr_diff_limited.txt)
+          
+          # Claude APIリクエスト用JSONを安全に作成
+          jq -n \
+            --arg model "claude-3-sonnet-20240229" \
+            --argjson max_tokens 2000 \
+            --arg content "以下のYamisskeyのPRをコードレビューしてください。セキュリティ、パフォーマンス、コード品質の観点から問題点を指摘してください。日本語で回答してください：
+
+$DIFF_CONTENT" \
+            '{
+              model: $model,
+              max_tokens: $max_tokens,
+              messages: [
+                {
+                  role: "user",
+                  content: $content
+                }
+              ]
+            }' > request.json
+          
+          # Claude APIを呼び出し
+          curl -X POST "https://api.anthropic.com/v1/messages" \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -d @request.json > claude_response.json
+          
+          # レスポンスを安全に解析
+          REVIEW_CONTENT=$(jq -r '.content[0].text // "レビューに失敗しました"' claude_response.json)
+          
+          # コメント内容をファイルに書き込み
+          cat > comment.md << 'EOF'
+## 🤖 Claude Code Review
+
+EOF
+          echo "$REVIEW_CONTENT" >> comment.md
+          cat >> comment.md << 'EOF'
+
+---
+*AI によるコードレビューです。参考程度にご活用ください。*
+EOF
+          
+          # PRにコメント
+          gh pr comment "$PR_NUMBER" --body-file comment.md
