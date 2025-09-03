@@ -15,17 +15,18 @@ name: Gemini PR Assistant
 
 jobs:
   gemini-code-action:
-    if: |
-      (github.event_name == 'issue_comment' &&
-       contains(github.event.comment.body, '@gemini')) ||
-      (github.event_name == 'pull_request_review_comment' &&
-       contains(github.event.comment.body, '@gemini')) ||
-      (github.event_name == 'pull_request_review' &&
-       contains(github.event.review.body, '@gemini')) ||
-      (github.event_name == 'issues' &&
-       contains(github.event.issue.body, '@gemini')) ||
-      (github.event_name == 'pull_request' &&
-       contains(github.event.pull_request.body, '@gemini'))
+    if: false  # Gemini API認証問題により無効化
+    # if: |
+    #   (github.event_name == 'issue_comment' &&
+    #    contains(github.event.comment.body, '@gemini')) ||
+    #   (github.event_name == 'pull_request_review_comment' &&
+    #    contains(github.event.comment.body, '@gemini')) ||
+    #   (github.event_name == 'pull_request_review' &&
+    #    contains(github.event.review.body, '@gemini')) ||
+    #   (github.event_name == 'issues' &&
+    #    contains(github.event.issue.body, '@gemini')) ||
+    #   (github.event_name == 'pull_request' &&
+    #    contains(github.event.pull_request.body, '@gemini'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
