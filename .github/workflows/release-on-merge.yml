@@ -61,9 +61,16 @@ jobs:
           if [ -f DIFFERENCE.md ]; then
             # DIFFERENCE.mdから対応するバージョンのセクションを抽出
             version="${{ steps.version.outputs.current_version }}"
-            difference=$(awk "/^## $version/,/^## [0-9]/ {if (/^## [0-9]/ && !/^## $version/) exit; print}" DIFFERENCE.md | head -n -1)
             
-            if [ -z "$difference" ]; then
+            # Unreleasedセクションの内容を取得（AI Code Review Requestセクションを含む）
+            unreleased_content=$(awk '/^## Unreleased/,/^## [0-9]/ {
+              if (/^## [0-9]/) exit
+              if (!/^## Unreleased/) print
+            }' DIFFERENCE.md)
+            
+            if [ -n "$unreleased_content" ]; then
+              difference="## $version\n\n$unreleased_content"
+            else
               difference="## $version\n\n### Changes\n- See DIFFERENCE.md for detailed changes"
             fi
             
