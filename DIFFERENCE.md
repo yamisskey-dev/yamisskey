@@ -1,5 +1,17 @@
 # DIFFRENCE
 
+## Unreleased
+
+### Feat
+- Misskey 2025.8.0への追従
+
+### Enhance
+- 最新版Misskeyとの互換性向上
+
+### Chore
+- 依存関係の更新
+- セキュリティ修正の適用
+
 ## 2025.7.0-yami-1.9.11
 
 <!-- ### AI -->
