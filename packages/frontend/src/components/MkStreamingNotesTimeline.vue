@@ -429,7 +429,7 @@ if (store.s.realtimeMode) {
 	connectChannel();
 }
 
-watch(() => [props.list, props.antenna, props.channel, props.role, props.withRenotes, props.withReplies, props.onlyFiles, props.localOnly, props.remoteOnly, props.withHashtags], () => {
+watch(() => [props.list, props.antenna, props.channel, props.role, props.withRenotes, props.withReplies, props.onlyFiles, props.localOnly, props.remoteOnly, props.withHashtags, props.showYamiNonFollowingPublicNotes, props.showYamiFollowingNotes], () => {
 	if (store.s.realtimeMode) {
 		disconnectChannel();
 		connectChannel();
