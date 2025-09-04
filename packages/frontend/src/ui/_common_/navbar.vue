@@ -9,7 +9,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div :class="$style.top">
 			<div v-if="instance.bannerUrl" :class="$style.banner" :style="{ backgroundImage: `url(${instance.bannerUrl})` }"></div>
 			<button v-tooltip.noDelay.right="instance.name ?? i18n.ts.instance" class="_button" :class="$style.instance" @click="openInstanceMenu">
-				<img :src="instance.iconUrl || instance.faviconUrl || '/favicon.ico'" alt="" :class="$style.instanceIcon" style="viewTransitionName: navbar-serverIcon;"/>
+				<img :src="instance.iconUrl || '/favicon.ico'" alt="" :class="$style.instanceIcon" style="viewTransitionName: navbar-serverIcon;"/>
 			</button>
 			<button v-if="!iconOnly && $i" v-tooltip.noDelay.right="$i.isInYamiMode ? i18n.ts._yami.switchToNormalMode : i18n.ts._yami.switchToYamiMode" class="_button" :class="[$style.yamiMode, $i.isInYamiMode ? $style.on : null]" @click="handleYamiModeClick">
 				<i class="ti ti-fw" :class="$i.isInYamiMode ? 'ti-moon' : 'ti-moon-off'"></i>

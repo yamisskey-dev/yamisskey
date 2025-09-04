@@ -51,6 +51,7 @@ export type DefaultStoredWidget = {
 
 <script lang="ts" setup>
 import { defineAsyncComponent, ref, computed } from 'vue';
+import { isLink } from '@@/js/is-link.js';
 import { genId } from '@/utility/id.js';
 import MkSelect from '@/components/MkSelect.vue';
 import MkButton from '@/components/MkButton.vue';
@@ -80,7 +81,7 @@ const emit = defineEmits<{
 	(ev: 'updateWidgets', widgets: Widget[]): void;
 	(ev: 'addWidget', widget: Widget): void;
 	(ev: 'removeWidget', widget: Widget): void;
-	(ev: 'updateWidget', widget: Partial<Widget>): void;
+	(ev: 'updateWidget', widget: { id: Widget['id']; data: Widget['data']; }): void;
 	(ev: 'exit'): void;
 }>();
 
@@ -103,7 +104,7 @@ const addWidget = () => {
 const removeWidget = (widget) => {
 	emit('removeWidget', widget);
 };
-const updateWidget = (id, data) => {
+const updateWidget = (id: Widget['id'], data: Widget['data']) => {
 	emit('updateWidget', { id, data });
 };
 
