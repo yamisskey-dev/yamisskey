@@ -1,48 +1,27 @@
----
-name: Claude PR Assistant (DISABLED - API Credit Required)
+name: Claude Code
 
-# ワークフロー無効化 - Claude API クレジット不足のため
-# Claude Maxプランとは別にClaude APIのクレジット購入が必要
-# 有効化するには以下の'on'セクションのコメントを外してください
-
-# 'on':
-#   issue_comment:
-#     types: [created]
-#   pull_request_review_comment:
-#     types: [created]
-#   issues:
-#     types: [opened, assigned]
-#   pull_request_review:
-#     types: [submitted]
-#   pull_request:
-#     types: [opened, synchronize]
-
-'on':
-  workflow_dispatch:
-    inputs:
-      enable_claude:
-        description: 'Enable Claude workflow (requires API credits)'
-        required: false
-        default: 'false'
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+  pull_request_review:
+    types: [submitted]
 
 jobs:
-  claude-code-action:
+  claude:
     if: |
-      (github.event_name == 'issue_comment' &&
-       contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' &&
-       contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' &&
-       contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' &&
-       contains(github.event.issue.body, '@claude')) ||
-      (github.event_name == 'pull_request' &&
-       contains(github.event.pull_request.body, '@claude'))
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
-      issues: write
+      pull-requests: read
+      issues: read
       id-token: write
     steps:
       - name: Checkout repository
@@ -50,123 +29,31 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Validate Event
-        id: validate
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          PR_URL: ${{ github.event.issue.pull_request }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          echo "event_name=$EVENT_NAME" >> $GITHUB_OUTPUT
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            echo "is_pr=true" >> $GITHUB_OUTPUT
-            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          elif [ "$PR_URL" != "null" ] && [ "$PR_URL" != "" ]; then
-            echo "is_pr=true" >> $GITHUB_OUTPUT
-            echo "pr_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
-          else
-            echo "is_pr=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Run Claude Code Review
-        if: steps.validate.outputs.is_pr == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          PR_NUMBER: ${{ steps.validate.outputs.pr_number }}
-        run: |
-          echo "Processing PR #$PR_NUMBER with Claude-Sonnet-4-20250514"
-
-          # PRの差分を取得
-          gh pr diff "$PR_NUMBER" > pr_diff.txt
-
-          # 差分のサイズ制限（200行まで）
-          head -200 pr_diff.txt > pr_diff_limited.txt
-
-          # 差分が空の場合は終了
-          if [ ! -s pr_diff_limited.txt ]; then
-            echo "No diff found, skipping review"
-            exit 0
-          fi
-
-          # PRのタイトルと説明を取得
-          PR_TITLE=$(gh pr view "$PR_NUMBER" --json title --jq '.title')
-          PR_BODY=$(gh pr view "$PR_NUMBER" --json body --jq '.body')
-
-          # Claude APIに送信するプロンプトを作成
-          cat > claude_prompt.txt << 'PROMPT_EOF'
-          あなたはYamisskey（Misskeyフォーク）のコードレビュー専門のエンジニアです。以下のPRの差分を詳細にレビューし、具体的で建設的なフィードバックを提供してください。
-
-          レビュー観点：
-          1. セキュリティの問題
-          2. パフォーマンスの問題
-          3. バグの可能性
-          4. コードの品質と可読性
-          5. Yamisskey/Misskeyの設計パターンとの整合性
-          6. TypeScript/JavaScript/Vue.jsのベストプラクティス
-
-          問題がない場合は「問題なし」と記載してください。
-
-          PR情報：
-          PROMPT_EOF
-
-          echo "タイトル: $PR_TITLE" >> claude_prompt.txt
-          echo "" >> claude_prompt.txt
-          echo "説明:" >> claude_prompt.txt
-          echo "$PR_BODY" >> claude_prompt.txt
-          echo "" >> claude_prompt.txt
-          echo "差分:" >> claude_prompt.txt
-          cat pr_diff_limited.txt >> claude_prompt.txt
-
-          # Claude APIを呼び出してレビューを取得
-          API_URL="https://api.anthropic.com/v1/messages"
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           
-          # デバッグ情報を出力
-          echo "Debug: API Key available: ${ANTHROPIC_API_KEY:+YES}"
-          echo "Debug: Prompt file size: $(wc -c < claude_prompt.txt) bytes"
+          # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4)
+          # model: "claude-opus-4-20250514"
           
-          # APIリクエストを実行
-          API_RESPONSE=$(curl -s -w "HTTP_STATUS:%{http_code}" -X POST "$API_URL" \
-            -H "Content-Type: application/json" \
-            -H "x-api-key: $ANTHROPIC_API_KEY" \
-            -H "anthropic-version: 2023-06-01" \
-            -d "{
-              \"model\": \"claude-3-5-sonnet-20241022\",
-              \"max_tokens\": 4000,
-              \"messages\": [
-                {
-                  \"role\": \"user\",
-                  \"content\": $(jq -Rs . claude_prompt.txt)
-                }
-              ]
-            }")
+          # Optional: Customize the trigger phrase (default: @claude)
+          # trigger_phrase: "/claude"
           
-          # HTTPステータスコードを抽出
-          HTTP_STATUS=$(echo "$API_RESPONSE" | grep -o "HTTP_STATUS:[0-9]*" | cut -d: -f2)
-          API_BODY=$(echo "$API_RESPONSE" | sed 's/HTTP_STATUS:[0-9]*$//')
+          # Optional: Trigger when specific user is assigned to an issue
+          # assignee_trigger: "claude-bot"
           
-          echo "Debug: HTTP Status: $HTTP_STATUS"
+          # Optional: Allow Claude to run specific commands
+          # allowed_tools: "Bash(npm install),Bash(npm run build),Bash(npm run test:*),Bash(npm run lint:*)"
           
-          if [ "$HTTP_STATUS" = "200" ]; then
-            REVIEW_RESULT=$(echo "$API_BODY" | jq -r '.content[0].text // "レスポンス解析失敗"')
-          else
-            ERROR_MSG=$(echo "$API_BODY" | jq -r '.error.message // "不明なエラー"')
-            REVIEW_RESULT="API呼び出しエラー (HTTP $HTTP_STATUS): $ERROR_MSG"
-          fi
+          # Optional: Add custom instructions for Claude to customize its behavior for your project
+          # custom_instructions: |
+          #   Follow our coding standards
+          #   Ensure all new code has tests
+          #   Use TypeScript for new files
+          
+          # Optional: Custom environment variables for Claude
+          # claude_env: |
+          #   NODE_ENV: test
 
-          # レビューコメントを作成
-          echo "## 🤖 Claude-Sonnet-4 Code Review" > comment.md
-          echo "" >> comment.md
-          echo "**レビュー対象:** PR #$PR_NUMBER" >> comment.md
-          echo "**モデル:** Claude-3.5-Sonnet-20241022" >> comment.md
-          echo "" >> comment.md
-          echo "### レビュー結果" >> comment.md
-          echo "" >> comment.md
-          echo "$REVIEW_RESULT" >> comment.md
-          echo "" >> comment.md
-          echo "---" >> comment.md
-          echo "*AI によるコードレビューです。参考程度にご活用ください。*" >> comment.md
-
-          # PRにコメント
-          gh pr comment "$PR_NUMBER" --body-file comment.md
