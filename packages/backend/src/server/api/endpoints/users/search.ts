@@ -14,6 +14,7 @@ export const meta = {
 	tags: ['users'],
 
 	requireCredential: false,
+	requiredRolePolicy: 'canSearchUsers',
 
 	description: 'Search for users.',
 

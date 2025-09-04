@@ -138,6 +138,18 @@ export type Channels = {
 		};
 		receives: null;
 	};
+	yamiTimeline: {
+		params: {
+			withRenotes?: boolean;
+			withFiles?: boolean;
+			showYamiNonFollowingPublicNotes?: boolean;
+			showYamiFollowingNotes?: boolean;
+		};
+		events: {
+			note: (payload: Note) => void;
+		};
+		receives: null;
+	};
 	antenna: {
 		params: {
 			antennaId: string;
