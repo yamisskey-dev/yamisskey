@@ -4,21 +4,14 @@
  */
 import { Brackets } from 'typeorm';
 import { Inject, Injectable } from '@nestjs/common';
-import type { NotesRepository, ChannelFollowingsRepository, FollowingsRepository } from '@/models/_.js';
+import type { NotesRepository, FollowingsRepository } from '@/models/_.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { QueryService } from '@/core/QueryService.js';
-import ActiveUsersChart from '@/core/chart/charts/active-users.js';
-import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { DI } from '@/di-symbols.js';
 import { RoleService } from '@/core/RoleService.js';
 import { IdService } from '@/core/IdService.js';
-import { CacheService } from '@/core/CacheService.js';
-import { UserFollowingService } from '@/core/UserFollowingService.js';
-import { MiLocalUser } from '@/models/User.js';
-import { MetaService } from '@/core/MetaService.js';
 import { FanoutTimelineEndpointService } from '@/core/FanoutTimelineEndpointService.js';
-import { FeaturedService } from '@/core/FeaturedService.js';
-import { isUserRelated } from '@/misc/is-user-related.js';
+import { FanoutTimelineName } from '@/core/FanoutTimelineService.js';
 import { ApiError } from '../../error.js';
 
 export const meta = {
@@ -69,29 +62,19 @@ export const paramDef = {
 
 @Injectable()
 export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
-	private globalNotesRankingCache: string[] = [];
-	private globalNotesRankingCacheLastFetchedAt = 0;
-
 	constructor(
 		@Inject(DI.notesRepository)
 		private notesRepository: NotesRepository,
 
 		@Inject(DI.channelFollowingsRepository)
-		private channelFollowingsRepository: ChannelFollowingsRepository,
 
 		@Inject(DI.followingsRepository)
 		private followingsRepository: FollowingsRepository,
 
-		private noteEntityService: NoteEntityService,
 		private roleService: RoleService,
-		private activeUsersChart: ActiveUsersChart,
 		private idService: IdService,
-		private cacheService: CacheService,
 		private fanoutTimelineEndpointService: FanoutTimelineEndpointService,
-		private userFollowingService: UserFollowingService,
 		private queryService: QueryService,
-		private metaService: MetaService,
-		private featuredService: FeaturedService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			// ポリシーチェック
@@ -101,7 +84,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			}
 
 			// Redis Timelinesを使用した実装
-			const redisTimelines = [];
+			const redisTimelines: FanoutTimelineName[] = [];
 
 			// やみモードONの場合のみRedisタイムラインを設定
 			if (me.isInYamiMode) {
@@ -122,17 +105,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				}
 			}
 
-			// DBフォールバック強制フラグを設定
-			const forceDbFallback = ps.showYamiNonFollowingPublicNotes && !ps.showYamiFollowingNotes;
-
-			// 特殊なsinceIdを生成（約3ヶ月前）- ただしフロントエンドから明示的にsinceIdが指定された場合は使用しない
-			const forcedSinceId = (forceDbFallback && !ps.sinceId && !ps.sinceDate)
-				? this.idService.gen(Date.now() - 90 * 24 * 60 * 60 * 1000)
-				: null;
-
 			return await this.fanoutTimelineEndpointService.timeline({
 				untilId: ps.untilId ?? (ps.untilDate ? this.idService.gen(ps.untilDate!) : null),
-				sinceId: ps.sinceId ?? (ps.sinceDate ? this.idService.gen(ps.sinceDate!) : forcedSinceId),
+				sinceId: ps.sinceId ?? (ps.sinceDate ? this.idService.gen(ps.sinceDate!) : null),
 				limit: ps.limit,
 				allowPartial: false, // 必ず完全な結果を使用
 				me,
@@ -141,27 +116,27 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				noteFilter: (note) => {
 					// クライアントサイドでの追加フィルタリング (Redis結果用)
 					if (!note.isNoteInYamiMode) return false;
-	
+
 					// 投稿が自分のものかどうか判定
 					const isMyNote = note.userId === me.id;
-	
+
 					// 自分がやみモードでない場合は自分の投稿だけ表示
 					if (!me.isInYamiMode) {
 						return isMyNote;
 					}
-	
+
 					// 自分の投稿は常に表示
 					if (isMyNote) return true;
-	
+
 					// ダイレクト投稿で自分が含まれていれば表示
 					if (note.visibility === 'specified' && note.visibleUserIds.includes(me.id)) return true;
-	
+
 					// フォロー状態を確認（同期的に判定）
 					// フォローしていないユーザーのパブリック投稿
 					if (note.visibility === 'public') {
 						return ps.showYamiNonFollowingPublicNotes;
 					}
-	
+
 					// その他の投稿はフォロー関係に基づいて判定
 					return ps.showYamiFollowingNotes;
 				},
