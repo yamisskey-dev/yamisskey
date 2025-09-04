@@ -122,7 +122,7 @@ const favorited = ref(false);
 const searchQuery = ref('');
 const searchPaginator = shallowRef();
 const searchKey = ref('');
-const featuredPaginator = markRaw(new Paginator('channels/featured', {
+const featuredPaginator = markRaw(new Paginator('notes/featured', {
 	limit: 10,
 	computedParams: computed(() => ({
 		channelId: props.channelId,
@@ -141,6 +141,8 @@ watch(() => props.channelId, async () => {
 	channel.value = await misskeyApi('channels/show', {
 		channelId: props.channelId,
 	});
+	if (channel.value == null) return; // TSを黙らすため
+
 	favorited.value = channel.value.isFavorited ?? false;
 	if (favorited.value || channel.value.isFollowing) {
 		tab.value = 'timeline';
@@ -157,7 +159,11 @@ watch(() => props.channelId, async () => {
 }, { immediate: true });
 
 function edit() {
-	router.push(`/channels/${channel.value?.id}/edit`);
+	router.push('/channels/:channelId/edit', {
+		params: {
+			channelId: props.channelId,
+		},
+	});
 }
 
 function openPostForm() {
