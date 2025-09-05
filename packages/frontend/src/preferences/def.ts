@@ -601,7 +601,7 @@ export const PREF_DEF = definePreferences({
 		default: true,
 	},
 	'activeStatusVisibility': {
-		default: { type: 'mutualFollow' } as {
+		default: { type: 'never' } as {
 			type: 'all' | 'following' | 'followers' | 'mutualFollow' | 'followingOrFollower' | 'never' | 'list';
 			userListId?: string;
 		},
