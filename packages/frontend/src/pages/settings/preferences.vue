@@ -187,7 +187,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 									<MkSwitch v-model="collapseSelfRenotes" style="padding-top: 12px;">
 										<template #label><SearchLabel>{{ i18n.ts.collapseSelfRenotes }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-										<template #caption><SearchKeyword>{{ i18n.ts.collapseSelfRenotesDescription }}</SearchKeyword></template>
+										<template #caption><SearchText>{{ i18n.ts.collapseSelfRenotesDescription }}</SearchText></template>
 									</MkSwitch>
 								</div>
 							</SearchMarker>
@@ -305,7 +305,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 								<MkPreferenceContainer k="hideReactionUsers">
 									<MkSwitch v-model="hideReactionUsers">
 										<template #label><SearchLabel>{{ i18n.ts.hideReactionUsers }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-										<template #caption><SearchKeyword>{{ i18n.ts.hideReactionUsersDescription }}</SearchKeyword></template>
+										<template #caption><SearchText>{{ i18n.ts.hideReactionUsersDescription }}</SearchText></template>
 									</MkSwitch>
 								</MkPreferenceContainer>
 							</SearchMarker>
@@ -328,7 +328,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 								<MkPreferenceContainer k="reactionChecksMuting">
 									<MkSwitch v-model="reactionChecksMuting">
 										<template #label><SearchLabel>{{ i18n.ts._reactionChecksMuting.title }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-										<template #caption><SearchKeyword>{{ i18n.ts._reactionChecksMuting.caption }}</SearchKeyword></template>
+										<template #caption><SearchText>{{ i18n.ts._reactionChecksMuting.caption }}</SearchText></template>
 									</MkSwitch>
 								</MkPreferenceContainer>
 							</SearchMarker>
@@ -735,7 +735,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<MkPreferenceContainer k="nicknameEnabled">
 								<MkSwitch v-model="nicknameEnabled">
 									<template #label><SearchLabel>{{ i18n.ts.nicknameEnabled }}</SearchLabel></template>
-									<template #caption><SearchKeyword>{{ i18n.ts.nicknameEnabledDescription }}</SearchKeyword></template>
+									<template #caption><SearchText>{{ i18n.ts.nicknameEnabledDescription }}</SearchText></template>
 								</MkSwitch>
 							</MkPreferenceContainer>
 						</SearchMarker>
@@ -866,7 +866,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<SearchMarker :keywords="['statistics', 'count', 'hide', 'notes', 'following', 'followers']">
 								<MkFolder>
 									<template #label><SearchLabel>{{ i18n.ts.hidePersonalStats }}</SearchLabel></template>
-									<template #caption><SearchKeyword>{{ i18n.ts.hidePersonalStatsDescription }}</SearchKeyword></template>
+									<template #caption><SearchText>{{ i18n.ts.hidePersonalStatsDescription }}</SearchText></template>
 
 									<div class="_gaps_s">
 										<MkPreferenceContainer k="hideNotesCountMyself">
@@ -897,7 +897,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<SearchMarker :keywords="['statistics', 'count', 'hide', 'notes', 'following', 'followers', 'others']">
 								<MkFolder>
 									<template #label><SearchLabel>{{ i18n.ts.hideOthersStats }}</SearchLabel></template>
-									<template #caption><SearchKeyword>{{ i18n.ts.hideOthersStatsDescription }}</SearchKeyword></template>
+									<template #caption><SearchText>{{ i18n.ts.hideOthersStatsDescription }}</SearchText></template>
 
 									<div class="_gaps_s">
 										<MkPreferenceContainer k="hideNotesCountOthers">
@@ -929,7 +929,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<SearchMarker :keywords="['timeline', 'local', 'social', 'global', 'ltl', 'stl', 'gtl', 'hide']">
 								<MkFolder>
 									<template #label><SearchLabel>{{ i18n.ts.hideTimelines }}</SearchLabel></template>
-									<template #caption><SearchKeyword>{{ i18n.ts.hideTimelinesDescription }}</SearchKeyword></template>
+									<template #caption><SearchText>{{ i18n.ts.hideTimelinesDescription }}</SearchText></template>
 
 									<div class="_gaps_s">
 										<MkPreferenceContainer k="hideLocalTimeLine">
@@ -960,7 +960,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<SearchMarker v-slot="slotProps" :keywords="['other']">
 				<MkFolder :defaultOpen="slotProps.isParentOfTarget">
 					<template #label><SearchLabel>{{ i18n.ts.other }}</SearchLabel></template>
-					<template #icon><SearchIcon><i class="ti ti-settings-cog"></i></searchicon></template>
+					<template #icon><SearchIcon><i class="ti ti-settings-cog"></i></SearchIcon></template>
 
 					<div class="_gaps_m">
 						<div class="_gaps_s">
@@ -1052,7 +1052,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<MkPreferenceContainer k="searchEngine">
 								<MkSelect v-model="searchEngine">
 									<template #label><SearchLabel>{{ i18n.ts.searchEngine }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-									<template #caption><SearchKeyword>{{ i18n.ts._yami.searchEngineDescription }}</SearchKeyword></template>
+									<template #caption><SearchText>{{ i18n.ts._yami.searchEngineDescription }}</SearchText></template>
 									<option value="https://google.com/search?">Google Search (google.com)</option>
 									<option value="https://duckduckgo.com/?">DuckDuckGo (duckduckgo.com)</option>
 									<option value="https://search.yahoo.com/search?">Yahoo! Search (search.yahoo.com)</option>
