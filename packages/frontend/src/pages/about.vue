@@ -50,24 +50,19 @@ const headerActions = computed(() => []);
 const headerTabs = computed(() => [{
 	key: 'overview',
 	title: i18n.ts.overview,
-}]);
-
-// const headerTabs = computed(() => [{
-// 	key: 'overview',
-// 	title: i18n.ts.overview,
-// }, {
-// 	key: 'emojis',
-// 	title: i18n.ts.customEmojis,
-// 	icon: 'ti ti-icons',
-// }, {
-// 	key: 'federation',
-// 	title: i18n.ts.federation,
-// 	icon: 'ti ti-whirl',
-// }, {
-// 	key: 'charts',
-// 	title: i18n.ts.charts,
-// 	icon: 'ti ti-chart-line',
-// }]);
+}/* , {
+	key: 'emojis',
+	title: i18n.ts.customEmojis,
+	icon: 'ti ti-icons',
+}, ...(instance.federation !== 'none' ? [{
+	key: 'federation',
+	title: i18n.ts.federation,
+	icon: 'ti ti-whirl',
+}] : []), {
+	key: 'charts',
+	title: i18n.ts.charts,
+	icon: 'ti ti-chart-line',
+} */]);
 
 definePage(() => ({
 	title: i18n.ts.instanceInfo,

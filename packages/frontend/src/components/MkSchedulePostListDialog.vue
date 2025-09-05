@@ -68,6 +68,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 										<i v-else-if="item.note.visibility === 'specified'" class="ti ti-mail"></i>
 									</span>
 									<span v-if="item.note.localOnly" :title="i18n.ts._visibility['disableFederation']"><i class="ti ti-rocket-off"></i></span>
+									<span v-if="(item.note as any).deleteAt" :title="i18n.tsx.noteDeletationAt({ time: dateTimeFormat.format(new Date((item.note as any).deleteAt)) })"><i class="ti ti-bomb"></i></span>
 								</div>
 								<div :class="$style.scheduleTime">
 									<i class="ti ti-clock"></i>
@@ -117,6 +118,7 @@ import { getNoteSummary } from '@/utility/get-note-summary.js';
 import { i18n } from '@/i18n.js';
 import * as os from '@/os.js';
 import { Paginator } from '@/utility/paginator.js';
+import { dateTimeFormat } from '@/utility/intl-const.js';
 
 const emit = defineEmits<{
 	(ev: 'cancel'): void;

@@ -58,6 +58,7 @@ export const paramDef = {
 		allowPartial: { type: 'boolean', default: false }, // true is recommended but for compatibility false by default
 		sinceDate: { type: 'integer' },
 		untilDate: { type: 'integer' },
+		excludeBots: { type: 'boolean', default: false },
 	},
 	required: [],
 } as const;
@@ -96,6 +97,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					limit: ps.limit,
 					withFiles: ps.withFiles,
 					withReplies: ps.withReplies,
+					excludeBots: ps.excludeBots,
 				}, me);
 
 				process.nextTick(() => {
@@ -127,6 +129,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					limit,
 					withFiles: ps.withFiles,
 					withReplies: ps.withReplies,
+					excludeBots: ps.excludeBots,
 				}, me),
 			});
 
@@ -146,6 +149,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		limit: number,
 		withFiles: boolean,
 		withReplies: boolean,
+		excludeBots: boolean,
 	}, me: MiLocalUser | null) {
 		const query = this.queryService.makePaginationQuery(this.notesRepository.createQueryBuilder('note'),
 			ps.sinceId, ps.untilId)
@@ -174,6 +178,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 							.andWhere('note.replyUserId = note.userId');
 					}));
 			}));
+		}
+
+		if (ps.excludeBots) {
+			query.andWhere('user.isBot = FALSE');
 		}
 
 		return await query.limit(ps.limit).getMany();

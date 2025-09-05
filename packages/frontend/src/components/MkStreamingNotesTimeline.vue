@@ -32,9 +32,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<template v-for="(note, i) in paginator.items.value" :key="note.id">
 				<div v-if="i > 0 && isSeparatorNeeded(paginator.items.value[i -1].createdAt, note.createdAt)" :data-scroll-anchor="note.id">
 					<div :class="$style.date">
-						<span><i class="ti ti-chevron-up"></i> {{ getSeparatorInfo(paginator.items.value[i -1].createdAt, note.createdAt).prevText }}</span>
+						<span><i class="ti ti-chevron-up"></i> {{ getSeparatorInfo(paginator.items.value[i -1].createdAt, note.createdAt)?.prevText }}</span>
 						<span style="height: 1em; width: 1px; background: var(--MI_THEME-divider);"></span>
-						<span>{{ getSeparatorInfo(paginator.items.value[i -1].createdAt, note.createdAt).nextText }} <i class="ti ti-chevron-down"></i></span>
+						<span>{{ getSeparatorInfo(paginator.items.value[i -1].createdAt, note.createdAt)?.nextText }} <i class="ti ti-chevron-down"></i></span>
 					</div>
 					<MkNote :class="$style.note" :note="note" :withHardMute="true"/>
 				</div>
@@ -47,7 +47,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<MkNote v-else :class="$style.note" :note="note" :withHardMute="true" :data-scroll-anchor="note.id"/>
 			</template>
 		</component>
-		<button v-show="paginator.canFetchOlder.value" key="_more_" :disabled="paginator.fetchingOlder.value" class="_button" :class="$style.more" @click="paginator.fetchOlder">
+		<button v-show="paginator.canFetchOlder.value" key="_more_" v-appear="prefer.s.enableInfiniteScroll ? paginator.fetchOlder : null" :disabled="paginator.fetchingOlder.value" class="_button" :class="$style.more" @click="paginator.fetchOlder">
 			<div v-if="!paginator.fetchingOlder.value">{{ i18n.ts.loadMore }}</div>
 			<MkLoading v-else :inline="true"/>
 		</button>
@@ -93,6 +93,7 @@ const props = withDefaults(defineProps<{
 	localOnly?: boolean;
 	remoteOnly?: boolean;
 	withHashtags?: boolean;
+	excludeBots?: boolean;
 	showYamiNonFollowingPublicNotes?: boolean;
 	showYamiFollowingNotes?: boolean;
 }>(), {
@@ -103,6 +104,7 @@ const props = withDefaults(defineProps<{
 	localOnly: false,
 	remoteOnly: false,
 	withHashtags: false,
+	excludeBots: false,
 	showYamiNonFollowingPublicNotes: false,
 	showYamiFollowingNotes: true,
 	sound: false,
@@ -127,6 +129,7 @@ if (props.src === 'antenna') {
 		computedParams: computed(() => ({
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
+			excludeBots: props.excludeBots,
 		})),
 		useShallowRef: true,
 	}));
@@ -135,6 +138,7 @@ if (props.src === 'antenna') {
 		computedParams: computed(() => ({
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
+			excludeBots: props.excludeBots,
 			showYamiNonFollowingPublicNotes: props.showYamiNonFollowingPublicNotes,
 			showYamiFollowingNotes: props.showYamiFollowingNotes,
 		})),
@@ -146,6 +150,7 @@ if (props.src === 'antenna') {
 			withRenotes: props.withRenotes,
 			withReplies: props.withReplies,
 			withFiles: props.onlyFiles ? true : undefined,
+			excludeBots: props.excludeBots,
 		})),
 		useShallowRef: true,
 	}));
@@ -156,6 +161,7 @@ if (props.src === 'antenna') {
 			withReplies: props.withReplies,
 			withFiles: props.onlyFiles ? true : undefined,
 			localOnly: props.localOnly,
+			excludeBots: props.excludeBots,
 		})),
 		useShallowRef: true,
 	}));
@@ -166,6 +172,7 @@ if (props.src === 'antenna') {
 			withFiles: props.onlyFiles ? true : undefined,
 			remoteOnly: props.remoteOnly,
 			withHashtags: props.withHashtags,
+			excludeBots: props.excludeBots,
 		})),
 		useShallowRef: true,
 	}));
@@ -320,93 +327,121 @@ function prepend(note: Misskey.entities.Note & MisskeyEntity) {
 	}
 }
 
-let connection: Misskey.IChannelConnection | null = null;
-let connection2: Misskey.IChannelConnection | null = null;
-
 const stream = store.s.realtimeMode ? useStream() : null;
+
+const connections = {
+	antenna: null as Misskey.IChannelConnection<Misskey.Channels['antenna']> | null,
+	homeTimeline: null as Misskey.IChannelConnection<Misskey.Channels['homeTimeline']> | null,
+	yamiTimeline: null as Misskey.IChannelConnection<Misskey.Channels['yamiTimeline']> | null,
+	localTimeline: null as Misskey.IChannelConnection<Misskey.Channels['localTimeline']> | null,
+	hybridTimeline: null as Misskey.IChannelConnection<Misskey.Channels['hybridTimeline']> | null,
+	globalTimeline: null as Misskey.IChannelConnection<Misskey.Channels['globalTimeline']> | null,
+	main: null as Misskey.IChannelConnection<Misskey.Channels['main']> | null,
+	userList: null as Misskey.IChannelConnection<Misskey.Channels['userList']> | null,
+	channel: null as Misskey.IChannelConnection<Misskey.Channels['channel']> | null,
+	roleTimeline: null as Misskey.IChannelConnection<Misskey.Channels['roleTimeline']> | null,
+};
 
 function connectChannel() {
 	if (stream == null) return;
 	if (props.src === 'antenna') {
 		if (props.antenna == null) return;
-		connection = stream.useChannel('antenna', {
+		connections.antenna = stream.useChannel('antenna', {
 			antennaId: props.antenna,
 		});
+		connections.antenna.on('note', prepend);
 	} else if (props.src === 'home') {
-		connection = stream.useChannel('homeTimeline', {
+		connections.homeTimeline = stream.useChannel('homeTimeline', {
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
+			excludeBots: props.excludeBots,
 		});
-		connection2 = stream.useChannel('main');
+		connections.main = stream.useChannel('main');
+		connections.homeTimeline.on('note', prepend);
 	} else if (props.src === 'yami') {
-		connection = stream.useChannel('yamiTimeline', {
+		connections.yamiTimeline = stream.useChannel('yamiTimeline', {
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
+			excludeBots: props.excludeBots,
 			showYamiNonFollowingPublicNotes: props.showYamiNonFollowingPublicNotes,
 			showYamiFollowingNotes: props.showYamiFollowingNotes,
 		});
+		connections.yamiTimeline.on('note', prepend);
 	} else if (props.src === 'local') {
-		connection = stream.useChannel('localTimeline', {
+		connections.localTimeline = stream.useChannel('localTimeline', {
 			withRenotes: props.withRenotes,
 			withReplies: props.withReplies,
 			withFiles: props.onlyFiles ? true : undefined,
+			excludeBots: props.excludeBots,
 		});
+		connections.localTimeline.on('note', prepend);
 	} else if (props.src === 'social') {
-		connection = stream.useChannel('hybridTimeline', {
+		connections.hybridTimeline = stream.useChannel('hybridTimeline', {
 			withRenotes: props.withRenotes,
 			withReplies: props.withReplies,
 			withFiles: props.onlyFiles ? true : undefined,
 			localOnly: props.localOnly,
+			excludeBots: props.excludeBots,
 		});
+		connections.hybridTimeline.on('note', prepend);
 	} else if (props.src === 'global') {
-		connection = stream.useChannel('globalTimeline', {
+		connections.globalTimeline = stream.useChannel('globalTimeline', {
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
 			remoteOnly: props.remoteOnly,
 			withHashtags: props.withHashtags,
+			excludeBots: props.excludeBots,
 		});
+		connections.globalTimeline.on('note', prepend);
 	} else if (props.src === 'mentions') {
-		connection = stream.useChannel('main');
-		connection.on('mention', prepend);
+		connections.main = stream.useChannel('main');
+		connections.main.on('mention', prepend);
 	} else if (props.src === 'directs') {
 		const onNote = note => {
 			if (note.visibility === 'specified') {
 				prepend(note);
 			}
 		};
-		connection = stream.useChannel('main');
-		connection.on('mention', onNote);
+		connections.main = stream.useChannel('main');
+		connections.main.on('mention', onNote);
 	} else if (props.src === 'list') {
 		if (props.list == null) return;
-		connection = stream.useChannel('userList', {
+		connections.userList = stream.useChannel('userList', {
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
 			listId: props.list,
 		});
+		connections.userList.on('note', prepend);
 	} else if (props.src === 'channel') {
 		if (props.channel == null) return;
-		connection = stream.useChannel('channel', {
+		connections.channel = stream.useChannel('channel', {
 			channelId: props.channel,
 		});
+		connections.channel.on('note', prepend);
 	} else if (props.src === 'role') {
 		if (props.role == null) return;
-		connection = stream.useChannel('roleTimeline', {
+		connections.roleTimeline = stream.useChannel('roleTimeline', {
 			roleId: props.role,
 		});
+		connections.roleTimeline.on('note', prepend);
 	}
-	if (props.src !== 'directs' && props.src !== 'mentions') connection?.on('note', prepend);
 }
 
 function disconnectChannel() {
-	if (connection) connection.dispose();
-	if (connection2) connection2.dispose();
+	for (const key in connections) {
+		const conn = connections[key as keyof typeof connections];
+		if (conn != null) {
+			conn.dispose();
+			connections[key as keyof typeof connections] = null;
+		}
+	}
 }
 
 if (store.s.realtimeMode) {
 	connectChannel();
 }
 
-watch(() => [props.list, props.antenna, props.channel, props.role, props.withRenotes, props.withReplies, props.onlyFiles, props.localOnly, props.remoteOnly, props.withHashtags], () => {
+watch(() => [props.list, props.antenna, props.channel, props.role, props.withRenotes, props.withReplies, props.onlyFiles, props.localOnly, props.remoteOnly, props.withHashtags, props.excludeBots, props.showYamiNonFollowingPublicNotes, props.showYamiFollowingNotes], () => {
 	if (store.s.realtimeMode) {
 		disconnectChannel();
 		connectChannel();

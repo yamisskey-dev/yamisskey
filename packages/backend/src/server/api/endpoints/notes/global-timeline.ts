@@ -48,6 +48,7 @@ export const paramDef = {
 		sinceDate: { type: 'integer' },
 		untilDate: { type: 'integer' },
 		remoteOnly: { type: 'boolean', default: false },
+		excludeBots: { type: 'boolean', default: false },
 	},
 	required: [],
 } as const;
@@ -99,6 +100,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					qb.orWhere(new Brackets(qb => {
 						qb.where('note.text IS NOT NULL');
 						qb.orWhere('note.fileIds != \'{}\'');
+						qb.orWhere('0 < (SELECT COUNT(*) FROM poll WHERE poll."noteId" = note.id)');
 					}));
 				}));
 			}
@@ -113,6 +115,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					qb.orWhere('note.hasPoll');
 					qb.orWhere('(SELECT r.tags FROM "note" as r WHERE r.id = note.renoteId) = \'{}\'');
 				}));
+			}
+
+			if (ps.excludeBots) {
+				query.andWhere('user.isBot = FALSE');
 			}
 
 			const timeline = await query.limit(ps.limit).getMany();

@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { toPascal } from 'ts-case-convert';
-import OpenAPIParser from '@readme/openapi-parser';
+import { parse } from '@readme/openapi-parser';
 import openapiTS, { astToString } from 'openapi-typescript';
 import ts from 'typescript';
 import type { OpenAPI3, OperationObject, PathItemObject } from 'openapi-typescript';
@@ -402,7 +402,7 @@ async function main() {
 	await mkdir(generatePath, { recursive: true });
 
 	const openApiJsonPath = './api.json';
-	const openApiDocs = await OpenAPIParser.parse(openApiJsonPath) as OpenAPIV3_1.Document;
+	const openApiDocs = await parse(openApiJsonPath) as OpenAPIV3_1.Document;
 
 	const typeFileName = './built/autogen/types.ts';
 	await generateBaseTypes(openApiDocs, openApiJsonPath, typeFileName);

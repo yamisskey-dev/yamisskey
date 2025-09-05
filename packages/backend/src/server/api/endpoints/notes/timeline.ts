@@ -48,6 +48,7 @@ export const paramDef = {
 		includeLocalRenotes: { type: 'boolean', default: true },
 		withFiles: { type: 'boolean', default: false },
 		withRenotes: { type: 'boolean', default: true },
+		excludeBots: { type: 'boolean', default: false },
 	},
 	required: [],
 } as const;
@@ -86,6 +87,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					includeLocalRenotes: ps.includeLocalRenotes,
 					withFiles: ps.withFiles,
 					withRenotes: ps.withRenotes,
+					excludeBots: ps.excludeBots,
 				}, me);
 
 				process.nextTick(() => {
@@ -116,6 +118,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 						if (!Object.hasOwn(followings, note.reply.userId) && note.reply.userId !== me.id) return false;
 					}
 
+					// ボットフィルタリング
+					if (ps.excludeBots && note.user?.isBot) return false;
+
 					return true;
 				},
 				dbFallback: async (untilId, sinceId, limit) => await this.getFromDb({
@@ -127,6 +132,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					includeLocalRenotes: ps.includeLocalRenotes,
 					withFiles: ps.withFiles,
 					withRenotes: ps.withRenotes,
+					excludeBots: ps.excludeBots,
 				}, me),
 			});
 
@@ -138,7 +144,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		});
 	}
 
-	private async getFromDb(ps: { untilId: string | null; sinceId: string | null; limit: number; includeMyRenotes: boolean; includeRenotedMyNotes: boolean; includeLocalRenotes: boolean; withFiles: boolean; withRenotes: boolean; }, me: MiLocalUser) {
+	private async getFromDb(ps: { untilId: string | null; sinceId: string | null; limit: number; includeMyRenotes: boolean; includeRenotedMyNotes: boolean; includeLocalRenotes: boolean; withFiles: boolean; withRenotes: boolean; excludeBots: boolean; }, me: MiLocalUser) {
 		const followees = await this.userFollowingService.getFollowees(me.id);
 		const followingChannels = await this.channelFollowingsRepository.find({
 			where: {
@@ -240,7 +246,18 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		}
 
 		if (ps.withRenotes === false) {
-			query.andWhere('note.renoteId IS NULL');
+			query.andWhere(new Brackets(qb => {
+				qb.orWhere('note.renoteId IS NULL');
+				qb.orWhere(new Brackets(qb => {
+					qb.orWhere('note.text IS NOT NULL');
+					qb.orWhere('note.fileIds != \'{}\'');
+					qb.orWhere('0 < (SELECT COUNT(*) FROM poll WHERE poll."noteId" = note.id)');
+				}));
+			}));
+		}
+
+		if (ps.excludeBots) {
+			query.andWhere('user.isBot = FALSE');
 		}
 		//#endregion
 

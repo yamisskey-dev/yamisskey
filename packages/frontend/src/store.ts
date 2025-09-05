@@ -54,7 +54,7 @@ export const store = markRaw(new Pizzax('base', {
 	tl: {
 		where: 'deviceAccount',
 		default: {
-			src: 'home' as 'home' | 'local' | 'social' | 'global' | `list:${string}` | `channel:${string}`,
+			src: 'home' as 'home' | 'local' | 'social' | 'global' | 'yami' | `list:${string}` | `channel:${string}`,
 			userList: null as Misskey.entities.UserList | null,
 			channel: null as Misskey.entities.Channel | null,
 			filter: {
@@ -62,6 +62,12 @@ export const store = markRaw(new Pizzax('base', {
 				withRenotes: true,
 				withSensitive: true,
 				onlyFiles: false,
+				excludeBots: false,
+				localOnly: false,
+				remoteOnly: false,
+				withHashtags: false,
+				showYamiNonFollowingPublicNotes: true,
+				showYamiFollowingNotes: true,
 			},
 		},
 	},
@@ -107,7 +113,7 @@ export const store = markRaw(new Pizzax('base', {
 	},
 	accountInfos: {
 		where: 'device',
-		default: {} as Record<string, Misskey.entities.User>, // host/userId, user
+		default: {} as Record<string, Misskey.entities.MeDetailed>, // host/userId, user
 	},
 
 	enablePreferencesAutoCloudBackup: {
