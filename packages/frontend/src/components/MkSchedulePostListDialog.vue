@@ -73,6 +73,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 									<i class="ti ti-clock"></i>
 									<MkTime :time="item.scheduledAt" mode="detail" colored/>
 								</div>
+								<span v-if="(item.note as any).deleteAt" :class="$style.scheduleDeleteTime" :title="i18n.tsx.noteDeletationAt({ time: dateTimeFormat.format(new Date((item.note as any).deleteAt)) })">
+									<i class="ti ti-bomb"></i>
+								</span>
 							</div>
 						</div>
 						<div :class="$style.scheduleActions" class="_buttons">
@@ -117,6 +120,7 @@ import { getNoteSummary } from '@/utility/get-note-summary.js';
 import { i18n } from '@/i18n.js';
 import * as os from '@/os.js';
 import { Paginator } from '@/utility/paginator.js';
+import { dateTimeFormat } from '@/utility/intl-const.js';
 
 const emit = defineEmits<{
 	(ev: 'cancel'): void;
@@ -207,6 +211,11 @@ async function deleteSchedule(item: any) {
     font-size: 85%;
     color: var(--MI_THEME-accent);
     font-weight: 600;
+}
+
+.scheduleDeleteTime {
+	margin-left: 8px;
+	color: var(--MI_THEME-error);
 }
 
 .scheduleActions {
