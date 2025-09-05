@@ -93,6 +93,7 @@ const props = withDefaults(defineProps<{
 	localOnly?: boolean;
 	remoteOnly?: boolean;
 	withHashtags?: boolean;
+	excludeBots?: boolean;
 	showYamiNonFollowingPublicNotes?: boolean;
 	showYamiFollowingNotes?: boolean;
 }>(), {
@@ -103,6 +104,7 @@ const props = withDefaults(defineProps<{
 	localOnly: false,
 	remoteOnly: false,
 	withHashtags: false,
+	excludeBots: false,
 	showYamiNonFollowingPublicNotes: false,
 	showYamiFollowingNotes: true,
 	sound: false,
@@ -127,6 +129,7 @@ if (props.src === 'antenna') {
 		computedParams: computed(() => ({
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
+			excludeBots: props.excludeBots,
 		})),
 		useShallowRef: true,
 	}));
@@ -135,6 +138,7 @@ if (props.src === 'antenna') {
 		computedParams: computed(() => ({
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
+			excludeBots: props.excludeBots,
 			showYamiNonFollowingPublicNotes: props.showYamiNonFollowingPublicNotes,
 			showYamiFollowingNotes: props.showYamiFollowingNotes,
 		})),
@@ -146,6 +150,7 @@ if (props.src === 'antenna') {
 			withRenotes: props.withRenotes,
 			withReplies: props.withReplies,
 			withFiles: props.onlyFiles ? true : undefined,
+			excludeBots: props.excludeBots,
 		})),
 		useShallowRef: true,
 	}));
@@ -156,6 +161,7 @@ if (props.src === 'antenna') {
 			withReplies: props.withReplies,
 			withFiles: props.onlyFiles ? true : undefined,
 			localOnly: props.localOnly,
+			excludeBots: props.excludeBots,
 		})),
 		useShallowRef: true,
 	}));
@@ -166,6 +172,7 @@ if (props.src === 'antenna') {
 			withFiles: props.onlyFiles ? true : undefined,
 			remoteOnly: props.remoteOnly,
 			withHashtags: props.withHashtags,
+			excludeBots: props.excludeBots,
 		})),
 		useShallowRef: true,
 	}));
@@ -347,6 +354,7 @@ function connectChannel() {
 		connections.homeTimeline = stream.useChannel('homeTimeline', {
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
+			excludeBots: props.excludeBots,
 		});
 		connections.main = stream.useChannel('main');
 		connections.homeTimeline.on('note', prepend);
@@ -354,6 +362,7 @@ function connectChannel() {
 		connections.yamiTimeline = stream.useChannel('yamiTimeline', {
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
+			excludeBots: props.excludeBots,
 			showYamiNonFollowingPublicNotes: props.showYamiNonFollowingPublicNotes,
 			showYamiFollowingNotes: props.showYamiFollowingNotes,
 		});
@@ -363,6 +372,7 @@ function connectChannel() {
 			withRenotes: props.withRenotes,
 			withReplies: props.withReplies,
 			withFiles: props.onlyFiles ? true : undefined,
+			excludeBots: props.excludeBots,
 		});
 		connections.localTimeline.on('note', prepend);
 	} else if (props.src === 'social') {
@@ -371,6 +381,7 @@ function connectChannel() {
 			withReplies: props.withReplies,
 			withFiles: props.onlyFiles ? true : undefined,
 			localOnly: props.localOnly,
+			excludeBots: props.excludeBots,
 		});
 		connections.hybridTimeline.on('note', prepend);
 	} else if (props.src === 'global') {
@@ -379,6 +390,7 @@ function connectChannel() {
 			withFiles: props.onlyFiles ? true : undefined,
 			remoteOnly: props.remoteOnly,
 			withHashtags: props.withHashtags,
+			excludeBots: props.excludeBots,
 		});
 		connections.globalTimeline.on('note', prepend);
 	} else if (props.src === 'mentions') {
@@ -429,7 +441,7 @@ if (store.s.realtimeMode) {
 	connectChannel();
 }
 
-watch(() => [props.list, props.antenna, props.channel, props.role, props.withRenotes, props.withReplies, props.onlyFiles, props.localOnly, props.remoteOnly, props.withHashtags, props.showYamiNonFollowingPublicNotes, props.showYamiFollowingNotes], () => {
+watch(() => [props.list, props.antenna, props.channel, props.role, props.withRenotes, props.withReplies, props.onlyFiles, props.localOnly, props.remoteOnly, props.withHashtags, props.excludeBots, props.showYamiNonFollowingPublicNotes, props.showYamiFollowingNotes], () => {
 	if (store.s.realtimeMode) {
 		disconnectChannel();
 		connectChannel();
