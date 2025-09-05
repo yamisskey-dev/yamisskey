@@ -55,7 +55,7 @@ export const paramDef = {
 		withRenotes: { type: 'boolean', default: true },
 		localOnly: { type: 'boolean', default: false }, // ローカルのみフィルター
 		excludeBots: { type: 'boolean', default: false },
-		showYamiNonFollowingPublicNotes: { type: 'boolean', default: true }, // フォローしていないユーザーのパブリックやみノート表示
+		showYamiNonFollowingPublicNotes: { type: 'boolean', default: true }, // フォロー外ユーザーのパブリックやみノート表示
 		showYamiFollowingNotes: { type: 'boolean', default: true }, // フォローしているユーザーのやみノート表示
 	},
 	required: [],
@@ -136,7 +136,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					if (note.visibility === 'specified' && note.visibleUserIds.includes(me.id)) return true;
 
 					// フォロー状態を確認（同期的に判定）
-					// フォローしていないユーザーのパブリック投稿
+					// フォロー外ユーザーのパブリック投稿
 					if (note.visibility === 'public') {
 						return ps.showYamiNonFollowingPublicNotes;
 					}
