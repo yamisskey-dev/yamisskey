@@ -387,32 +387,38 @@ const filterItems = computed(() => {
 	if (src.value === 'social') {
 		items.push({
 			type: 'switch',
+			icon: 'ti ti-rocket-off',
 			text: i18n.ts.localOnly,
 			ref: localOnly,
 		});
 	} else if (src.value === 'global') {
 		items.push({
 			type: 'switch',
+			icon: 'ti ti-rocket',
 			text: i18n.ts.remoteOnly,
 			ref: remoteOnly,
 		}, {
 			type: 'switch',
+			icon: 'ti ti-hash',
 			text: i18n.ts.withHashtags,
 			ref: withHashtags,
 		});
 	} else if (src.value === 'yami') {
 		items.push({
 			type: 'switch',
+			icon: 'ti ti-rocket-off',
 			text: i18n.ts.localOnly,
 			ref: localOnly,
 		}, {
 			type: 'switch',
+			icon: 'ti ti-world',
 			text: i18n.ts._yami.showYamiNonFollowingPublicNotes,
 			ref: showYamiNonFollowingPublicNotes,
 			// 闇モードでない場合は視覚的に無効化
 			disabled: !$i?.isInYamiMode,
 		}, {
 			type: 'switch',
+			icon: 'ti ti-home',
 			text: i18n.ts._yami.showYamiFollowingNotes,
 			ref: showYamiFollowingNotes,
 			// 闇モードでない場合は視覚的に無効化
