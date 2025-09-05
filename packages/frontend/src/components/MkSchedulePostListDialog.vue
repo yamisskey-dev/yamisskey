@@ -68,14 +68,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 										<i v-else-if="item.note.visibility === 'specified'" class="ti ti-mail"></i>
 									</span>
 									<span v-if="item.note.localOnly" :title="i18n.ts._visibility['disableFederation']"><i class="ti ti-rocket-off"></i></span>
+									<span v-if="(item.note as any).deleteAt" :title="i18n.tsx.noteDeletationAt({ time: dateTimeFormat.format(new Date((item.note as any).deleteAt)) })"><i class="ti ti-bomb"></i></span>
 								</div>
 								<div :class="$style.scheduleTime">
 									<i class="ti ti-clock"></i>
 									<MkTime :time="item.scheduledAt" mode="detail" colored/>
 								</div>
-								<span v-if="(item.note as any).deleteAt" :class="$style.scheduleDeleteTime" :title="i18n.tsx.noteDeletationAt({ time: dateTimeFormat.format(new Date((item.note as any).deleteAt)) })">
-									<i class="ti ti-bomb"></i>
-								</span>
 							</div>
 						</div>
 						<div :class="$style.scheduleActions" class="_buttons">
@@ -211,11 +209,6 @@ async function deleteSchedule(item: any) {
     font-size: 85%;
     color: var(--MI_THEME-accent);
     font-weight: 600;
-}
-
-.scheduleDeleteTime {
-	margin-left: 8px;
-	color: var(--MI_THEME-error);
 }
 
 .scheduleActions {
