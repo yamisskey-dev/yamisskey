@@ -373,12 +373,6 @@ onUnmounted(() => {
 });
 
 onMounted(() => {
-	console.log('JitsiMeet widget mounted:', {
-		widgetProps: widgetProps,
-		props: props,
-		name: name,
-	});
-
 	// ルーム名が空または'default-room'の場合、初期ルーム名をランダム生成
 	if (!widgetProps.roomName || widgetProps.roomName === 'default-room') {
 		generateRandomRoomName();
