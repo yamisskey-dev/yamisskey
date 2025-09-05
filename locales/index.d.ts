@@ -1763,6 +1763,10 @@ export interface Locale extends ILocale {
      */
     "antennaKeywordsDescription": string;
     /**
+     * Botアカウントを除外
+     */
+    "timelineExcludeBots": string;
+    /**
      * 新しいノートを通知する
      */
     "notifyAntenna": string;
@@ -12560,7 +12564,7 @@ export interface Locale extends ILocale {
          */
         "yamiTimeline": string;
         /**
-         * フォローしていないユーザーのパブリックやみノートを表示
+         * フォロー外ユーザーのパブリックやみノートを表示
          */
         "showYamiNonFollowingPublicNotes": string;
         /**

@@ -38126,6 +38126,8 @@ export interface operations {
                     untilDate?: number;
                     /** @default false */
                     remoteOnly?: boolean;
+                    /** @default false */
+                    excludeBots?: boolean;
                 };
             };
         };
@@ -38220,6 +38222,8 @@ export interface operations {
                     withReplies?: boolean;
                     /** @default false */
                     localOnly?: boolean;
+                    /** @default false */
+                    excludeBots?: boolean;
                 };
             };
         };
@@ -38306,6 +38310,8 @@ export interface operations {
                     allowPartial?: boolean;
                     sinceDate?: number;
                     untilDate?: number;
+                    /** @default false */
+                    excludeBots?: boolean;
                 };
             };
         };
@@ -39879,6 +39885,8 @@ export interface operations {
                     withFiles?: boolean;
                     /** @default true */
                     withRenotes?: boolean;
+                    /** @default false */
+                    excludeBots?: boolean;
                 };
             };
         };
@@ -40228,6 +40236,8 @@ export interface operations {
                     withRenotes?: boolean;
                     /** @default false */
                     localOnly?: boolean;
+                    /** @default false */
+                    excludeBots?: boolean;
                     /** @default true */
                     showYamiNonFollowingPublicNotes?: boolean;
                     /** @default true */
