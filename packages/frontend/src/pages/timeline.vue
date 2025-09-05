@@ -392,7 +392,7 @@ const filterItems = computed(() => {
 		items.push({
 			type: 'switch',
 			icon: 'ti ti-robot-off',
-			text: 'Exclude bots',
+			text: i18n.ts.timelineExcludeBots,
 			ref: excludeBots,
 		});
 	}
