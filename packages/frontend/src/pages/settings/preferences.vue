@@ -871,21 +871,21 @@ SPDX-License-Identifier: AGPL-3.0-only
 									<div class="_gaps_s">
 										<MkPreferenceContainer k="hideNotesCountMyself">
 											<MkSwitch v-model="hideNotesCountMyself">
-												<template #label><SearchLabel>{{ i18n.ts.hideNotesCountMyself }}</SearchLabel></template>
+												<template #label><SearchLabel>{{ i18n.ts.hideNotesCountMyself }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 												<template #caption>{{ i18n.ts.hideNotesCountMyselfDescription }}</template>
 											</MkSwitch>
 										</MkPreferenceContainer>
 
 										<MkPreferenceContainer k="hideFollowingCountMyself">
 											<MkSwitch v-model="hideFollowingCountMyself">
-												<template #label><SearchLabel>{{ i18n.ts.hideFollowingCountMyself }}</SearchLabel></template>
+												<template #label><SearchLabel>{{ i18n.ts.hideFollowingCountMyself }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 												<template #caption>{{ i18n.ts.hideFollowingCountMyselfDescription }}</template>
 											</MkSwitch>
 										</MkPreferenceContainer>
 
 										<MkPreferenceContainer k="hideFollowersCountMyself">
 											<MkSwitch v-model="hideFollowersCountMyself">
-												<template #label><SearchLabel>{{ i18n.ts.hideFollowersCountMyself }}</SearchLabel></template>
+												<template #label><SearchLabel>{{ i18n.ts.hideFollowersCountMyself }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 												<template #caption>{{ i18n.ts.hideFollowersCountMyselfDescription }}</template>
 											</MkSwitch>
 										</MkPreferenceContainer>
@@ -902,21 +902,21 @@ SPDX-License-Identifier: AGPL-3.0-only
 									<div class="_gaps_s">
 										<MkPreferenceContainer k="hideNotesCountOthers">
 											<MkSwitch v-model="hideNotesCountOthers">
-												<template #label><SearchLabel>{{ i18n.ts.hideNotesCountOthers }}</SearchLabel></template>
+												<template #label><SearchLabel>{{ i18n.ts.hideNotesCountOthers }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 												<template #caption>{{ i18n.ts.hideNotesCountOthersDescription }}</template>
 											</MkSwitch>
 										</MkPreferenceContainer>
 
 										<MkPreferenceContainer k="hideFollowingCountOthers">
 											<MkSwitch v-model="hideFollowingCountOthers">
-												<template #label><SearchLabel>{{ i18n.ts.hideFollowingCountOthers }}</SearchLabel></template>
+												<template #label><SearchLabel>{{ i18n.ts.hideFollowingCountOthers }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 												<template #caption>{{ i18n.ts.hideFollowingCountOthersDescription }}</template>
 											</MkSwitch>
 										</MkPreferenceContainer>
 
 										<MkPreferenceContainer k="hideFollowersCountOthers">
 											<MkSwitch v-model="hideFollowersCountOthers">
-												<template #label><SearchLabel>{{ i18n.ts.hideFollowersCountOthers }}</SearchLabel></template>
+												<template #label><SearchLabel>{{ i18n.ts.hideFollowersCountOthers }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 												<template #caption>{{ i18n.ts.hideFollowersCountOthersDescription }}</template>
 											</MkSwitch>
 										</MkPreferenceContainer>
@@ -934,19 +934,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 									<div class="_gaps_s">
 										<MkPreferenceContainer k="hideLocalTimeLine">
 											<MkSwitch v-model="hideLocalTimeLine">
-												<template #label><SearchLabel>{{ i18n.ts.hideLocalTimeLine }}</SearchLabel></template>
+												<template #label><SearchLabel>{{ i18n.ts.hideLocalTimeLine }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 											</MkSwitch>
 										</MkPreferenceContainer>
 
 										<MkPreferenceContainer k="hideSocialTimeLine">
 											<MkSwitch v-model="hideSocialTimeLine">
-												<template #label><SearchLabel>{{ i18n.ts.hideSocialTimeLine }}</SearchLabel></template>
+												<template #label><SearchLabel>{{ i18n.ts.hideSocialTimeLine }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 											</MkSwitch>
 										</MkPreferenceContainer>
 
 										<MkPreferenceContainer k="hideGlobalTimeLine">
 											<MkSwitch v-model="hideGlobalTimeLine">
-												<template #label><SearchLabel>{{ i18n.ts.hideGlobalTimeLine }}</SearchLabel></template>
+												<template #label><SearchLabel>{{ i18n.ts.hideGlobalTimeLine }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 											</MkSwitch>
 										</MkPreferenceContainer>
 									</div>
