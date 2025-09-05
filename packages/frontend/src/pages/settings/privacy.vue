@@ -28,7 +28,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<SearchMarker :keywords="['follow', 'auto', 'reject', 'request']">
 					<MkSwitch v-model="autoRejectFollowRequest" @update:modelValue="save()">
 						<template #label><SearchLabel>{{ i18n.ts.autoRejectFollowRequest }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-						<template #caption><SearchKeyword>{{ i18n.ts.autoRejectFollowRequestDescription }}</SearchKeyword></template>
+						<template #caption><SearchText>{{ i18n.ts.autoRejectFollowRequestDescription }}</SearchText></template>
 					</MkSwitch>
 				</SearchMarker>
 			</div>
@@ -44,42 +44,42 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<SearchMarker :keywords="['activity', 'hide', 'visibility']">
 			<MkSwitch v-model="hideActivity" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.hideActivity }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<template #caption><SearchKeyword>{{ i18n.ts.hideActivityDescription }}</SearchKeyword></template>
+				<template #caption><SearchText>{{ i18n.ts.hideActivityDescription }}</SearchText></template>
 			</MkSwitch>
 		</SearchMarker>
 
 		<SearchMarker :keywords="['profile', 'files', 'hide', 'visibility']">
 			<MkSwitch v-model="hideProfileFiles" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.hideProfileFiles }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<template #caption><SearchKeyword>{{ i18n.ts.hideProfileFilesDescription }}</SearchKeyword></template>
+				<template #caption><SearchText>{{ i18n.ts.hideProfileFilesDescription }}</SearchText></template>
 			</MkSwitch>
 		</SearchMarker>
 
 		<SearchMarker :keywords="['registration', 'date', 'hide', 'visibility']">
 			<MkSwitch v-model="hideRegistrationDate" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.hideRegistrationDate }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<template #caption><SearchKeyword>{{ i18n.ts.hideRegistrationDateDescription }}</SearchKeyword></template>
+				<template #caption><SearchText>{{ i18n.ts.hideRegistrationDateDescription }}</SearchText></template>
 			</MkSwitch>
 		</SearchMarker>
 
 		<SearchMarker :keywords="['activity', 'hide', 'visibility']">
 			<MkSwitch v-model="hideActivity" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.hideActivity }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<template #caption><SearchKeyword>{{ i18n.ts.hideActivityDescription }}</SearchKeyword></template>
+				<template #caption><SearchText>{{ i18n.ts.hideActivityDescription }}</SearchText></template>
 			</MkSwitch>
 		</SearchMarker>
 
 		<SearchMarker :keywords="['profile', 'files', 'hide', 'visibility']">
 			<MkSwitch v-model="hideProfileFiles" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.hideProfileFiles }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<template #caption><SearchKeyword>{{ i18n.ts.hideProfileFilesDescription }}</SearchKeyword></template>
+				<template #caption><SearchText>{{ i18n.ts.hideProfileFilesDescription }}</SearchText></template>
 			</MkSwitch>
 		</SearchMarker>
 
 		<SearchMarker :keywords="['registration', 'date', 'hide', 'visibility']">
 			<MkSwitch v-model="hideRegistrationDate" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.hideRegistrationDate }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<template #caption><SearchKeyword>{{ i18n.ts.hideRegistrationDateDescription }}</SearchKeyword></template>
+				<template #caption><SearchText>{{ i18n.ts.hideRegistrationDateDescription }}</SearchText></template>
 			</MkSwitch>
 		</SearchMarker>
 
@@ -156,7 +156,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</MkSwitch>
 		<MkSwitch v-model="hideSearchResult" @update:modelValue="save()">
 			<template #label><SearchLabel>{{ i18n.ts.hideSearchResult }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-			<template #caption><SearchKeyword>{{ i18n.ts.hideSearchResultDescription }}</SearchKeyword></template>
+			<template #caption><SearchText>{{ i18n.ts.hideSearchResultDescription }}</SearchText></template>
 		</MkSwitch>
 		<MkSwitch v-model="noCrawle" @update:modelValue="save()">
 			{{ i18n.ts.noCrawle }}
