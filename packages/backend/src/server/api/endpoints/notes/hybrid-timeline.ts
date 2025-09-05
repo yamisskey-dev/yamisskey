@@ -67,6 +67,7 @@ export const paramDef = {
 		withRenotes: { type: 'boolean', default: true },
 		withReplies: { type: 'boolean', default: false },
 		localOnly: { type: 'boolean', default: false },
+		excludeBots: { type: 'boolean', default: false },
 	},
 	required: [],
 } as const;
@@ -113,6 +114,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					includeLocalRenotes: ps.includeLocalRenotes,
 					withFiles: ps.withFiles,
 					withReplies: ps.withReplies,
+					excludeBots: ps.excludeBots,
 				}, me);
 
 				process.nextTick(() => {
@@ -165,6 +167,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 						if (!Object.hasOwn(followings, note.reply.userId) && note.reply.userId !== me.id) return false;
 					}
 
+					// ボットフィルタリング
+					if (ps.excludeBots && note.user?.isBot) return false;
+
 					return true;
 				},
 				dbFallback: async (untilId, sinceId, limit) => await this.getFromDb({
@@ -176,6 +181,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					includeLocalRenotes: ps.includeLocalRenotes,
 					withFiles: ps.withFiles,
 					withReplies: ps.withReplies,
+					excludeBots: ps.excludeBots,
 				}, me),
 			});
 
@@ -196,6 +202,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		includeLocalRenotes: boolean,
 		withFiles: boolean,
 		withReplies: boolean,
+		excludeBots: boolean,
 	}, me: MiLocalUser) {
 		const followees = await this.userFollowingService.getFollowees(me.id);
 		const followingChannels = await this.channelFollowingsRepository.find({
@@ -283,6 +290,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 		if (ps.withFiles) {
 			query.andWhere('note.fileIds != \'{}\'');
+		}
+
+		if (ps.excludeBots) {
+			query.andWhere('user.isBot = FALSE');
 		}
 		//#endregion
 

@@ -12,7 +12,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkPostForm v-if="shouldShowFixedPostForm" :channel="currentChannel" :class="$style.postForm" class="_panel" fixed style="margin-bottom: var(--MI-margin);" :isInYamiTimeline="src === 'yami'" :isInNormalTimeline="src !== 'yami'"/>
 		<MkStreamingNotesTimeline
 			ref="tlComponent"
-			:key="src + withRenotes + withReplies + withHashtags + onlyFiles + localOnly + remoteOnly + withSensitive"
+			:key="src + withRenotes + withReplies + withHashtags + onlyFiles + localOnly + remoteOnly + excludeBots + withSensitive"
 			:class="$style.tl"
 			:src="(src.split(':')[0] as (BasicTimelineType | 'list'))"
 			:list="src.startsWith('list:') ? src.split(':')[1] : undefined"
@@ -24,6 +24,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			:onlyFiles="onlyFiles"
 			:localOnly="localOnly"
 			:remoteOnly="remoteOnly"
+			:excludeBots="excludeBots"
 			:showYamiNonFollowingPublicNotes="showYamiNonFollowingPublicNotes"
 			:showYamiFollowingNotes="showYamiFollowingNotes"
 			:sound="true"
@@ -83,6 +84,8 @@ const remoteOnly = computed<boolean>({
 	get: () => store.r.tl.value.filter.remoteOnly,
 	set: (x) => saveTlFilter('remoteOnly', x),
 });
+
+const excludeBots = ref<boolean>(false);
 
 // 固定投稿フォームの表示制御
 const shouldShowFixedPostForm = computed(() => {
@@ -383,6 +386,16 @@ const headerActions = computed(() => {
 
 const filterItems = computed(() => {
 	const items: MenuItem[] = [];
+
+	// すべてのタイムラインにボットフィルターを追加
+	if (['home', 'local', 'social', 'global', 'yami'].includes(src.value)) {
+		items.push({
+			type: 'switch',
+			icon: 'ti ti-robot-off',
+			text: 'Exclude bots',
+			ref: excludeBots,
+		});
+	}
 
 	if (src.value === 'social') {
 		items.push({

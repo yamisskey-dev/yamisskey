@@ -54,6 +54,7 @@ export const paramDef = {
 		withFiles: { type: 'boolean', default: false },
 		withRenotes: { type: 'boolean', default: true },
 		localOnly: { type: 'boolean', default: false }, // ローカルのみフィルター
+		excludeBots: { type: 'boolean', default: false },
 		showYamiNonFollowingPublicNotes: { type: 'boolean', default: true }, // フォローしていないユーザーのパブリックやみノート表示
 		showYamiFollowingNotes: { type: 'boolean', default: true }, // フォローしているユーザーのやみノート表示
 	},
@@ -116,6 +117,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				noteFilter: (note) => {
 					// クライアントサイドでの追加フィルタリング (Redis結果用)
 					if (!note.isNoteInYamiMode) return false;
+
+					// ボットフィルタリング
+					if (ps.excludeBots && note.user?.isBot) return false;
 
 					// 投稿が自分のものかどうか判定
 					const isMyNote = note.userId === me.id;
@@ -243,6 +247,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 					if (ps.withRenotes === false) {
 						query.andWhere('note.renoteId IS NULL');
+					}
+
+					if (ps.excludeBots) {
+						query.andWhere('user.isBot = FALSE');
 					}
 
 					// ソート順を明示的に指定

@@ -71,6 +71,7 @@ export type Channels = {
 		params: {
 			withRenotes?: boolean;
 			withFiles?: boolean;
+			excludeBots?: boolean;
 		};
 		events: {
 			note: (payload: Note) => void;
@@ -82,6 +83,7 @@ export type Channels = {
 			withRenotes?: boolean;
 			withReplies?: boolean;
 			withFiles?: boolean;
+			excludeBots?: boolean;
 		};
 		events: {
 			note: (payload: Note) => void;
@@ -93,6 +95,8 @@ export type Channels = {
 			withRenotes?: boolean;
 			withReplies?: boolean;
 			withFiles?: boolean;
+			localOnly?: boolean;
+			excludeBots?: boolean;
 		};
 		events: {
 			note: (payload: Note) => void;
@@ -103,6 +107,9 @@ export type Channels = {
 		params: {
 			withRenotes?: boolean;
 			withFiles?: boolean;
+			remoteOnly?: boolean;
+			withHashtags?: boolean;
+			excludeBots?: boolean;
 		};
 		events: {
 			note: (payload: Note) => void;
@@ -142,6 +149,7 @@ export type Channels = {
 		params: {
 			withRenotes?: boolean;
 			withFiles?: boolean;
+			excludeBots?: boolean;
 			showYamiNonFollowingPublicNotes?: boolean;
 			showYamiFollowingNotes?: boolean;
 		};

@@ -20,6 +20,7 @@ class GlobalTimelineChannel extends Channel {
 	private withRenotes: boolean;
 	private withFiles: boolean;
 	private withHashtags: boolean;
+	private excludeBots: boolean;
 
 	constructor(
 		private metaService: MetaService,
@@ -41,6 +42,7 @@ class GlobalTimelineChannel extends Channel {
 		this.withRenotes = !!(params.withRenotes ?? true);
 		this.withFiles = !!(params.withFiles ?? false);
 		this.withHashtags = !!(params.withHashtags ?? true);
+		this.excludeBots = !!(params.excludeBots ?? false);
 
 		// Subscribe events
 		this.subscriber.on('notesStream', this.onNote);
@@ -50,6 +52,9 @@ class GlobalTimelineChannel extends Channel {
 	private async onNote(note: Packed<'Note'>) {
 		// やみモードの投稿はグローバルタイムラインに表示しない
 		if (note.isNoteInYamiMode) return;
+
+		// Bot filtering
+		if (this.excludeBots && note.user.isBot) return;
 
 		// 以下、通常のフィルタリング条件
 		if (note.tags && note.tags.length > 0 && !this.withHashtags) return;
