@@ -62,27 +62,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkSwitch>
 		</SearchMarker>
 
-		<SearchMarker :keywords="['activity', 'hide', 'visibility']">
-			<MkSwitch v-model="hideActivity" @update:modelValue="save()">
-				<template #label><SearchLabel>{{ i18n.ts.hideActivity }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<template #caption><SearchText>{{ i18n.ts.hideActivityDescription }}</SearchText></template>
-			</MkSwitch>
-		</SearchMarker>
-
-		<SearchMarker :keywords="['profile', 'files', 'hide', 'visibility']">
-			<MkSwitch v-model="hideProfileFiles" @update:modelValue="save()">
-				<template #label><SearchLabel>{{ i18n.ts.hideProfileFiles }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<template #caption><SearchText>{{ i18n.ts.hideProfileFilesDescription }}</SearchText></template>
-			</MkSwitch>
-		</SearchMarker>
-
-		<SearchMarker :keywords="['registration', 'date', 'hide', 'visibility']">
-			<MkSwitch v-model="hideRegistrationDate" @update:modelValue="save()">
-				<template #label><SearchLabel>{{ i18n.ts.hideRegistrationDate }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<template #caption><SearchText>{{ i18n.ts.hideRegistrationDateDescription }}</SearchText></template>
-			</MkSwitch>
-		</SearchMarker>
-
 		<SearchMarker :keywords="['following', 'visibility']">
 			<MkSelect v-model="followingVisibility" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.followingVisibility }}</SearchLabel></template>
