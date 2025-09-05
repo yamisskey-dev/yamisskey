@@ -3,6 +3,20 @@
 ## Unreleased
 
 ### AI
+@claude このPRをレビューしてください。セキュリティ、パフォーマンス、コード品質の観点で問題点があれば指摘してください。
+<!-- Gemini: @gemini このPRをレビューしてください（Gemini APIは認証問題により無効化中） -->
+
+### Feat
+
+### Fix
+
+### Refactor
+
+### Chore
+
+## 2025.8.0-yami-1.9.12
+
+### AI
 @claude このPRをレビューしてください。本家misskey-dev/misskeyの2025.8.0リリースをyamisskeyフォークにマージした内容です。
 
 以下の観点で重点的に確認をお願いします：
