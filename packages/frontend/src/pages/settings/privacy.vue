@@ -55,13 +55,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkSwitch>
 		</SearchMarker>
 
-		<SearchMarker :keywords="['registration', 'date', 'hide', 'visibility']">
-			<MkSwitch v-model="hideRegistrationDate" @update:modelValue="save()">
-				<template #label><SearchLabel>{{ i18n.ts.hideRegistrationDate }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<template #caption><SearchText>{{ i18n.ts.hideRegistrationDateDescription }}</SearchText></template>
-			</MkSwitch>
-		</SearchMarker>
-
 		<SearchMarker :keywords="['following', 'visibility']">
 			<MkSelect v-model="followingVisibility" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.followingVisibility }}</SearchLabel></template>
@@ -319,7 +312,6 @@ const hideSearchResult = ref($i.hideSearchResult);
 const publicReactions = ref($i.publicReactions);
 const hideActivity = ref($i.hideActivity);
 const hideProfileFiles = ref($i.hideProfileFiles);
-const hideRegistrationDate = ref($i.hideRegistrationDate);
 const notesVisibility = ref($i.notesVisibility);
 const followingVisibility = ref($i.followingVisibility);
 const followersVisibility = ref($i.followersVisibility);
@@ -477,7 +469,6 @@ function save() {
 		publicReactions: !!publicReactions.value,
 		hideActivity: !!hideActivity.value,
 		hideProfileFiles: !!hideProfileFiles.value,
-		hideRegistrationDate: !!hideRegistrationDate.value,
 		notesVisibility: notesVisibility.value,
 		followingVisibility: followingVisibility.value,
 		followersVisibility: followersVisibility.value,

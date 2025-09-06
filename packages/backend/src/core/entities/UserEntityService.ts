@@ -540,9 +540,7 @@ export class UserEntityService implements OnModuleInit {
 					? Promise.all(user.alsoKnownAs.map(uri => this.apPersonService.fetchPerson(uri).then(user => user?.id).catch(() => null)))
 						.then(xs => xs.length === 0 ? null : xs.filter(x => x != null))
 					: null,
-				createdAt: !profile!.hideRegistrationDate || isMe || iAmModerator
-					? this.idService.parse(user.id).date.toISOString()
-					: null,
+				createdAt: this.idService.parse(user.id).date.toISOString(),
 				updatedAt: user.updatedAt ? user.updatedAt.toISOString() : null,
 				lastFetchedAt: user.lastFetchedAt ? user.lastFetchedAt.toISOString() : null,
 				bannerUrl: user.bannerId == null ? null : user.bannerUrl,
@@ -569,7 +567,6 @@ export class UserEntityService implements OnModuleInit {
 				publicReactions: this.isLocalUser(user) ? profile!.publicReactions : false, // https://github.com/misskey-dev/misskey/issues/12964
 				hideActivity: this.isLocalUser(user) ? profile!.hideActivity : false, //
 				hideProfileFiles: this.isLocalUser(user) ? profile!.hideProfileFiles : false,
-				hideRegistrationDate: this.isLocalUser(user) ? profile!.hideRegistrationDate : false,
 				notesVisibility: profile!.notesVisibility,
 				followersVisibility: profile!.followersVisibility,
 				followingVisibility: profile!.followingVisibility,
