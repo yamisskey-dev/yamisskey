@@ -6,13 +6,9 @@
 @claude このPRをレビューしてください。セキュリティ、パフォーマンス、コード品質の観点で問題点があれば指摘してください。
 <!-- Gemini: @gemini このPRをレビューしてください（Gemini APIは認証問題により無効化中） -->
 
-### Feat
-
 ### Fix
-
-### Refactor
-
-### Chore
+- 外部クライアント（Aria等）との互換性問題により登録日プライバシー機能を削除
+- `hideRegistrationDate`機能で`user.createdAt`がnullになることで外部クライアントでエラーが発生していた問題を修正
 
 ## 2025.8.0-yami-1.9.12
 
