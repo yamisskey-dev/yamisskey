@@ -561,9 +561,6 @@ export const PREF_DEF = definePreferences({
 	hideProfileFiles: {
 		default: true,
 	},
-	hideRegistrationDate: {
-		default: true,
-	},
 	autoRejectFollowRequest: {
 		default: false,
 	},
