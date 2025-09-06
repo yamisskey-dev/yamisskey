@@ -209,7 +209,6 @@ export const paramDef = {
 		publicReactions: { type: 'boolean' },
 		hideActivity: { type: 'boolean' },
 		hideProfileFiles: { type: 'boolean' },
-		hideRegistrationDate: { type: 'boolean' },
 		carefulBot: { type: 'boolean' },
 		autoAcceptFollowed: { type: 'boolean' },
 		autoRejectFollowRequest: { type: 'boolean' },
@@ -381,7 +380,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			if (typeof ps.publicReactions === 'boolean') profileUpdates.publicReactions = ps.publicReactions;
 			if (typeof ps.hideActivity === 'boolean') profileUpdates.hideActivity = ps.hideActivity;
 			if (typeof ps.hideProfileFiles === 'boolean') profileUpdates.hideProfileFiles = ps.hideProfileFiles;
-			if (typeof ps.hideRegistrationDate === 'boolean') profileUpdates.hideRegistrationDate = ps.hideRegistrationDate;
 			if (typeof ps.isBot === 'boolean') updates.isBot = ps.isBot;
 			if (typeof ps.carefulBot === 'boolean') profileUpdates.carefulBot = ps.carefulBot;
 			if (typeof ps.autoAcceptFollowed === 'boolean') profileUpdates.autoAcceptFollowed = ps.autoAcceptFollowed;

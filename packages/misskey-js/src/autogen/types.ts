@@ -35318,7 +35318,6 @@ export interface operations {
                     publicReactions?: boolean;
                     hideActivity?: boolean;
                     hideProfileFiles?: boolean;
-                    hideRegistrationDate?: boolean;
                     carefulBot?: boolean;
                     autoAcceptFollowed?: boolean;
                     autoRejectFollowRequest?: boolean;
