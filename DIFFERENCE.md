@@ -7,8 +7,7 @@
 <!-- Gemini: @gemini このPRをレビューしてください（Gemini APIは認証問題により無効化中） -->
 
 ### Fix
-- 外部クライアント（Aria等）との互換性問題により登録日プライバシー機能を削除
-- `hideRegistrationDate`機能で`user.createdAt`がnullになることで外部クライアントでエラーが発生していた問題を修正
+- 外部クライアントとの互換性問題（`user.createdAt`が`null`になる）を修正するため、登録日を非表示にする機能を削除
 
 ## 2025.8.0-yami-1.9.12
 
