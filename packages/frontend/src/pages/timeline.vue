@@ -214,6 +214,7 @@ function openPostForm() {
 }
 
 const showFixedPostForm = prefer.model('showFixedPostForm');
+const showFixedPostFormInChannel = prefer.model('showFixedPostFormInChannel');
 
 async function chooseList(ev: MouseEvent): Promise<void> {
 	const lists = await userListsCache.fetch();
@@ -361,11 +362,23 @@ const headerActions = computed(() => {
 				disabled: isBasicTimeline(src.value) && hasWithReplies(src.value) ? withReplies : false,
 			}, {
 				type: 'divider',
-			}, {
-				type: 'switch',
-				text: i18n.ts.showFixedPostForm,
-				ref: showFixedPostForm,
 			});
+
+			// チャンネルタイムラインの場合はチャンネル用の設定を表示
+			if (src.value.startsWith('channel:')) {
+				menuItems.push({
+					type: 'switch',
+					text: i18n.ts.showFixedPostFormInChannel,
+					ref: showFixedPostFormInChannel,
+				});
+			} else {
+				// その他のタイムラインでは通常の設定を表示
+				menuItems.push({
+					type: 'switch',
+					text: i18n.ts.showFixedPostForm,
+					ref: showFixedPostForm,
+				});
+			}
 
 			os.popupMenu(menuItems, ev.currentTarget ?? ev.target);
 		},
