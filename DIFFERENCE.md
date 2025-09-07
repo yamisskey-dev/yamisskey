@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## Unreleased
+## 2025.8.0-yami-1.9.14
 
 ### Test
 - 自動リリースワークフローのテスト実行
