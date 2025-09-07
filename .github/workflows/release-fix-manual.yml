@@ -143,28 +143,39 @@ jobs:
 
           if [ -f DIFFERENCE.md ]; then
             # DIFFERENCE.mdから対応するバージョンのセクションを抽出
-            unreleased_content=$(awk '/^## Unreleased/,/^## [0-9]/ {
-              if (/^## [0-9]/) exit
-              if (!/^## Unreleased/) print
-            }' DIFFERENCE.md)
+            target_section=$(awk -v tag="$target_tag" '
+              /^## / {
+                if ($0 ~ "## " tag) {
+                  found = 1
+                  next
+                }
+                if (found && /^## /) {
+                  exit
+                }
+              }
+              found && !/^## / { print }
+            ' DIFFERENCE.md)
 
-            if [ -n "$unreleased_content" ]; then
-              difference="## $target_tag\n\n$unreleased_content"
+            if [ -n "$target_section" ]; then
+              # DIFFERENCE.mdの内容をそのまま使用
+              {
+                echo "notes<<EOF"
+                echo "$target_section"
+                echo "EOF"
+              } >> $GITHUB_OUTPUT
             else
-              difference="## $target_tag\n\n### Changes\n- Version correction release\n- Fixed package.json version mismatch"
+              # タグが見つからない場合のフォールバック
+              {
+                echo "notes<<EOF"
+                echo "### Changes"
+                echo "- Version correction release"
+                echo "- Fixed package.json version mismatch"
+                echo "EOF"
+              } >> $GITHUB_OUTPUT
             fi
-
-            # GitHubの出力形式に合わせてエスケープ
-            {
-              echo "notes<<EOF"
-              echo "$difference"
-              echo "EOF"
-            } >> $GITHUB_OUTPUT
           else
             {
               echo "notes<<EOF"
-              echo "## $target_tag"
-              echo ""
               echo "### Changes"
               echo "- Version correction release"
               echo "- Fixed package.json version mismatch"
@@ -177,7 +188,7 @@ jobs:
         run: |
           target_tag="${{ inputs.target_tag }}"
           gh release create "$target_tag" \
-            --title "Release $target_tag (Corrected)" \
+            --title "$target_tag" \
             --notes "${{ steps.notes.outputs.notes }}" \
             --target master
         env:
