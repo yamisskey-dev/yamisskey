@@ -33,18 +33,37 @@ jobs:
           echo "current_version=$current_version" >> $GITHUB_OUTPUT
           echo "Current master version: $current_version"
 
-          # yamiバージョン形式チェック
-          if [[ "$current_version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-yami-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            echo "✅ Valid yami version format"
-            echo "is_yami=true" >> $GITHUB_OUTPUT
+          # yamisskey バージョン形式チェック
+          if [[ "$current_version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-(muyami|nayami|yami)-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            version_type="${BASH_REMATCH[2]}"
+            echo "✅ Valid yamisskey version format: $version_type"
+            echo "is_yamisskey=true" >> $GITHUB_OUTPUT
+            echo "version_type=$version_type" >> $GITHUB_OUTPUT
+
+            # バージョンタイプに応じたリリース作成を決定
+            case "$version_type" in
+              "yami")
+                echo "should_create_release=true" >> $GITHUB_OUTPUT
+                echo "🚀 Production version - will create GitHub release"
+                ;;
+              "nayami")
+                echo "should_create_release=false" >> $GITHUB_OUTPUT
+                echo "🔧 Development version - no release creation"
+                ;;
+              "muyami")
+                echo "should_create_release=false" >> $GITHUB_OUTPUT
+                echo "⚙️ Early development version - no release creation"
+                ;;
+            esac
           else
-            echo "⚠️ Not a yami version format, skipping release"
-            echo "is_yami=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Not a yamisskey version format, skipping release creation"
+            echo "is_yamisskey=false" >> $GITHUB_OUTPUT
+            echo "should_create_release=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Check if tag already exists
         id: tag_check
-        if: steps.version.outputs.is_yami == 'true'
+        if: steps.version.outputs.should_create_release == 'true'
         run: |
           # リモートのタグも確認
           git fetch --tags
@@ -58,7 +77,7 @@ jobs:
 
       - name: Get difference
         id: difference
-        if: steps.version.outputs.is_yami == 'true' && steps.tag_check.outputs.tag_exists == 'false'
+        if: steps.version.outputs.should_create_release == 'true' && steps.tag_check.outputs.tag_exists == 'false'
         run: |
           if [ -f DIFFERENCE.md ]; then
             version="${{ steps.version.outputs.current_version }}"
@@ -115,7 +134,7 @@ jobs:
           fi
 
       - name: Create tag
-        if: steps.version.outputs.is_yami == 'true' && steps.tag_check.outputs.tag_exists == 'false'
+        if: steps.version.outputs.should_create_release == 'true' && steps.tag_check.outputs.tag_exists == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -134,12 +153,13 @@ jobs:
           git push origin "${{ steps.version.outputs.current_version }}"
 
       - name: Create GitHub Release
-        if: steps.version.outputs.is_yami == 'true' && steps.tag_check.outputs.tag_exists == 'false'
+        if: steps.version.outputs.should_create_release == 'true' && steps.tag_check.outputs.tag_exists == 'false'
         run: |
           # 既存のリリースを削除（もし存在する場合）
           gh release delete "${{ steps.version.outputs.current_version }}" --yes || true
 
-          # 新しいリリースを作成（publishedイベントを発火させるため）
+          # yamiバージョンのみリリース作成（published状態でDockerワークフローを発火）
+          echo "🚀 Creating production release for yami version"
           gh release create "${{ steps.version.outputs.current_version }}" \
             --title "Release ${{ steps.version.outputs.current_version }}" \
             --notes "${{ steps.difference.outputs.difference }}" \
@@ -149,7 +169,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Summary
-        if: steps.version.outputs.is_yami == 'true' && steps.tag_check.outputs.tag_exists == 'false'
+        if: steps.version.outputs.should_create_release == 'true' && steps.tag_check.outputs.tag_exists == 'false'
         run: |
           echo "🎉 Successfully created release: ${{ steps.version.outputs.current_version }}"
           echo "📋 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.current_version }}"
