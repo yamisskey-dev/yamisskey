@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## Unreleased
+## 2025.8.0-yami-1.9.18
 
 ### Feat
 - チャンネル一覧ページにピン止めタブを追加
