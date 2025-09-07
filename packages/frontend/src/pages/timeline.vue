@@ -85,7 +85,10 @@ const remoteOnly = computed<boolean>({
 	set: (x) => saveTlFilter('remoteOnly', x),
 });
 
-const excludeBots = ref<boolean>(false);
+const excludeBots = computed<boolean>({
+	get: () => store.r.tl.value.filter.excludeBots,
+	set: (x) => saveTlFilter('excludeBots', x),
+});
 
 // 固定投稿フォームの表示制御
 const shouldShowFixedPostForm = computed(() => {
