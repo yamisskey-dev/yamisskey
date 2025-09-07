@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## 2025.8.0-yami-1.9.17
+## Unreleased
 
 ### Fix
 - 浮上タイムラインに自動ロード機能を対応
