@@ -447,14 +447,8 @@ const canSaveAsServerDraft = computed((): boolean => {
 	return canPost.value && (textLength.value > 0 || files.value.length > 0 || poll.value != null);
 });
 
-const withHashtags = computed({
-	get: () => store.s.postFormWithHashtags,
-	set: (value) => store.set('postFormWithHashtags', value),
-});
-const hashtags = computed({
-	get: () => store.s.postFormHashtags,
-	set: (value) => store.set('postFormHashtags', value),
-});
+const withHashtags = computed(store.makeGetterSetter('postFormWithHashtags'));
+const hashtags = computed(store.makeGetterSetter('postFormHashtags'));
 
 const bottomItemActionDef: Record<keyof typeof bottomItemDef, {
 	hide?: boolean;
