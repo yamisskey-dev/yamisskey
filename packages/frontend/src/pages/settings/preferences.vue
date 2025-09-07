@@ -174,7 +174,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<SearchMarker :keywords="['renote']">
 								<MkSwitch v-model="collapseRenotes">
 									<template #label><SearchLabel>{{ i18n.ts.collapseRenotes }}</SearchLabel></template>
-                  <template #caption><SearchText>{{ i18n.ts.collapseRenotesDescription }}</SearchText></template>
+									<template #caption><SearchText>{{ i18n.ts.collapseRenotesDescription }}</SearchText></template>
 								</MkSwitch>
 
 								<div v-if="collapseRenotes" style="padding-left: 46px;">
@@ -1380,27 +1380,40 @@ function removePinnedList() {
 }
 
 async function setPinnedChannel() {
-	const channels = await misskeyApi('channels/my-favorites', { limit: 100 });
-	const currentPinnedChannels = prefer.r.pinnedChannels.value;
+	return new Promise(async (resolve) => {
+		try {
+			const { dispose } = await os.popupAsyncWithDialog(import('@/components/MkChannelSearchDialog.vue').then(x => x.default), {
+				title: i18n.ts.selectChannel,
+				excludeIds: prefer.r.pinnedChannels.value.map(c => c.id), // 既にピン止め済みのIDを除外
+			}, {
+				done: async (searchResult) => {
+					// undefined、null、または空のオブジェクトの場合は何もしない
+					if (!searchResult || !searchResult.id || !searchResult.name) {
+						resolve(undefined);
+						return;
+					}
 
-	// 既にピン止めされているチャンネルを除外
-	const availableChannels = channels.filter(channel =>
-		!currentPinnedChannels.some(pinned => pinned.id === channel.id),
-	);
+					// 既存のピン止めチャンネルに追加
+					const currentPinnedChannels = prefer.r.pinnedChannels.value;
+					const newPinnedChannels = [...currentPinnedChannels, searchResult];
+					prefer.commit('pinnedChannels', newPinnedChannels);
 
-	const { canceled, result: channel } = await os.select({
-		title: i18n.ts.selectChannel,
-		items: availableChannels.map(x => ({
-			value: x, text: x.name,
-		})),
+					// 成功ダイアログを表示
+					await os.success();
+
+					resolve(searchResult);
+				},
+				closed: () => {
+					dispose();
+					resolve(undefined);
+				},
+			});
+		} catch (error) {
+			// ダイアログがキャンセルされた場合やエラーが発生した場合
+			console.warn('Channel selection cancelled or failed:', error);
+			resolve(undefined);
+		}
 	});
-
-	if (canceled) return;
-	if (channel == null) return;
-
-	// 既存のピン止めチャンネルに追加
-	const newPinnedChannels = [...currentPinnedChannels, channel];
-	prefer.commit('pinnedChannels', newPinnedChannels);
 }
 
 function removePinnedChannel(channelId: string) {

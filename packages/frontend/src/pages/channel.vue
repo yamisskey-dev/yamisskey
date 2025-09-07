@@ -11,6 +11,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<XChannelFollowButton :channel="channel" :full="true" :class="$style.subscribe"/>
 				<MkButton v-if="favorited" v-tooltip="i18n.ts.unfavorite" asLike class="button" rounded primary :class="$style.favorite" @click="unfavorite()"><i class="ti ti-star"></i></MkButton>
 				<MkButton v-else v-tooltip="i18n.ts.favorite" asLike class="button" rounded :class="$style.favorite" @click="favorite()"><i class="ti ti-star"></i></MkButton>
+				<MkButton v-if="pinned" v-tooltip="i18n.ts.unpin" asLike class="button" rounded primary style="--MI-bg: var(--MI_THEME-success);" :class="$style.pin" @click="unpin()"><i class="ti ti-pin"></i></MkButton>
+				<MkButton v-else v-tooltip="i18n.ts.pin" asLike class="button" rounded style="--MI-bg: var(--MI_THEME-success);" :class="$style.pin" @click="pin()"><i class="ti ti-pin"></i></MkButton>
 				<div :style="{ backgroundImage: channel.bannerUrl ? `url(${channel.bannerUrl})` : undefined }" :class="$style.banner">
 					<div :class="$style.bannerStatus">
 						<div><i class="ti ti-users ti-fw"></i><I18n :src="i18n.ts._channel.usersCount" tag="span" style="margin-left: 4px;"><template #n><b>{{ channel.usersCount }}</b></template></I18n></div>
@@ -119,6 +121,10 @@ const tab = ref('overview');
 
 const channel = ref<Misskey.entities.Channel | null>(null);
 const favorited = ref(false);
+const pinned = computed(() => {
+	if (!channel.value) return false;
+	return prefer.r.pinnedChannels.value.some(c => c.id === channel.value!.id);
+});
 const searchQuery = ref('');
 const searchPaginator = shallowRef();
 const searchKey = ref('');
@@ -197,6 +203,22 @@ async function unfavorite() {
 		favorited.value = false;
 		favoritedChannelsCache.delete();
 	});
+}
+
+function pin() {
+	if (!channel.value) return;
+
+	const currentPinnedChannels = prefer.r.pinnedChannels.value;
+	const newPinnedChannels = [...currentPinnedChannels, channel.value];
+	prefer.commit('pinnedChannels', newPinnedChannels);
+}
+
+function unpin() {
+	if (!channel.value) return;
+
+	const currentPinnedChannels = prefer.r.pinnedChannels.value;
+	const newPinnedChannels = currentPinnedChannels.filter(c => c.id !== channel.value!.id);
+	prefer.commit('pinnedChannels', newPinnedChannels);
 }
 
 async function search() {
@@ -344,6 +366,13 @@ definePage(() => ({
 	position: absolute;
 	z-index: 1;
 	top: 16px;
+	right: 16px;
+}
+
+.pin {
+	position: absolute;
+	z-index: 1;
+	top: 60px;
 	right: 16px;
 }
 
