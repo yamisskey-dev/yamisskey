@@ -44,6 +44,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 			</MkPagination>
 		</div>
+		<div v-else-if="tab === 'pinned'">
+			<div :class="$style.root">
+				<MkChannelPreview v-for="channel in pinnedChannels" :key="channel.id" :channel="channel"/>
+			</div>
+		</div>
 		<div v-else-if="tab === 'owned'">
 			<MkButton class="new" @click="create()"><i class="ti ti-plus"></i></MkButton>
 			<MkPagination v-slot="{items}" :paginator="ownedPaginator">
@@ -69,6 +74,7 @@ import { definePage } from '@/page.js';
 import { i18n } from '@/i18n.js';
 import { useRouter } from '@/router.js';
 import { Paginator } from '@/utility/paginator.js';
+import { prefer } from '@/preferences.js';
 
 const router = useRouter();
 
@@ -82,6 +88,9 @@ const tab = ref('featured');
 const searchQuery = ref('');
 const searchType = ref('nameAndDescription');
 const channelPaginator = shallowRef();
+
+// ピン止めチャンネルを取得
+const pinnedChannels = computed(() => prefer.r.pinnedChannels.value || []);
 
 onMounted(() => {
 	searchQuery.value = props.query ?? '';
@@ -148,6 +157,10 @@ const headerTabs = computed(() => [{
 	key: 'favorites',
 	title: i18n.ts.favorites,
 	icon: 'ti ti-star',
+}, {
+	key: 'pinned',
+	title: i18n.ts.pinned,
+	icon: 'ti ti-pin',
 }, {
 	key: 'following',
 	title: i18n.ts._channel.following,
