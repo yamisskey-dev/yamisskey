@@ -6,15 +6,15 @@ SPDX-License-Identifier: AGPL-3.0-only
 <template>
 <div class="_spacer" style="--MI_SPACER-w: 800px;">
 	<MkPagination
-		v-slot="{ items: paginationItems, fetching }" ref="paginationComponent"
+		v-slot="{ items: paginationItems }" ref="paginationComponent"
 		:paginator="followingPaginator" :class="$style.tl"
 	>
 		<div :class="$style.content">
-			<MkLoading v-if="fetching && paginationItems.length === 0"/>
-			<MkResult v-else-if="paginationItems.length === 0" type="empty"/>
+			<MkLoading v-if="followingPaginator.fetching.value && (!paginationItems || paginationItems.length === 0)"/>
+			<MkResult v-else-if="!paginationItems || paginationItems.length === 0" type="empty"/>
 
 			<!-- 重複排除したアイテムを使用 -->
-			<div v-for="item in getUniqueItems(paginationItems)" :key="item.id" :class="$style.userNotes">
+			<div v-for="item in getUniqueItems(paginationItems || [])" :key="item.id" :class="$style.userNotes">
 				<template v-for="(note, i) in item.notes.slice(0, displayCount)" :key="note.id">
 					<!-- 日付区切り: 日付が変わる場合や最初のノートに表示 -->
 					<div
@@ -27,7 +27,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<span>{{ getDateInfo(note, i, item) }}</span>
 					</div>
 
-					<MkNote :note="note" :class="$style.note" :withHardMute="true" :ignoreInheritedHardMute="false"/>
+					<MkNote :note="note as any" :class="$style.note" :withHardMute="true" :ignoreInheritedHardMute="false"/>
 				</template>
 			</div>
 		</div>
@@ -36,7 +36,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, shallowRef, provide, watch, ref, onMounted } from 'vue';
+import { computed, provide, watch, ref, onMounted, useTemplateRef, shallowRef } from 'vue';
 import MkPagination from '@/components/MkPagination.vue';
 import MkNote from '@/components/MkNote.vue';
 import MkLoading from '@/components/global/MkLoading.vue';
@@ -302,7 +302,7 @@ function getCombinedFloaterInfo(item: FloaterItem, noteIndex = 0, nextNote?: any
 	}
 }
 
-// 型定義を追加
+// FloaterItem型定義（実用的なアプローチ）
 interface FloaterItem {
 	id: string;
 	last?: string;
@@ -314,10 +314,12 @@ interface FloaterItem {
 			name?: string;
 			username: string;
 		};
-		// 他のノートプロパティ
+		// MkNoteコンポーネントが必要とする他のプロパティは実行時に存在
+		[key: string]: any;
 	}>;
 	_cachedInfo?: string; // キャッシュ用
 	isFirstPublicPost?: boolean; // 初浮上かどうか
+	isFollowing?: boolean; // フォロー状況
 	_sortedNotes?: any[]; // ソート済みノートのキャッシュ用
 }
 
@@ -336,9 +338,15 @@ function calculateDaysDifference(olderDate: Date, newerDate: Date): number {
 
 // 文字列置換を一元化
 function formatFloaterMessage(messageKey: string, params: Record<string, string>): string {
-	let message = i18n.ts._floater[messageKey];
+	const messageTemplate = (i18n.ts._floater as any)[messageKey];
+	if (!messageTemplate) {
+		console.warn(`Missing floater message: ${messageKey}`);
+		return messageKey;
+	}
+
+	let message = messageTemplate;
 	Object.entries(params).forEach(([key, value]) => {
-		message = message.replace(`{${key}}`, value);
+		message = message.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
 	});
 	return message;
 }
@@ -351,14 +359,42 @@ function getChronologicalNotes(item: FloaterItem): any[] {
 	return item._sortedNotes;
 }
 
+// 強化された型ガード関数（レビュー指摘事項対応）
+function isValidFloaterItem(item: any): item is FloaterItem {
+	return item &&
+		typeof item === 'object' &&
+		typeof item.id === 'string' &&
+		'notes' in item &&
+		Array.isArray(item.notes) &&
+		item.notes.every((note: any) =>
+			note &&
+			typeof note === 'object' &&
+			typeof note.id === 'string' &&
+			typeof note.createdAt === 'string' &&
+			note.user &&
+			typeof note.user.id === 'string' &&
+			typeof note.user.username === 'string'
+		);
+}
+
 // ユーザーIDで重複排除する関数
-function getUniqueItems(items: FloaterItem[]) {
+function getUniqueItems(items: any[]): FloaterItem[] {
+	// 引数がFloaterItem配列でない場合は空配列を返す
+	if (!items || !Array.isArray(items)) return [];
+
+	// 型ガードを使用して安全に型変換
+	const floaterItems = items.filter(isValidFloaterItem);
 	const userMap = new Map();
 
 	// まず重複するユーザーの投稿をマージ
-	items.forEach(item => {
-		if (item.notes.length > 0) {
-			const userId = item.notes[0].user.id;
+	floaterItems.forEach(item => {
+		if (item.notes && item.notes.length > 0) {
+			// ユーザーID取得にフォールバック機能を追加
+			const userId = item.id || item.notes[0]?.user?.id;
+			if (!userId) {
+				console.warn('FloaterItem has no valid user ID:', item);
+				return;
+			}
 
 			if (!userMap.has(userId)) {
 				userMap.set(userId, item);
