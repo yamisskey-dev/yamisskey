@@ -1,5 +1,10 @@
 # DIFFRENCE
 
+## Unreleased
+
+### Test
+- 自動リリースワークフローのテスト実行
+
 ## 2025.8.0-yami-1.9.13
 
 ### AI
