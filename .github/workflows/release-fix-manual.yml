@@ -3,8 +3,8 @@ name: "Fix Release Manual"
 on:
   workflow_dispatch:
     inputs:
-      current_tag:
-        description: 'Current problematic tag (e.g., 2025.8.0-yami-1.9.13)'
+      target_tag:
+        description: 'Use workflow from tag (e.g., 2025.8.0-yami-1.9.13)'
         required: true
         type: string
       force_recreate:
@@ -32,7 +32,7 @@ jobs:
       - name: Validate input tag format
         id: validate
         run: |
-          tag="${{ inputs.current_tag }}"
+          tag="${{ inputs.target_tag }}"
           if [[ "$tag" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-yami-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             echo "✅ Valid yami tag format: $tag"
             echo "is_valid=true" >> $GITHUB_OUTPUT
@@ -47,7 +47,7 @@ jobs:
         if: steps.validate.outputs.is_valid == 'true'
         run: |
           current_version=$(jq -r '.version' package.json)
-          target_tag="${{ inputs.current_tag }}"
+          target_tag="${{ inputs.target_tag }}"
 
           echo "Current package.json version: $current_version"
           echo "Target tag: $target_tag"
@@ -65,7 +65,7 @@ jobs:
       - name: Update package.json version
         if: steps.check_version.outputs.needs_update == 'true'
         run: |
-          target_tag="${{ inputs.current_tag }}"
+          target_tag="${{ inputs.target_tag }}"
           echo "🔄 Updating package.json version to: $target_tag"
 
           # package.jsonを更新
@@ -84,7 +84,7 @@ jobs:
       - name: Handle existing tag and release
         id: cleanup
         run: |
-          target_tag="${{ inputs.current_tag }}"
+          target_tag="${{ inputs.target_tag }}"
           force_recreate="${{ inputs.force_recreate }}"
 
           # タグの存在確認
@@ -128,7 +128,7 @@ jobs:
       - name: Create corrected tag
         if: steps.cleanup.outputs.will_recreate == 'true'
         run: |
-          target_tag="${{ inputs.current_tag }}"
+          target_tag="${{ inputs.target_tag }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "$target_tag" -m "Release $target_tag (version corrected)"
@@ -139,7 +139,7 @@ jobs:
         id: notes
         if: steps.cleanup.outputs.will_recreate == 'true'
         run: |
-          target_tag="${{ inputs.current_tag }}"
+          target_tag="${{ inputs.target_tag }}"
 
           if [ -f DIFFERENCE.md ]; then
             # DIFFERENCE.mdから対応するバージョンのセクションを抽出
@@ -175,7 +175,7 @@ jobs:
       - name: Create corrected GitHub Release
         if: steps.cleanup.outputs.will_recreate == 'true'
         run: |
-          target_tag="${{ inputs.current_tag }}"
+          target_tag="${{ inputs.target_tag }}"
           gh release create "$target_tag" \
             --title "Release $target_tag (Corrected)" \
             --notes "${{ steps.notes.outputs.notes }}" \
@@ -185,7 +185,7 @@ jobs:
 
       - name: Summary
         run: |
-          target_tag="${{ inputs.current_tag }}"
+          target_tag="${{ inputs.target_tag }}"
           echo "🎉 Version fix completed for: $target_tag"
           echo "📋 Release URL: https://github.com/${{ github.repository }}/releases/tag/$target_tag"
           echo ""
