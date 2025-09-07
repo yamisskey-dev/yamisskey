@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## Unreleased
+## 2025.8.0-yami-1.9.15
 
 ### Test
 - 修正版リリースワークフローのテスト実行
