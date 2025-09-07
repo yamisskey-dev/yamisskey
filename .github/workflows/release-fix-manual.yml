@@ -144,8 +144,9 @@ jobs:
           if [ -f DIFFERENCE.md ]; then
             # DIFFERENCE.mdから対応するバージョンのセクションを抽出
             target_section=$(awk -v tag="$target_tag" '
+              BEGIN { found = 0 }
               /^## / {
-                if ($0 ~ "## " tag) {
+                if ($0 ~ "## " tag "$") {
                   found = 1
                   next
                 }
@@ -153,14 +154,14 @@ jobs:
                   exit
                 }
               }
-              found && !/^## / { print }
+              found { print }
             ' DIFFERENCE.md)
 
             if [ -n "$target_section" ]; then
               # DIFFERENCE.mdの内容をそのまま使用
               {
                 echo "notes<<EOF"
-                echo "$target_section"
+                printf "%s\n" "$target_section"
                 echo "EOF"
               } >> $GITHUB_OUTPUT
             else
