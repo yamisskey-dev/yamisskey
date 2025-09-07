@@ -10,11 +10,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 		:paginator="followingPaginator" :class="$style.tl"
 	>
 		<div :class="$style.content">
-			<MkLoading v-if="fetching && paginationItems.length === 0"/>
-			<MkResult v-else-if="paginationItems.length === 0" type="empty"/>
+			<MkLoading v-if="fetching && (!paginationItems || paginationItems.length === 0)"/>
+			<MkResult v-else-if="!paginationItems || paginationItems.length === 0" type="empty"/>
 
 			<!-- 重複排除したアイテムを使用 -->
-			<div v-for="item in getUniqueItems(paginationItems)" :key="item.id" :class="$style.userNotes">
+			<div v-for="item in getUniqueItems(paginationItems || [])" :key="item.id" :class="$style.userNotes">
 				<template v-for="(note, i) in item.notes.slice(0, displayCount)" :key="note.id">
 					<!-- 日付区切り: 日付が変わる場合や最初のノートに表示 -->
 					<div
@@ -36,11 +36,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, shallowRef, provide, watch, ref, onMounted } from 'vue';
-import MkPagination from '@/components/MkPagination.vue';
+import { computed, provide, watch, ref, onMounted, useTemplateRef, shallowRef } from 'vue';
 import MkNote from '@/components/MkNote.vue';
 import MkLoading from '@/components/global/MkLoading.vue';
 import MkResult from '@/components/global/MkResult.vue';
+import MkPagination from '@/components/MkPagination.vue';
 import { getDateText } from '@/utility/timeline-date-separate.js';
 import { i18n } from '@/i18n.js';
 import { formatDateTimeString } from '@/utility/format-time-string.js';
@@ -306,18 +306,10 @@ function getCombinedFloaterInfo(item: FloaterItem, noteIndex = 0, nextNote?: any
 interface FloaterItem {
 	id: string;
 	last?: string;
-	notes: Array<{
-		id: string;
-		createdAt: string;
-		user: {
-			id: string;
-			name?: string;
-			username: string;
-		};
-		// 他のノートプロパティ
-	}>;
+	notes: any[]; // noteEntityService.packMany でパックされた完全なNote型
 	_cachedInfo?: string; // キャッシュ用
 	isFirstPublicPost?: boolean; // 初浮上かどうか
+	isFollowing?: boolean; // フォロー状況
 	_sortedNotes?: any[]; // ソート済みノートのキャッシュ用
 }
 
@@ -336,9 +328,15 @@ function calculateDaysDifference(olderDate: Date, newerDate: Date): number {
 
 // 文字列置換を一元化
 function formatFloaterMessage(messageKey: string, params: Record<string, string>): string {
-	let message = i18n.ts._floater[messageKey];
+	const messageTemplate = (i18n.ts._floater as any)[messageKey];
+	if (!messageTemplate) {
+		console.warn(`Missing floater message: ${messageKey}`);
+		return messageKey;
+	}
+
+	let message = messageTemplate;
 	Object.entries(params).forEach(([key, value]) => {
-		message = message.replace(`{${key}}`, value);
+		message = message.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
 	});
 	return message;
 }
@@ -352,13 +350,21 @@ function getChronologicalNotes(item: FloaterItem): any[] {
 }
 
 // ユーザーIDで重複排除する関数
-function getUniqueItems(items: FloaterItem[]) {
+function getUniqueItems(items: any[]): FloaterItem[] {
+	// 引数がFloaterItem配列でない場合は空配列を返す
+	if (!items || !Array.isArray(items)) return [];
+
+	// 各アイテムがFloaterItem構造を持っているかチェック
+	const floaterItems = items.filter(item =>
+		item && typeof item === 'object' &&
+		'notes' in item && Array.isArray(item.notes),
+	) as FloaterItem[];
 	const userMap = new Map();
 
 	// まず重複するユーザーの投稿をマージ
-	items.forEach(item => {
-		if (item.notes.length > 0) {
-			const userId = item.notes[0].user.id;
+	floaterItems.forEach(item => {
+		if (item.notes && item.notes.length > 0) {
+			const userId = item.id; // フロータータイムラインでは item.id がユーザーID
 
 			if (!userMap.has(userId)) {
 				userMap.set(userId, item);
