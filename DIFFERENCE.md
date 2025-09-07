@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Fix
+- リリースワークフローでDockerイメージが作成されない問題を修正
+- GitHub Releaseを`published`状態で作成してDockerワークフローを発火させるよう改善
+
+## 2025.8.0-yami-1.9.15
+
 ## Test
 - 修正版リリースワークフローのテスト実行
 

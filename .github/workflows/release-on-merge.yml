@@ -139,11 +139,12 @@ jobs:
           # 既存のリリースを削除（もし存在する場合）
           gh release delete "${{ steps.version.outputs.current_version }}" --yes || true
 
-          # 新しいリリースを作成
+          # 新しいリリースを作成（publishedイベントを発火させるため）
           gh release create "${{ steps.version.outputs.current_version }}" \
             --title "Release ${{ steps.version.outputs.current_version }}" \
             --notes "${{ steps.difference.outputs.difference }}" \
-            --target master
+            --target master \
+            --latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
