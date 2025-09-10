@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## 2025.8.0-yami-1.9.19
+## Unreleased
 
 ### AI
 <!-- Gemini: @gemini このPRをレビューしてください（Gemini APIは認証問題により無効化中） -->
