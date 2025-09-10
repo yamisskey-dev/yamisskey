@@ -163,7 +163,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			/>
 			<MkCaptcha
 				v-if="instance.enableTestcaptcha" ref="testcaptcha" v-model="testcaptchaResponse"
-				:class="$style.captcha" provider="testcaptcha"
+				:class="$style.captcha" provider="testcaptcha" :sitekey="null"
 			/>
 			<MkButton
 				type="submit" :disabled="shouldDisableSubmitting" large gradate rounded data-cy-signup-submit
