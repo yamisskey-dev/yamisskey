@@ -49,6 +49,7 @@ export const paramDef = {
 		untilDate: { type: 'integer' },
 		remoteOnly: { type: 'boolean', default: false },
 		excludeBots: { type: 'boolean', default: false },
+		excludeFiles: { type: 'boolean', default: false },
 	},
 	required: [],
 } as const;
@@ -119,6 +120,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			if (ps.excludeBots) {
 				query.andWhere('user.isBot = FALSE');
+			}
+	
+			if (ps.excludeFiles) {
+				query.andWhere('note.fileIds = \'{}\'');
 			}
 
 			const timeline = await query.limit(ps.limit).getMany();

@@ -110,6 +110,7 @@ export type Channels = {
 			remoteOnly?: boolean;
 			withHashtags?: boolean;
 			excludeBots?: boolean;
+			excludeFiles?: boolean;
 		};
 		events: {
 			note: (payload: Note) => void;
@@ -150,6 +151,7 @@ export type Channels = {
 			withRenotes?: boolean;
 			withFiles?: boolean;
 			excludeBots?: boolean;
+			excludeFiles?: boolean;
 			showYamiNonFollowingPublicNotes?: boolean;
 			showYamiFollowingNotes?: boolean;
 		};
