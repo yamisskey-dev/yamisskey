@@ -17,23 +17,13 @@ export type FanoutTimelineName = (
 	| 'localTimeline' // replies are not included
 	| 'localTimelineWithFiles' // only non-reply notes with files are included
 	| 'localTimelineWithReplies' // only replies are included
-	| `localTimelineWithReplyTo:${string}` // Only replies to specific local user are included. Parameter is reply user id.ad
-	// hybrid timeline
-	| 'hybridTimeline' // replies are not included
-	| 'hybridTimelineWithFiles' // only non-reply notes with files are included
-	| 'hybridTimelineWithReplies' // only replies are included
-	| `hybridTimelineWithReplyTo:${string}` // Only replies to specific local user are included. Parameter is reply user id.
+	| `localTimelineWithReplyTo:${string}` // Only replies to specific local user are included. Parameter is reply user id.
 	// yami timeline
 	| `yamiTimeline:${string}` // ユーザー個別のやみタイムライン
 	| `yamiTimelineWithFiles:${string}` // ユーザー個別のファイル付きやみタイムライン
 	| `yamiTimelineWithReplyTo:${string}` // 特定ユーザーへのリプライ
 	| 'yamiPublicNotes' // ユーザーのパブリックやみノート
 	| 'yamiPublicNotesWithFiles' // ユーザーのファイル付きパブリックやみノート
-	// global timeline
-	| 'globalTimeline' // replies are not included
-	| 'globalTimelineWithFiles' // only non-reply notes with files are included
-	| 'globalTimelineWithReplies' // only replies are included
-	| `globalTimelineWithReplyTo:${string}` // Only replies to specific local user are included. Parameter is reply user id.
 
 	// antenna
 	| `antennaTimeline:${string}`
@@ -56,7 +46,7 @@ export type FanoutTimelineName = (
 );
 
 export type FanoutTimelineNamePrefix =
-	'homeTimeline' | 'localTimeline' | 'hybridTimeline' | 'yamiTimeline' | 'globalTimeline' |
+	'homeTimeline' | 'localTimeline' | 'yamiTimeline' |
 	'antennaTimeline' | 'userTimeline' | 'userListTimeline' | 'channelTimeline' | 'roleTimeline';
 
 export type TimelineOptions = {

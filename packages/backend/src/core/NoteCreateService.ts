@@ -1503,26 +1503,6 @@ export class NoteCreateService implements OnApplicationShutdown {
 			}
 		}
 
-		// HYBRID (ソーシャル)
-		if (note.visibility === 'public') {
-			if (shouldPush('hybridTimeline')) {
-				this.fanoutTimelineService.push('hybridTimeline', note.id, 1000, r);
-				if (note.fileIds.length > 0) {
-					this.fanoutTimelineService.push('hybridTimelineWithFiles', note.id, 500, r);
-				}
-			}
-		}
-
-		// GLOBAL
-		if (note.visibility === 'public') {
-			if (shouldPush('globalTimeline')) {
-				this.fanoutTimelineService.push('globalTimeline', note.id, 1000, r);
-				if (note.fileIds.length > 0) {
-					this.fanoutTimelineService.push('globalTimelineWithFiles', note.id, 500, r);
-				}
-			}
-		}
-
 		// ヒベルネーションチェック（重要）
 		if (Math.random() < 0.1) {
 			process.nextTick(() => {
