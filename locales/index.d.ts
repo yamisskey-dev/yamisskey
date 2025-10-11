@@ -6746,6 +6746,10 @@ export interface Locale extends ILocale {
              */
             "home": string;
             /**
+             * あなたがフォローしているアカウントのやみノートとパブリックやみノートを見られます。やみモードユーザー専用のタイムラインです。
+             */
+            "yami": string;
+            /**
              * このサーバーにいるユーザー全員の投稿を見られます。
              */
             "local": string;
@@ -6775,6 +6779,12 @@ export interface Locale extends ILocale {
              * Misskeyにノートを投稿する際には、様々なオプションの設定が可能です。投稿フォームはこのようになっています。
              */
             "description1": string;
+            "_yamiNote": {
+                /**
+                 * やみモードユーザーは、通常ノートとやみノートを切り替えて投稿できます。やみノートはやみモードユーザーのみが閲覧できる特殊な投稿です。
+                 */
+                "description": string;
+            };
             "_visibility": {
                 /**
                  * ノートを表示できる相手を制限できます。
@@ -6795,7 +6805,11 @@ export interface Locale extends ILocale {
                 /**
                  * 指定したユーザーにのみ公開され、また相手に通知が入ります。
                  */
-                "direct": string;
+                "specified": string;
+                /**
+                 * 自分のみに公開。他のユーザーは閲覧できません。下書きやメモとして使用できます。
+                 */
+                "private": string;
                 /**
                  * 機密情報は送信する際は注意してください。
                  */
@@ -9667,6 +9681,14 @@ export interface Locale extends ILocale {
          */
         "write:admin:delete-all-files-of-a-user": string;
         /**
+         * ユーザーアカウントを承認する
+         */
+        "write:admin:approve-account": string;
+        /**
+         * ユーザーアカウントを拒否する
+         */
+        "write:admin:reject-account": string;
+        /**
          * データベースインデックスに関する情報を見る
          */
         "read:admin:index-stats": string;
@@ -11456,6 +11478,14 @@ export interface Locale extends ILocale {
          * ロールのアサイン解除
          */
         "unassignRole": string;
+        /**
+         * 配信キューをクリア
+         */
+        "clearQueue": string;
+        /**
+         * ジョブを促進
+         */
+        "promoteQueue": string;
         /**
          * 承認済み
          */

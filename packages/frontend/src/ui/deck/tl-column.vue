@@ -20,12 +20,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<MkStreamingNotesTimeline
 		v-else-if="column.tl"
 		ref="timeline"
-		:key="column.tl + withRenotes + withReplies + onlyFiles"
+		:key="column.tl + withRenotes + withReplies + onlyFiles + localOnly + remoteOnly + withHashtags + excludeBots + showYamiNonFollowingPublicNotes + showYamiFollowingNotes"
 		:src="column.tl"
 		:withRenotes="withRenotes"
 		:withReplies="withReplies"
 		:withSensitive="withSensitive"
 		:onlyFiles="onlyFiles"
+		:localOnly="localOnly"
+		:remoteOnly="remoteOnly"
+		:withHashtags="withHashtags"
+		:excludeBots="excludeBots"
+		:showYamiNonFollowingPublicNotes="showYamiNonFollowingPublicNotes"
+		:showYamiFollowingNotes="showYamiFollowingNotes"
 		:sound="true"
 		:customSound="soundSetting"
 	/>
@@ -57,6 +63,12 @@ const withRenotes = ref(props.column.withRenotes ?? true);
 const withReplies = ref(props.column.withReplies ?? false);
 const withSensitive = ref(props.column.withSensitive ?? true);
 const onlyFiles = ref(props.column.onlyFiles ?? false);
+const localOnly = ref(props.column.localOnly ?? false);
+const remoteOnly = ref(props.column.remoteOnly ?? false);
+const withHashtags = ref(props.column.withHashtags ?? false);
+const excludeBots = ref(props.column.excludeBots ?? false);
+const showYamiNonFollowingPublicNotes = ref(props.column.showYamiNonFollowingPublicNotes ?? false);
+const showYamiFollowingNotes = ref(props.column.showYamiFollowingNotes ?? false);
 
 watch(withRenotes, v => {
 	updateColumn(props.column.id, {
@@ -86,6 +98,42 @@ watch(soundSetting, v => {
 	updateColumn(props.column.id, { soundSetting: v });
 });
 
+watch(showYamiNonFollowingPublicNotes, v => {
+	updateColumn(props.column.id, {
+		showYamiNonFollowingPublicNotes: v,
+	});
+});
+
+watch(showYamiFollowingNotes, v => {
+	updateColumn(props.column.id, {
+		showYamiFollowingNotes: v,
+	});
+});
+
+watch(localOnly, v => {
+	updateColumn(props.column.id, {
+		localOnly: v,
+	});
+});
+
+watch(remoteOnly, v => {
+	updateColumn(props.column.id, {
+		remoteOnly: v,
+	});
+});
+
+watch(withHashtags, v => {
+	updateColumn(props.column.id, {
+		withHashtags: v,
+	});
+});
+
+watch(excludeBots, v => {
+	updateColumn(props.column.id, {
+		excludeBots: v,
+	});
+});
+
 onMounted(() => {
 	if (props.column.tl == null) {
 		setType();
@@ -97,6 +145,8 @@ async function setType() {
 		title: i18n.ts.timeline,
 		items: [{
 			value: 'home' as const, text: i18n.ts._timelines.home,
+		}, {
+			value: 'yami' as const, text: i18n.ts._timelines.yami,
 		}, {
 			value: 'local' as const, text: i18n.ts._timelines.local,
 		}, {
@@ -153,6 +203,54 @@ const menu = computed<MenuItem[]>(() => {
 		text: i18n.ts.withSensitive,
 		ref: withSensitive,
 	});
+
+	// 全タイムラインでBotフィルター
+	if (['home', 'local', 'social', 'global', 'yami'].includes(props.column.tl ?? '')) {
+		menuItems.push({
+			type: 'switch',
+			text: i18n.ts.timelineExcludeBots,
+			ref: excludeBots,
+		});
+	}
+
+	// socialタイムライン専用オプション
+	if (props.column.tl === 'social') {
+		menuItems.push({
+			type: 'switch',
+			text: i18n.ts.localOnly,
+			ref: localOnly,
+		});
+	}
+
+	// globalタイムライン専用オプション
+	if (props.column.tl === 'global') {
+		menuItems.push({
+			type: 'switch',
+			text: i18n.ts.remoteOnly,
+			ref: remoteOnly,
+		}, {
+			type: 'switch',
+			text: i18n.ts.withHashtags,
+			ref: withHashtags,
+		});
+	}
+
+	// yamiタイムライン専用オプション
+	if (props.column.tl === 'yami') {
+		menuItems.push({
+			type: 'switch',
+			text: i18n.ts.localOnly,
+			ref: localOnly,
+		}, {
+			type: 'switch',
+			text: i18n.ts._yami.showYamiNonFollowingPublicNotes,
+			ref: showYamiNonFollowingPublicNotes,
+		}, {
+			type: 'switch',
+			text: i18n.ts._yami.showYamiFollowingNotes,
+			ref: showYamiFollowingNotes,
+		});
+	}
 
 	return menuItems;
 });
