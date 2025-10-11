@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+### Feat
+- デッキUIでやみタイムラインとその専用オプションに対応
+- 新規ユーザーチュートリアルの改善（セキュリティ設定・やみノート・公開範囲の説明追加）
+
+### Fix
+- モデレーターにモデレーションログの閲覧権限を付与
+- アクセストークン権限の翻訳欠落を修正（ユーザー承認システム関連）
+- モデレーションログの翻訳追加（clearQueue, promoteQueue）
+- 未実装の`followRequestRejected`通知タイプを削除
+- フォーク由来のTypeScriptエラーを修正
+- フォーク特有の型定義エラーと実装ミスを修正
+- 管理者・設定ページでの SearchLabel 重複警告を解決
+
+### Perf
+- 使用されていないRedisタイムラインキャッシュを削除（hybrid/globalタイムライン）
+
+### i18n
+- 英語・関西弁の翻訳とタイムラインフィルター対応を追加
+- デッキUIのタイムラインフィルターオプションを追加（localOnly, remoteOnly, withHashtags, excludeBots）
+
+## 2025.9.0-yami-1.9.19
+
 ### AI
 <!-- Gemini: @gemini このPRをレビューしてください（Gemini APIは認証問題により無効化中） -->
 @claude このPRをレビューしてください。yamisskeyへの本家misskey-dev/misskey 2025.9.0リリースのマージPRです。
