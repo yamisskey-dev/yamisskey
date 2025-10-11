@@ -90,7 +90,6 @@ const props = withDefaults(defineProps<{
 	withReplies?: boolean;
 	withSensitive?: boolean;
 	onlyFiles?: boolean;
-	excludeFiles?: boolean;
 	localOnly?: boolean;
 	remoteOnly?: boolean;
 	withHashtags?: boolean;
@@ -102,7 +101,6 @@ const props = withDefaults(defineProps<{
 	withReplies: false,
 	withSensitive: true,
 	onlyFiles: false,
-	excludeFiles: false,
 	localOnly: false,
 	remoteOnly: false,
 	withHashtags: false,
@@ -140,7 +138,6 @@ if (props.src === 'antenna') {
 		computedParams: computed(() => ({
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
-			excludeFiles: props.excludeFiles ? true : undefined,
 			excludeBots: props.excludeBots,
 			showYamiNonFollowingPublicNotes: props.showYamiNonFollowingPublicNotes,
 			showYamiFollowingNotes: props.showYamiFollowingNotes,
@@ -173,7 +170,6 @@ if (props.src === 'antenna') {
 		computedParams: computed(() => ({
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
-			excludeFiles: props.excludeFiles ? true : undefined,
 			remoteOnly: props.remoteOnly,
 			withHashtags: props.withHashtags,
 			excludeBots: props.excludeBots,
@@ -366,7 +362,6 @@ function connectChannel() {
 		connections.yamiTimeline = stream.useChannel('yamiTimeline', {
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
-			excludeFiles: props.excludeFiles ? true : undefined,
 			excludeBots: props.excludeBots,
 			showYamiNonFollowingPublicNotes: props.showYamiNonFollowingPublicNotes,
 			showYamiFollowingNotes: props.showYamiFollowingNotes,
@@ -393,7 +388,6 @@ function connectChannel() {
 		connections.globalTimeline = stream.useChannel('globalTimeline', {
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
-			excludeFiles: props.excludeFiles ? true : undefined,
 			remoteOnly: props.remoteOnly,
 			withHashtags: props.withHashtags,
 			excludeBots: props.excludeBots,
@@ -447,7 +441,7 @@ if (store.s.realtimeMode) {
 	connectChannel();
 }
 
-watch(() => [props.list, props.antenna, props.channel, props.role, props.withRenotes, props.withReplies, props.onlyFiles, props.excludeFiles, props.localOnly, props.remoteOnly, props.withHashtags, props.excludeBots, props.showYamiNonFollowingPublicNotes, props.showYamiFollowingNotes], () => {
+watch(() => [props.list, props.antenna, props.channel, props.role, props.withRenotes, props.withReplies, props.onlyFiles, props.localOnly, props.remoteOnly, props.withHashtags, props.excludeBots, props.showYamiNonFollowingPublicNotes, props.showYamiFollowingNotes], () => {
 	if (store.s.realtimeMode) {
 		disconnectChannel();
 		connectChannel();

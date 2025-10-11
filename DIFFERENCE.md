@@ -2,10 +2,6 @@
 
 ## Unreleased
 
-- `excludeFiles`オプションをやみタイムライン・グローバルタイムラインに追加
-
-## 2025.9.0-yami-1.9.19
-
 ### AI
 <!-- Gemini: @gemini このPRをレビューしてください（Gemini APIは認証問題により無効化中） -->
 @claude このPRをレビューしてください。yamisskeyへの本家misskey-dev/misskey 2025.9.0リリースのマージPRです。

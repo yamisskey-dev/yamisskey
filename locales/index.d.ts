@@ -5071,10 +5071,6 @@ export interface Locale extends ILocale {
      */
     "fileAttachedOnly": string;
     /**
-     * ファイル付き以外
-     */
-    "excludeFiles": string;
-    /**
      * TLに他の人への返信を含める
      */
     "showRepliesToOthersInTimeline": string;

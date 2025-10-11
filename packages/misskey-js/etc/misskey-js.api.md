@@ -728,7 +728,6 @@ export type Channels = {
             remoteOnly?: boolean;
             withHashtags?: boolean;
             excludeBots?: boolean;
-            excludeFiles?: boolean;
         };
         events: {
             note: (payload: Note) => void;
@@ -769,7 +768,6 @@ export type Channels = {
             withRenotes?: boolean;
             withFiles?: boolean;
             excludeBots?: boolean;
-            excludeFiles?: boolean;
             showYamiNonFollowingPublicNotes?: boolean;
             showYamiFollowingNotes?: boolean;
         };
@@ -3934,8 +3932,8 @@ type VerifyEmailRequest = operations['verify-email']['requestBody']['content']['
 //
 // src/entities.ts:55:2 - (ae-forgotten-export) The symbol "ModerationLogPayloads" needs to be exported by the entry point index.d.ts
 // src/streaming.ts:57:3 - (ae-forgotten-export) The symbol "ReconnectingWebSocket" needs to be exported by the entry point index.d.ts
-// src/streaming.types.ts:240:4 - (ae-forgotten-export) The symbol "ReversiUpdateKey" needs to be exported by the entry point index.d.ts
-// src/streaming.types.ts:250:4 - (ae-forgotten-export) The symbol "ReversiUpdateSettings" needs to be exported by the entry point index.d.ts
+// src/streaming.types.ts:238:4 - (ae-forgotten-export) The symbol "ReversiUpdateKey" needs to be exported by the entry point index.d.ts
+// src/streaming.types.ts:248:4 - (ae-forgotten-export) The symbol "ReversiUpdateSettings" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

@@ -24,7 +24,6 @@ class YamiTimelineChannel extends Channel {
 	private showYamiNonFollowingPublicNotes: boolean;
 	private showYamiFollowingNotes: boolean;
 	private excludeBots: boolean;
-	private excludeFiles: boolean;
 
 	constructor(
 		private noteEntityService: NoteEntityService,
@@ -54,7 +53,6 @@ class YamiTimelineChannel extends Channel {
 		this.showYamiNonFollowingPublicNotes = !!(params.showYamiNonFollowingPublicNotes ?? true);
 		this.showYamiFollowingNotes = !!(params.showYamiFollowingNotes ?? true);
 		this.excludeBots = !!(params.excludeBots ?? false);
-		this.excludeFiles = !!(params.excludeFiles ?? false);
 
 		// ノートストリームの購読
 		this.subscriber.on('notesStream', this.onNote);
@@ -71,14 +69,11 @@ class YamiTimelineChannel extends Channel {
 
 			// Bot filtering
 			if (this.excludeBots && note.user.isBot) return;
-	
-			// File filtering
-			if (this.excludeFiles && note.fileIds && note.fileIds.length > 0) return;
-	
+
 			// 【基本フィルタリング】
 			// 1. 自分がやみモードでない場合は自分の投稿だけ表示
 			if (!isMyNote && !this.user!.isInYamiMode) return;
-	
+
 			// 2. 添付ファイル条件
 			if (this.withFiles && (note.fileIds == null || note.fileIds.length === 0)) return;
 

@@ -12,7 +12,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkPostForm v-if="shouldShowFixedPostForm" :channel="currentChannel" :class="$style.postForm" class="_panel" fixed style="margin-bottom: var(--MI-margin);" :isInYamiTimeline="src === 'yami'" :isInNormalTimeline="src !== 'yami'"/>
 		<MkStreamingNotesTimeline
 			ref="tlComponent"
-			:key="src + withRenotes + withReplies + withHashtags + onlyFiles + excludeFiles + localOnly + remoteOnly + excludeBots + withSensitive"
+			:key="src + withRenotes + withReplies + withHashtags + onlyFiles + localOnly + remoteOnly + excludeBots + withSensitive"
 			:class="$style.tl"
 			:src="(src.split(':')[0] as (BasicTimelineType | 'list'))"
 			:list="src.startsWith('list:') ? src.split(':')[1] : undefined"
@@ -22,7 +22,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			:withHashtags="withHashtags"
 			:withSensitive="withSensitive"
 			:onlyFiles="onlyFiles"
-			:excludeFiles="excludeFiles"
 			:localOnly="localOnly"
 			:remoteOnly="remoteOnly"
 			:excludeBots="excludeBots"
@@ -120,10 +119,9 @@ const currentChannel = computed(() => {
 });
 
 // computed内での無限ループを防ぐためのフラグ
-const localSocialTLFilterSwitchStore = ref<'withReplies' | 'onlyFiles' | 'excludeFiles' | false>(
+const localSocialTLFilterSwitchStore = ref<'withReplies' | 'onlyFiles' | false>(
 	store.r.tl.value.filter.withReplies ? 'withReplies' :
 	store.r.tl.value.filter.onlyFiles ? 'onlyFiles' :
-	store.r.tl.value.filter.excludeFiles ? 'excludeFiles' :
 	false,
 );
 
@@ -140,34 +138,13 @@ const withReplies = computed<boolean>({
 });
 const onlyFiles = computed<boolean>({
 	get: () => {
-		if (['local', 'social'].includes(src.value) && ['withReplies', 'excludeFiles'].includes(localSocialTLFilterSwitchStore.value as string)) {
+		if (['local', 'social'].includes(src.value) && localSocialTLFilterSwitchStore.value === 'withReplies') {
 			return false;
 		} else {
 			return store.r.tl.value.filter.onlyFiles;
 		}
 	},
-	set: (x) => {
-		if (x && excludeFiles.value) {
-			saveTlFilter('excludeFiles', false);
-		}
-		saveTlFilter('onlyFiles', x);
-	},
-});
-
-const excludeFiles = computed<boolean>({
-	get: () => {
-		// excludeFilesはグローバル・やみタイムラインのみ有効
-		if (!['global', 'yami'].includes(src.value)) {
-			return false;
-		}
-		return store.r.tl.value.filter.excludeFiles;
-	},
-	set: (x) => {
-		if (x && onlyFiles.value) {
-			saveTlFilter('onlyFiles', false);
-		}
-		saveTlFilter('excludeFiles', x);
-	},
+	set: (x) => saveTlFilter('onlyFiles', x),
 });
 
 const withHashtags = computed<boolean>({
@@ -175,26 +152,18 @@ const withHashtags = computed<boolean>({
 	set: (x) => saveTlFilter('withHashtags', x),
 });
 
-watch([withReplies, onlyFiles, excludeFiles], ([withRepliesTo, onlyFilesTo, excludeFilesTo]) => {
+watch([withReplies, onlyFiles], ([withRepliesTo, onlyFilesTo]) => {
 	if (withRepliesTo) {
 		localSocialTLFilterSwitchStore.value = 'withReplies';
 	} else if (onlyFilesTo) {
 		localSocialTLFilterSwitchStore.value = 'onlyFiles';
-	} else if (excludeFilesTo) {
-		localSocialTLFilterSwitchStore.value = 'excludeFiles';
 	} else {
 		localSocialTLFilterSwitchStore.value = false;
 	}
 });
 
 const withSensitive = computed<boolean>({
-	get: () => {
-		// excludeFilesが有効な場合は強制的にfalse
-		if (excludeFiles.value) {
-			return false;
-		}
-		return store.r.tl.value.filter.withSensitive;
-	},
+	get: () => store.r.tl.value.filter.withSensitive,
 	set: (x) => saveTlFilter('withSensitive', x),
 });
 
@@ -388,25 +357,13 @@ const headerActions = computed(() => {
 				icon: 'ti ti-eye-exclamation',
 				text: i18n.ts.withSensitive,
 				ref: withSensitive,
-				disabled: excludeFiles,
 			}, {
 				type: 'switch',
 				icon: 'ti ti-photo',
 				text: i18n.ts.fileAttachedOnly,
 				ref: onlyFiles,
-				disabled: isBasicTimeline(src.value) && hasWithReplies(src.value) ? withReplies : excludeFiles,
-			});
-			// excludeFilesはグローバル・やみタイムラインのみ表示
-			if (['global', 'yami'].includes(src.value)) {
-				menuItems.push({
-					type: 'switch',
-					icon: 'ti ti-photo-off',
-					text: i18n.ts.excludeFiles,
-					ref: excludeFiles,
-					disabled: isBasicTimeline(src.value) && hasWithReplies(src.value) ? withReplies : onlyFiles,
-				});
-			}
-			menuItems.push({
+				disabled: isBasicTimeline(src.value) && hasWithReplies(src.value) ? withReplies : false,
+			}, {
 				type: 'divider',
 			});
 

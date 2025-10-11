@@ -21,7 +21,6 @@ class GlobalTimelineChannel extends Channel {
 	private withFiles: boolean;
 	private withHashtags: boolean;
 	private excludeBots: boolean;
-	private excludeFiles: boolean;
 
 	constructor(
 		private metaService: MetaService,
@@ -44,7 +43,6 @@ class GlobalTimelineChannel extends Channel {
 		this.withFiles = !!(params.withFiles ?? false);
 		this.withHashtags = !!(params.withHashtags ?? true);
 		this.excludeBots = !!(params.excludeBots ?? false);
-		this.excludeFiles = !!(params.excludeFiles ?? false);
 
 		// Subscribe events
 		this.subscriber.on('notesStream', this.onNote);
@@ -57,13 +55,10 @@ class GlobalTimelineChannel extends Channel {
 
 		// Bot filtering
 		if (this.excludeBots && note.user.isBot) return;
-	
-		// File filtering
-		if (this.excludeFiles && note.fileIds && note.fileIds.length > 0) return;
-	
+
 		// 以下、通常のフィルタリング条件
 		if (note.tags && note.tags.length > 0 && !this.withHashtags) return;
-	
+
 		if (this.withFiles && (note.fileIds == null || note.fileIds.length === 0)) return;
 
 		if (note.visibility !== 'public') return;

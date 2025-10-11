@@ -55,7 +55,6 @@ export const paramDef = {
 		withRenotes: { type: 'boolean', default: true },
 		localOnly: { type: 'boolean', default: false }, // ローカルのみフィルター
 		excludeBots: { type: 'boolean', default: false },
-		excludeFiles: { type: 'boolean', default: false },
 		showYamiNonFollowingPublicNotes: { type: 'boolean', default: true }, // フォロー外ユーザーのパブリックやみノート表示
 		showYamiFollowingNotes: { type: 'boolean', default: true }, // フォローしているユーザーのやみノート表示
 	},
@@ -121,9 +120,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 					// ボットフィルタリング
 					if (ps.excludeBots && note.user?.isBot) return false;
-	
-					// ファイル除外フィルタリング
-					if (ps.excludeFiles && note.fileIds && note.fileIds.length > 0) return false;
 
 					// 投稿が自分のものかどうか判定
 					const isMyNote = note.userId === me.id;
@@ -255,10 +251,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 					if (ps.excludeBots) {
 						query.andWhere('user.isBot = FALSE');
-					}
-	
-					if (ps.excludeFiles) {
-						query.andWhere('note.fileIds = \'{}\'');
 					}
 
 					// ソート順を明示的に指定

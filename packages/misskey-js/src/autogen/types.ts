@@ -38127,8 +38127,6 @@ export interface operations {
                     remoteOnly?: boolean;
                     /** @default false */
                     excludeBots?: boolean;
-                    /** @default false */
-                    excludeFiles?: boolean;
                 };
             };
         };
@@ -40239,8 +40237,6 @@ export interface operations {
                     localOnly?: boolean;
                     /** @default false */
                     excludeBots?: boolean;
-                    /** @default false */
-                    excludeFiles?: boolean;
                     /** @default true */
                     showYamiNonFollowingPublicNotes?: boolean;
                     /** @default true */
