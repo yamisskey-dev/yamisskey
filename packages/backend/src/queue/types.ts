@@ -137,3 +137,7 @@ export type ThinUser = {
 export type ScheduleNotePostJobData = {
 	scheduleNoteId: MiNote['id'];
 };
+
+export type ScheduledNoteDeleteJobData = {
+	noteId: MiNote['id'];
+};
