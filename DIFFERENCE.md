@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## 2025.9.0-yami-1.9.19
+## Unreleased
 
 ### Feat
 - デッキUIでやみタイムラインとその専用オプションに対応
