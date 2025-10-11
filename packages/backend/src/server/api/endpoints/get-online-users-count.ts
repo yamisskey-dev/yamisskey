@@ -277,7 +277,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 						const decoration = decorationMap.get(d.id);
 						return {
 							...d,
-							url: decoration?.url, // URL を追加
+							url: decoration?.url ?? '', // URL を追加
 						};
 					}),
 					lastActiveDate: user.lastActiveDate?.toISOString() ?? new Date().toISOString(),

@@ -158,6 +158,11 @@ export type ModerationLogPayloads = {
 		userUsername: string;
 		//userHost: string | null; // User approval is local action
 	};
+	reject: {
+		userId: string;
+		userUsername: string;
+		//userHost: string | null; // User rejection is local action
+	};
 	unsuspend: {
 		userId: string;
 		userUsername: string;

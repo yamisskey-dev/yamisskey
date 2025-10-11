@@ -6,7 +6,7 @@
 import ms from 'ms';
 import { In } from 'typeorm';
 import { Inject, Injectable } from '@nestjs/common';
-import { isPureRenote } from 'misskey-js/note.js';
+import { isRenote, isQuote } from '@/misc/is-renote.js';
 import type { MiUser } from '@/models/User.js';
 import type {
 	UsersRepository,
@@ -18,7 +18,6 @@ import type {
 } from '@/models/_.js';
 import type { MiDriveFile } from '@/models/DriveFile.js';
 import type { MiNote } from '@/models/Note.js';
-import type { MiChannel } from '@/models/Channel.js';
 import { MAX_NOTE_TEXT_LENGTH } from '@/const.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { DI } from '@/di-symbols.js';
@@ -275,7 +274,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 				if (renote == null) {
 					throw new ApiError(meta.errors.noSuchRenoteTarget);
-				} else if (isPureRenote(renote)) {
+				} else if (isRenote(renote) && !isQuote(renote)) {
 					throw new ApiError(meta.errors.cannotReRenote);
 				}
 
@@ -308,7 +307,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 				if (reply == null) {
 					throw new ApiError(meta.errors.noSuchReplyTarget);
-				} else if (isPureRenote(reply)) {
+				} else if (isRenote(reply) && !isQuote(reply)) {
 					throw new ApiError(meta.errors.cannotReplyToPureRenote);
 				}
 
