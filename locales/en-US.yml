@@ -1676,6 +1676,7 @@ _initialTutorial:
     title: "The Concept of Timelines"
     description1: "Misskey provides multiple timelines based on usage (some may not be available depending on the server's policies)."
     home: "You can view notes from accounts you follow."
+    yami: "You can view Yami notes from accounts you follow and public Yami notes. This is a timeline exclusive to Yami mode users."
     local: "You can view notes from all users on this server."
     social: "Notes from the Home and Local timelines will be displayed."
     global: "You can view notes from all connected servers."
@@ -1684,12 +1685,15 @@ _initialTutorial:
   _postNote:
     title: "Note Posting Settings"
     description1: "When posting a note on Misskey, various options are available. The posting form looks like this."
+    _yamiNote:
+      description: "Yami mode users can switch between normal notes and Yami notes when posting. Yami notes are special posts that can only be viewed by Yami mode users."
     _visibility:
       description: "You can limit who can view your note."
       public: "Your note will be visible for all users."
       home: "Public only on the Home timeline. People visiting your profile, via followers, and through renotes can see it."
       followers: "Visible to followers only. Only followers can see it and no one else, and it cannot be renoted by others."
-      direct: "Visible only to specified users, and the recipient will be notified. It can be used as an alternative to direct messaging."
+      specified: "Visible only to specified users, and the recipient will be notified. It can be used as an alternative to direct messaging."
+      private: "Visible only to yourself. No other users can see it. Can be used as drafts or memos."
       doNotSendConfidencialOnDirect1: "Be careful when sending sensitive information!"
       doNotSendConfidencialOnDirect2: "Administrators of the server can see what you write. Be careful with sensitive information when sending direct notes to users on untrusted servers."
       localOnly: "Posting with this flag will not federate the note to other servers. Users on other servers will not be able to view these notes directly, regardless of the display settings above."
