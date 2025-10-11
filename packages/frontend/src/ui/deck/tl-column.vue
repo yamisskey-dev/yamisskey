@@ -20,12 +20,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<MkStreamingNotesTimeline
 		v-else-if="column.tl"
 		ref="timeline"
-		:key="column.tl + withRenotes + withReplies + onlyFiles"
+		:key="column.tl + withRenotes + withReplies + onlyFiles + showYamiNonFollowingPublicNotes + showYamiFollowingNotes"
 		:src="column.tl"
 		:withRenotes="withRenotes"
 		:withReplies="withReplies"
 		:withSensitive="withSensitive"
 		:onlyFiles="onlyFiles"
+		:showYamiNonFollowingPublicNotes="showYamiNonFollowingPublicNotes"
+		:showYamiFollowingNotes="showYamiFollowingNotes"
 		:sound="true"
 		:customSound="soundSetting"
 	/>
@@ -57,6 +59,8 @@ const withRenotes = ref(props.column.withRenotes ?? true);
 const withReplies = ref(props.column.withReplies ?? false);
 const withSensitive = ref(props.column.withSensitive ?? true);
 const onlyFiles = ref(props.column.onlyFiles ?? false);
+const showYamiNonFollowingPublicNotes = ref(props.column.showYamiNonFollowingPublicNotes ?? false);
+const showYamiFollowingNotes = ref(props.column.showYamiFollowingNotes ?? false);
 
 watch(withRenotes, v => {
 	updateColumn(props.column.id, {
@@ -86,6 +90,18 @@ watch(soundSetting, v => {
 	updateColumn(props.column.id, { soundSetting: v });
 });
 
+watch(showYamiNonFollowingPublicNotes, v => {
+	updateColumn(props.column.id, {
+		showYamiNonFollowingPublicNotes: v,
+	});
+});
+
+watch(showYamiFollowingNotes, v => {
+	updateColumn(props.column.id, {
+		showYamiFollowingNotes: v,
+	});
+});
+
 onMounted(() => {
 	if (props.column.tl == null) {
 		setType();
@@ -97,6 +113,8 @@ async function setType() {
 		title: i18n.ts.timeline,
 		items: [{
 			value: 'home' as const, text: i18n.ts._timelines.home,
+		}, {
+			value: 'yami' as const, text: i18n.ts._timelines.yami,
 		}, {
 			value: 'local' as const, text: i18n.ts._timelines.local,
 		}, {
@@ -153,6 +171,19 @@ const menu = computed<MenuItem[]>(() => {
 		text: i18n.ts.withSensitive,
 		ref: withSensitive,
 	});
+
+	// yamiタイムライン専用オプション
+	if (props.column.tl === 'yami') {
+		menuItems.push({
+			type: 'switch',
+			text: i18n.ts.showYamiNonFollowingPublicNotes as string,
+			ref: showYamiNonFollowingPublicNotes,
+		}, {
+			type: 'switch',
+			text: i18n.ts.showYamiFollowingNotes as string,
+			ref: showYamiFollowingNotes,
+		});
+	}
 
 	return menuItems;
 });
