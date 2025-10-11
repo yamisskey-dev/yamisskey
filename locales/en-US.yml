@@ -2452,6 +2452,8 @@ _permissions:
   "read:admin:abuse-user-reports": "View user reports"
   "write:admin:delete-account": "Delete user account"
   "write:admin:delete-all-files-of-a-user": "Delete all files of a user"
+  "write:admin:approve-account": "Approve user account"
+  "write:admin:reject-account": "Reject user account"
   "read:admin:index-stats": "View database index stats"
   "read:admin:table-stats": "View database table stats"
   "read:admin:user-ips": "View user IP addresses"

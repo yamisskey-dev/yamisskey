@@ -9667,6 +9667,14 @@ export interface Locale extends ILocale {
          */
         "write:admin:delete-all-files-of-a-user": string;
         /**
+         * ユーザーアカウントを承認する
+         */
+        "write:admin:approve-account": string;
+        /**
+         * ユーザーアカウントを拒否する
+         */
+        "write:admin:reject-account": string;
+        /**
          * データベースインデックスに関する情報を見る
          */
         "read:admin:index-stats": string;

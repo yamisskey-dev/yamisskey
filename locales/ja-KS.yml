@@ -2249,6 +2249,8 @@ _permissions:
   "read:admin:abuse-user-reports": "ユーザーからの通報を見る"
   "write:admin:delete-account": "ユーザーアカウント消す"
   "write:admin:delete-all-files-of-a-user": "ユーザーのファイル全部ほかす"
+  "write:admin:approve-account": "ユーザーアカウントを承認する"
+  "write:admin:reject-account": "ユーザーアカウントを拒否する"
   "read:admin:index-stats": "データベースインデックスの情報見る"
   "read:admin:table-stats": "データベーステーブルの情報見る"
   "read:admin:user-ips": "ユーザーのIPアドレスを見る"
