@@ -11457,6 +11457,14 @@ export interface Locale extends ILocale {
          */
         "unassignRole": string;
         /**
+         * 配信キューをクリア
+         */
+        "clearQueue": string;
+        /**
+         * ジョブを促進
+         */
+        "promoteQueue": string;
+        /**
          * 承認済み
          */
         "approve": string;

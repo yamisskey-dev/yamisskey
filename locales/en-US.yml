@@ -2904,6 +2904,8 @@ _moderationLogTypes:
   updateRole: "Role updated"
   assignRole: "Assigned to role"
   unassignRole: "Removed from role"
+  clearQueue: "Queue cleared"
+  promoteQueue: "Job promoted"
   approve: "approved"
   reject: "rejected"
   suspend: "Suspended"

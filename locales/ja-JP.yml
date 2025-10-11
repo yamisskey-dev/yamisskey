@@ -3031,6 +3031,8 @@ _moderationLogTypes:
   updateRole: "ロールを更新"
   assignRole: "ロールへアサイン"
   unassignRole: "ロールのアサイン解除"
+  clearQueue: "配信キューをクリア"
+  promoteQueue: "ジョブを促進"
   approve: "承認済み"
   reject: "拒否済み"
   suspend: "凍結"
