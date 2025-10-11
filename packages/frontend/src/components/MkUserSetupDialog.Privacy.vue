@@ -24,6 +24,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</MkFolder>
 
 	<MkFolder>
+		<template #label>{{ i18n.ts.hideSearchResult }}</template>
+		<template #icon><i class="ti ti-search-off"></i></template>
+		<template #suffix>{{ hideSearchResult ? i18n.ts.on : i18n.ts.off }}</template>
+
+		<MkSwitch v-model="hideSearchResult">{{ i18n.ts.hideSearchResult }}<template #caption>{{ i18n.ts.hideSearchResultDescription }}</template></MkSwitch>
+	</MkFolder>
+
+	<MkFolder>
 		<template #label>{{ i18n.ts.noCrawle }}</template>
 		<template #icon><i class="ti ti-world-x"></i></template>
 		<template #suffix>{{ noCrawle ? i18n.ts.on : i18n.ts.off }}</template>
@@ -53,13 +61,15 @@ import { misskeyApi } from '@/utility/misskey-api.js';
 
 const isLocked = ref(true);
 const hideOnlineStatus = ref(true);
+const hideSearchResult = ref(true);
 const noCrawle = ref(true);
 const preventAiLearning = ref(true);
 
-watch([isLocked, hideOnlineStatus, noCrawle, preventAiLearning], () => {
+watch([isLocked, hideOnlineStatus, hideSearchResult, noCrawle, preventAiLearning], () => {
 	misskeyApi('i/update', {
 		isLocked: !!isLocked.value,
 		hideOnlineStatus: !!hideOnlineStatus.value,
+		hideSearchResult: !!hideSearchResult.value,
 		noCrawle: !!noCrawle.value,
 		preventAiLearning: !!preventAiLearning.value,
 	});

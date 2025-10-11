@@ -159,7 +159,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
             LIMIT $4
         `, [me.id, ps.anchorId, ps.offset, ps.limit, me.isInYamiMode]);
 
-		return await Promise.all(updatedUsers.map(async (row) => {
+		return await Promise.all(updatedUsers.map(async (row: { user: string; last: string | null; is_following: boolean; is_first_public_post: boolean }) => {
 			const userId = row.user;
 			const query = this.notesRepository.createQueryBuilder('note').innerJoinAndSelect('note.user', 'user');
 
@@ -197,11 +197,11 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				if (notes.length > 0) {
 					// 最初のノートは必ず含める
 					processedNotes.push(notes[0]);
-					const firstDate = new Date(notes[0].createdAt);
+					const firstDate = this.idService.parse(notes[0].id).date;
 
 					// 最初のノートと日付が異なるノートを探す
 					for (let i = 1; i < notes.length; i++) {
-						const currentDate = new Date(notes[i].createdAt);
+						const currentDate = this.idService.parse(notes[i].id).date;
 
 						// 日付が同じなら追加
 						if (firstDate.getFullYear() === currentDate.getFullYear() &&

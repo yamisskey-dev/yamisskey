@@ -57,7 +57,6 @@ import { trackPromise } from '@/misc/promise-tracker.js';
 import { IdentifiableError } from '@/misc/identifiable-error.js';
 import { CollapsedQueue } from '@/misc/collapsed-queue.js';
 import { CacheService } from '@/core/CacheService.js';
-import { prefer } from '@/preferences.js';
 import { MetaService } from '@/core/MetaService.js';
 
 type NotificationType = 'reply' | 'renote' | 'quote' | 'mention';
@@ -1247,7 +1246,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 				if (!reply) return false;
 				return await this.isPrivateNoteInReplyChain(reply);
 			} catch (err) {
-				this.logger.error(`Error checking private note in reply chain: ${err}`);
+				console.error(`Error checking private note in reply chain: ${err}`);
 				return false;
 			}
 		}
@@ -1294,7 +1293,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 						this.fanoutTimelineService.push(`yamiTimelineWithFiles:${following.followerId}`, note.id, 300, followingsPipeline);
 					}
 				}
-				followingsPipeline.exec().catch(err => this.logger.error(err));
+				followingsPipeline.exec();
 			});
 
 			// パブリックなやみノートの場合の処理
@@ -1325,7 +1324,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 			}
 
 			// パイプライン実行
-			r.exec().catch(err => this.logger.error(err));
+			r.exec();
 			return;
 		}
 
@@ -1391,7 +1390,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 			}
 
 			// パイプラインを実行
-			r.exec().catch(err => this.logger.error(err));
+			r.exec();
 			return;
 		}
 
@@ -1503,26 +1502,6 @@ export class NoteCreateService implements OnApplicationShutdown {
 			}
 		}
 
-		// HYBRID (ソーシャル)
-		if (note.visibility === 'public') {
-			if (shouldPush('hybridTimeline')) {
-				this.fanoutTimelineService.push('hybridTimeline', note.id, 1000, r);
-				if (note.fileIds.length > 0) {
-					this.fanoutTimelineService.push('hybridTimelineWithFiles', note.id, 500, r);
-				}
-			}
-		}
-
-		// GLOBAL
-		if (note.visibility === 'public') {
-			if (shouldPush('globalTimeline')) {
-				this.fanoutTimelineService.push('globalTimeline', note.id, 1000, r);
-				if (note.fileIds.length > 0) {
-					this.fanoutTimelineService.push('globalTimelineWithFiles', note.id, 500, r);
-				}
-			}
-		}
-
 		// ヒベルネーションチェック（重要）
 		if (Math.random() < 0.1) {
 			process.nextTick(() => {
@@ -1531,7 +1510,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 		}
 
 		// パイプラインを実行
-		r.exec().catch(err => this.logger.error(err));
+		r.exec();
 	}
 
 	@bindThis
