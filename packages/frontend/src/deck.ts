@@ -61,6 +61,10 @@ export type Column = {
 	withReplies?: boolean;
 	withSensitive?: boolean;
 	onlyFiles?: boolean;
+	localOnly?: boolean;
+	remoteOnly?: boolean;
+	withHashtags?: boolean;
+	excludeBots?: boolean;
 	showYamiNonFollowingPublicNotes?: boolean;
 	showYamiFollowingNotes?: boolean;
 	soundSetting?: SoundStore;
