@@ -14,15 +14,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 >
 	<template v-if="page === 1" #header><i class="ti ti-user-edit"></i> {{ i18n.ts._initialAccountSetting.profileSetting }}</template>
 	<template v-else-if="page === 2" #header><i class="ti ti-lock"></i> {{ i18n.ts._initialAccountSetting.privacySetting }}</template>
-	<template v-else-if="page === 3" #header><i class="ti ti-id-badge"></i> {{ i18n.ts.communityRole }}</template>
-	<template v-else-if="page === 4" #header><i class="ti ti-user-plus"></i> {{ i18n.ts.follow }}</template>
-	<template v-else-if="page === 5" #header><i class="ti ti-bell-plus"></i> {{ i18n.ts.pushNotification }}</template>
-	<template v-else-if="page === 6" #header>{{ i18n.ts.done }}</template>
+	<template v-else-if="page === 3" #header><i class="ti ti-user-plus"></i> {{ i18n.ts.follow }}</template>
+	<template v-else-if="page === 4" #header><i class="ti ti-bell-plus"></i> {{ i18n.ts.pushNotification }}</template>
+	<template v-else-if="page === 5" #header>{{ i18n.ts.done }}</template>
 	<template v-else #header>{{ i18n.ts.initialAccountSetting }}</template>
 
 	<div style="overflow-x: clip;">
 		<div :class="$style.progressBar">
-			<div :class="$style.progressBarValue" :style="{ width: `${(page / 6) * 100}%` }"></div>
+			<div :class="$style.progressBarValue" :style="{ width: `${(page / 5) * 100}%` }"></div>
 		</div>
 		<Transition
 			mode="out-in"
@@ -77,21 +76,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</template>
 			<template v-else-if="page === 3">
 				<div style="height: 100cqh; overflow: auto;">
-					<div :class="$style.pageRoot">
-						<div class="_spacer" style="--MI_SPACER-min: 20px; --MI_SPACER-max: 28px;" :class="$style.pageMain">
-							<XCommunityRole/>
-						</div>
-						<div :class="$style.pageFooter">
-							<div class="_buttonsCenter">
-								<MkButton rounded data-cy-user-setup-back @click="page--"><i class="ti ti-arrow-left"></i> {{ i18n.ts.goBack }}</MkButton>
-								<MkButton primary rounded gradate data-cy-user-setup-continue @click="page++">{{ i18n.ts.continue }} <i class="ti ti-arrow-right"></i></MkButton>
-							</div>
-						</div>
-					</div>
-				</div>
-			</template>
-			<template v-else-if="page === 4">
-				<div style="height: 100cqh; overflow: auto;">
 					<div class="_spacer" style="--MI_SPACER-min: 20px; --MI_SPACER-max: 28px;">
 						<XFollow/>
 					</div>
@@ -103,7 +87,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</div>
 				</div>
 			</template>
-			<template v-else-if="page === 5">
+			<template v-else-if="page === 4">
 				<div :class="$style.centerPage">
 					<div class="_spacer" style="--MI_SPACER-min: 20px; --MI_SPACER-max: 28px;">
 						<div class="_gaps" style="text-align: center;">
@@ -119,7 +103,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</div>
 				</div>
 			</template>
-			<template v-else-if="page === 6">
+			<template v-else-if="page === 5">
 				<div :class="$style.centerPage">
 					<MkAnimBg style="position: absolute; top: 0;" :scale="1.5"/>
 					<div class="_spacer" style="--MI_SPACER-min: 20px; --MI_SPACER-max: 28px;">
@@ -151,7 +135,6 @@ import MkButton from '@/components/MkButton.vue';
 import XProfile from '@/components/MkUserSetupDialog.Profile.vue';
 import XFollow from '@/components/MkUserSetupDialog.Follow.vue';
 import XPrivacy from '@/components/MkUserSetupDialog.Privacy.vue';
-import XCommunityRole from '@/components/MkUserSetupDialog.CommunityRole.vue';
 import MkAnimBg from '@/components/MkAnimBg.vue';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';

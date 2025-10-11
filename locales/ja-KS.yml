@@ -1489,10 +1489,6 @@ _initialAccountSetting:
   startTutorial: "チュートリアルはじめる"
   skipAreYouSure: "初期設定飛ばすか？"
   laterAreYouSure: "初期設定あとでやり直すん？"
-  _communityRole:
-    description: "コミュニティロールは、ユーザーが自分で選んで付けれる役割やで。自分に当てはまるやつ選んでな。"
-    info: "選んだロールは、あんたのプロフィールに表示されるで。後から変えることもできるで。"
-    noRolesAvailable: "今利用できるコミュニティロールはあらへんで。"
 _initialTutorial:
   launchTutorial: "チュートリアル見るで"
   title: "チュートリアルやで"

@@ -6652,20 +6652,6 @@ export interface Locale extends ILocale {
          * 初期設定をあとでやり直しますか？
          */
         "laterAreYouSure": string;
-        "_communityRole": {
-            /**
-             * コミュニティロールは、ユーザーが自分で選んで付与できる役割です。自分に当てはまるものを選択してください。
-             */
-            "description": string;
-            /**
-             * 選択したロールは、あなたのプロフィールに表示されます。後から変更することもできます。
-             */
-            "info": string;
-            /**
-             * 現在利用可能なコミュニティロールはありません。
-             */
-            "noRolesAvailable": string;
-        };
     };
     "_initialTutorial": {
         /**

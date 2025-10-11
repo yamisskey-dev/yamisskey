@@ -1650,10 +1650,6 @@ _initialAccountSetting:
   startTutorial: "Start Tutorial"
   skipAreYouSure: "Really skip profile setup?"
   laterAreYouSure: "Really do profile setup later?"
-  _communityRole:
-    description: "Community roles are roles that users can choose and assign to themselves. Select the ones that apply to you."
-    info: "Selected roles will be displayed on your profile. You can change them later."
-    noRolesAvailable: "There are currently no available community roles."
 _initialTutorial:
   launchTutorial: "Start Tutorial"
   title: "Tutorial"
