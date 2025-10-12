@@ -14,6 +14,7 @@ export const meta = {
 	tags: ['flash'],
 
 	requireCredential: true,
+	kind: 'read:flash',
 
 	res: {
 		type: 'array',

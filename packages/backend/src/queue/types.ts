@@ -60,6 +60,12 @@ export type DbJobMap = {
 	importBlockingToDb: DbUserImportToDbJobData;
 	importUserLists: DbUserImportJobData;
 	importCustomEmojis: DbUserImportJobData;
+	importTweetsToDb: DbNoteImportToDbJobData;
+	importMastoToDb: DbNoteImportToDbJobData;
+	importPleroToDb: DbNoteImportToDbJobData;
+	importKeyNotesToDb: DbNoteImportToDbJobData;
+	importIGToDb: DbUserImportToDbJobData;
+	importFBToDb: DbUserImportToDbJobData;
 	deleteAccount: DbUserDeleteJobData;
 };
 
@@ -97,6 +103,24 @@ export type DbUserImportToDbJobData = {
 	user: ThinUser;
 	target: string;
 	withReplies?: boolean;
+};
+
+export type DbNoteImportToDbJobData = {
+	user: ThinUser;
+	target: any; // JSON object containing note data
+	note: string | null;
+};
+
+export type DbNoteImportJobData = {
+	user: ThinUser;
+	fileId: MiDriveFile['id'];
+	type?: string;
+};
+
+export type DbNoteWithParentImportToDbJobData = {
+	user: ThinUser;
+	target: any; // JSON object containing note data
+	note: string;
 };
 
 export type ObjectStorageJobData = ObjectStorageFileJobData | Record<string, unknown>;

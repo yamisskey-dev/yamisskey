@@ -6781,9 +6781,21 @@ export interface Locale extends ILocale {
             "description1": string;
             "_yamiNote": {
                 /**
+                 * やみノート
+                 */
+                "title": string;
+                /**
                  * やみモードユーザーは、通常ノートとやみノートを切り替えて投稿できます。やみノートはやみモードユーザーのみが閲覧できる特殊な投稿です。
                  */
                 "description": string;
+                /**
+                 * やみモートユーザーのみが閲覧できる投稿です。投稿フォームの月アイコンボタンで切り替えられます。
+                 */
+                "yamiNote": string;
+                /**
+                 * 通常のノートです。公開範囲の設定に従ってすべてのユーザーが閲覧できます。
+                 */
+                "normalNote": string;
             };
             "_visibility": {
                 /**

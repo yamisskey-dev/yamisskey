@@ -12,6 +12,9 @@ export class Power9999999999999 {
     await queryRunner.query(`ALTER TABLE "user_profile" ALTER COLUMN "followingVisibility" SET DEFAULT 'private';`);
     await queryRunner.query(`ALTER TABLE "user" ALTER COLUMN "isExplorable" SET DEFAULT false;`);
     await queryRunner.query(`ALTER TABLE "user" ALTER COLUMN "hideOnlineStatus" SET DEFAULT true;`);
+    await queryRunner.query(`ALTER TABLE "user_profile" ALTER COLUMN "publicReactions" SET DEFAULT false;`);
+    await queryRunner.query(`ALTER TABLE "user_profile" ALTER COLUMN "hideActivity" SET DEFAULT true;`);
+    await queryRunner.query(`ALTER TABLE "user_profile" ALTER COLUMN "hideProfileFiles" SET DEFAULT true;`);
   }
 
   async down(queryRunner) {
@@ -20,5 +23,8 @@ export class Power9999999999999 {
     await queryRunner.query(`ALTER TABLE "user_profile" ALTER COLUMN "followingVisibility" SET DEFAULT 'public';`);
     await queryRunner.query(`ALTER TABLE "user" ALTER COLUMN "isExplorable" SET DEFAULT NULL;`);
     await queryRunner.query(`ALTER TABLE "user" ALTER COLUMN "hideOnlineStatus" SET DEFAULT NULL;`);
+    await queryRunner.query(`ALTER TABLE "user_profile" ALTER COLUMN "publicReactions" SET DEFAULT false;`);
+    await queryRunner.query(`ALTER TABLE "user_profile" ALTER COLUMN "hideActivity" SET DEFAULT false;`);
+    await queryRunner.query(`ALTER TABLE "user_profile" ALTER COLUMN "hideProfileFiles" SET DEFAULT false;`);
   }
 }

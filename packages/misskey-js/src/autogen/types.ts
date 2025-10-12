@@ -2824,7 +2824,7 @@ export type paths = {
          * channels/followers
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *read:channels*
          */
         post: operations['channels___followers'];
         delete?: never;
@@ -2934,7 +2934,7 @@ export type paths = {
          * channels/timeline
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *read:channels*
          */
         post: operations['channels___timeline'];
         delete?: never;
@@ -4629,7 +4629,7 @@ export type paths = {
          * federation/followers
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *read:following*
          */
         post: operations['federation___followers'];
         delete?: never;
@@ -4651,7 +4651,7 @@ export type paths = {
          * federation/following
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *read:following*
          */
         post: operations['federation___following'];
         delete?: never;
@@ -4673,7 +4673,7 @@ export type paths = {
          * federation/instances
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *read:federation*
          */
         post: operations['federation___instances'];
         delete?: never;
@@ -4695,7 +4695,7 @@ export type paths = {
          * federation/show-instance
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *read:federation*
          */
         post: operations['federation___show-instance'];
         delete?: never;
@@ -4739,7 +4739,7 @@ export type paths = {
          * federation/update-remote-user
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *write:admin:federation*
          */
         post: operations['federation___update-remote-user'];
         delete?: never;
@@ -4761,7 +4761,7 @@ export type paths = {
          * federation/users
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *read:federation*
          */
         post: operations['federation___users'];
         delete?: never;
@@ -4872,7 +4872,7 @@ export type paths = {
          * flash/featured
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Credential required**: *Yes* / **Permission**: *read:flash*
          */
         post: operations['flash___featured'];
         delete?: never;
@@ -7413,7 +7413,8 @@ export type paths = {
          * notes/featured
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+         *     **Credential required**: *Yes* / **Permission**: *read:notes*
          */
         post: operations['notes___featured'];
         delete?: never;
@@ -9027,7 +9028,8 @@ export type paths = {
          * users
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+         *     **Credential required**: *Yes* / **Permission**: *read:users*
          */
         post: operations['users'];
         delete?: never;
@@ -9093,7 +9095,8 @@ export type paths = {
          * users/featured-notes
          * @description No description provided.
          *
-         *     **Credential required**: *Yes*
+         *     **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+         *     **Credential required**: *Yes* / **Permission**: *read:notes*
          */
         post: operations['users___featured-notes'];
         delete?: never;

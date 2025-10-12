@@ -5,18 +5,20 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
-import type { ChannelFollowingsRepository, UsersRepository } from '@/models/_.js';
+import type { ChannelFollowingsRepository } from '@/models/_.js';
+import type { MiFollowing } from '@/models/Following.js';
 import { QueryService } from '@/core/QueryService.js';
-import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { FollowingEntityService } from '@/core/entities/FollowingEntityService.js';
 import { DI } from '@/di-symbols.js';
 import { GetterService } from '@/server/api/GetterService.js';
+import { RoleService } from '@/core/RoleService.js';
 import { ApiError } from '../../error.js';
 
 export const meta = {
 	tags: ['channels'],
 
-	requireCredential: true, // Changed from false to true - require user to be logged in
+	requireCredential: true,
+	kind: 'read:channels',
 
 	res: {
 		type: 'array',
@@ -59,22 +61,19 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 		@Inject(DI.channelFollowingsRepository)
 		private channelFollowingsRepository: ChannelFollowingsRepository,
 
-		@Inject(DI.usersRepository)
-		private usersRepository: UsersRepository,
-
-		private userEntityService: UserEntityService,
 		private followingEntityService: FollowingEntityService,
 		private queryService: QueryService,
 		private getterService: GetterService,
+		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
-			const channel = await this.getterService.getChannel(ps.channelId).catch(err => {
+			const channel = await this.getterService.getChannel(ps.channelId).catch(() => {
 				throw new ApiError(meta.errors.noSuchChannel);
 			});
 
 			// Check visibility permissions
 			const iAmOwner = me && channel.userId === me.id;
-			const iAmModerator = me && me.isAdmin || me.isModerator;
+			const iAmModerator = me && await this.roleService.isModerator(me);
 			const iAmFollowing = me && await this.channelFollowingsRepository.findOneBy({
 				followerId: me.id,
 				followeeId: channel.id,
@@ -99,11 +98,13 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 				.andWhere('following.followeeId = :channelId', { channelId: ps.channelId })
 				.innerJoinAndSelect('following.follower', 'follower');
 
-			const followers = await query
+			const followings = await query
 				.limit(ps.limit)
 				.getMany();
 
-			return await this.followingEntityService.packMany(followers, me, { populateFollower: true });
+			// MiChannelFollowing has the same structure as MiFollowing (id, followeeId, followerId, followee, follower)
+			// so we can safely cast it for the pack function
+			return await this.followingEntityService.packMany(followings as MiFollowing[], me, { populateFollower: true });
 		});
 	}
 }

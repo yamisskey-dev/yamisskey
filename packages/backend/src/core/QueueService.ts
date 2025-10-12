@@ -22,6 +22,7 @@ import type { Packed } from '@/misc/json-schema.js';
 import { type UserWebhookPayload } from './UserWebhookService.js';
 import type {
 	DbJobData,
+	DbJobMap,
 	DeliverJobData,
 	RelationshipJobData,
 	SystemWebhookDeliverJobData,
@@ -512,8 +513,8 @@ export class QueueService {
 	}
 
 	@bindThis
-	private generateToDbJobData<T extends 'importFollowingToDb' | 'importBlockingToDb' | 'importTweetsToDb' | 'importIGToDb' | 'importFBToDb' | 'importMastoToDb' | 'importPleroToDb' | 'importKeyNotesToDb', D extends DbJobData<T>>(name: T, data: D): {
-		name: string,
+	private generateToDbJobData<T extends keyof DbJobMap, D extends DbJobData<T>>(name: T, data: D): {
+		name: T,
 		data: D,
 		opts: Bull.JobsOptions,
 	} {

@@ -83,7 +83,7 @@ import MkFeatureBanner from '@/components/MkFeatureBanner.vue';
 
 const $i = ensureSignin();
 
-const nonConfigurableNotificationTypes = ['note', 'roleAssigned', 'followRequestAccepted', 'test', 'exportCompleted'] satisfies (typeof notificationTypes[number])[] as string[];
+const nonConfigurableNotificationTypes = ['note', 'roleAssigned', 'followRequestAccepted', 'groupInvited', 'test', 'exportCompleted'] satisfies (typeof notificationTypes[number])[] as string[];
 
 const onlyOnOrOffNotificationTypes = ['app', 'achievementEarned', 'login', 'createToken'] satisfies (typeof notificationTypes[number])[] as string[];
 
