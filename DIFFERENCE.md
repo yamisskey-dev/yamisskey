@@ -20,7 +20,7 @@
 ### Chore
 - `pnpm build-misskey-js-with-types`の実行
 
-## 2025.9.0-muyami-1.9.20
+## 2025.9.0-yami-1.9.20
 
 ### Feat
 - デッキUIでやみタイムラインとその専用オプションに対応
