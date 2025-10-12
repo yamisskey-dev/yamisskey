@@ -56,48 +56,39 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</SearchMarker>
 
 		<SearchMarker :keywords="['following', 'visibility']">
-			<MkSelect v-model="followingVisibility" @update:modelValue="save()">
+			<MkSelect v-model="followingVisibility" :items="followingVisibilityDef" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.followingVisibility }}</SearchLabel></template>
-				<option value="public">{{ i18n.ts._ffVisibility.public }}</option>
-				<option value="followers">{{ i18n.ts._ffVisibility.followers }}</option>
-				<option value="private">{{ i18n.ts._ffVisibility.private }}</option>
 			</MkSelect>
 		</SearchMarker>
 
 		<SearchMarker :keywords="['follower', 'visibility']">
-			<MkSelect v-model="followersVisibility" @update:modelValue="save()">
+			<MkSelect v-model="followersVisibility" :items="followersVisibilityDef" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.followersVisibility }}</SearchLabel></template>
-				<option value="public">{{ i18n.ts._ffVisibility.public }}</option>
-				<option value="followers">{{ i18n.ts._ffVisibility.followers }}</option>
-				<option value="private">{{ i18n.ts._ffVisibility.private }}</option>
 			</MkSelect>
 		</SearchMarker>
 
 		<SearchMarker :keywords="['notes', 'visibility']">
-			<MkSelect v-model="notesVisibility" @update:modelValue="save()">
+			<MkSelect v-model="notesVisibility" :items="notesVisibilityDef" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.notesVisibility }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-        <template #caption><SearchText>{{ i18n.ts.hideOnlineStatusDescription }}</SearchText></template>
-				<option value="public">{{ i18n.ts._ffVisibility.public }}</option>
-				<option value="followers">{{ i18n.ts._ffVisibility.followers }}</option>
-				<option value="private">{{ i18n.ts._ffVisibility.private }}</option>
+				<template #caption><SearchText>{{ i18n.ts.hideOnlineStatusDescription }}</SearchText></template>
 			</MkSelect>
 		</SearchMarker>
 
+		<SearchMarker :keywords="['online', 'status']">
+			<MkSwitch v-model="hideOnlineStatus" @update:modelValue="save()">
+				<template #label><SearchLabel>{{ i18n.ts.hideOnlineStatus }}</SearchLabel></template>
+				<template #caption><SearchText>{{ i18n.ts.hideOnlineStatusDescription }}</SearchText></template>
+			</MkSwitch>
+		</SearchMarker>
+
 		<SearchMarker :keywords="['active', 'status', 'visibility', 'online']">
-			<MkSelect v-model="activeStatusVisibility.type" @update:modelValue="save()">
+			<MkSelect v-model="activeStatusVisibilityType" :items="activeStatusVisibilityTypeDef" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.activeStatusVisibility }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<option value="all">{{ i18n.ts.public }}</option>
-				<option value="following">{{ i18n.ts.following }}</option>
-				<option value="followers">{{ i18n.ts.followers }}</option>
-				<option value="mutualFollow">{{ i18n.ts.mutualFollow }}</option>
-				<option value="followingOrFollower">{{ i18n.ts.followingOrFollower }}</option>
-				<option value="list">{{ i18n.ts.lists }}</option>
-				<option value="never">{{ i18n.ts.private }}</option>
 			</MkSelect>
 
-			<div v-if="activeStatusVisibility.type === 'list'" class="_panel" style="padding: 12px; margin-top: 8px; background: var(--panelHighlight); border-radius: 8px;">
+			<div v-if="activeStatusVisibilityType === 'list'" class="_panel" style="padding: 12px; margin-top: 8px; background: var(--panelHighlight); border-radius: 8px;">
 				<!-- リストが選択されていない場合は追加ボタンを表示 -->
-				<div v-if="!activeStatusVisibility.userListId || !selectedList">
+				<div v-if="activeStatusVisibility.type === 'list' && (!activeStatusVisibility.userListId || !selectedList)">
 					<MkButton primary full @click="selectActiveStatusList()">
 						<i class="ti ti-plus" style="margin-right: 6px;"></i>
 						{{ i18n.ts.selectList }}
@@ -105,7 +96,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 
 				<!-- リストが選択されている場合はリスト名と削除ボタンを表示 -->
-				<div v-else>
+				<div v-else-if="selectedList">
 					<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
 						<div style="display: flex; align-items: center; flex-grow: 1; overflow: hidden;">
 							<i class="ti ti-list" style="margin-right: 8px;"></i>
@@ -145,18 +136,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 		<SearchMarker :keywords="['chat']">
 			<FormSection>
-				<template #label><SearchLabel>{{ i18n.ts.chat }}</SearchLabel></template>
+				<template #label><SearchLabel>{{ i18n.ts.directMessage }}</SearchLabel></template>
 
 				<div class="_gaps_m">
 					<MkInfo v-if="$i.policies.chatAvailability === 'unavailable'">{{ i18n.ts._chat.chatNotAvailableForThisAccountOrServer }}</MkInfo>
 					<SearchMarker :keywords="['chat']">
-						<MkSelect v-model="chatScope" @update:modelValue="save()">
+						<MkSelect v-model="chatScope" :items="chatScopeDef" @update:modelValue="save()">
 							<template #label><SearchLabel>{{ i18n.ts._chat.chatAllowedUsers }}</SearchLabel></template>
-							<option value="everyone">{{ i18n.ts._chat._chatAllowedUsers.everyone }}</option>
-							<option value="followers">{{ i18n.ts._chat._chatAllowedUsers.followers }}</option>
-							<option value="following">{{ i18n.ts._chat._chatAllowedUsers.following }}</option>
-							<option value="mutual">{{ i18n.ts._chat._chatAllowedUsers.mutual }}</option>
-							<option value="none">{{ i18n.ts._chat._chatAllowedUsers.none }}</option>
 							<template #caption>{{ i18n.ts._chat.chatAllowedUsers_note }}</template>
 						</MkSelect>
 					</SearchMarker>
@@ -184,15 +170,24 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<template #label><SearchLabel>{{ i18n.ts._accountSettings.makeNotesFollowersOnlyBefore }}</SearchLabel></template>
 
 							<div class="_gaps_s">
-								<MkSelect :modelValue="makeNotesFollowersOnlyBefore_type" @update:modelValue="makeNotesFollowersOnlyBefore = $event === 'relative' ? -604800 : $event === 'absolute' ? Math.floor(Date.now() / 1000) : null">
-									<option :value="null">{{ i18n.ts.none }}</option>
-									<option value="relative">{{ i18n.ts._accountSettings.notesHavePassedSpecifiedPeriod }}</option>
-									<option value="absolute">{{ i18n.ts._accountSettings.notesOlderThanSpecifiedDateAndTime }}</option>
+								<MkSelect
+									v-model="makeNotesFollowersOnlyBefore_type"
+									:items="[
+										{ label: i18n.ts.none, value: null },
+										{ label: i18n.ts._accountSettings.notesHavePassedSpecifiedPeriod, value: 'relative' },
+										{ label: i18n.ts._accountSettings.notesOlderThanSpecifiedDateAndTime, value: 'absolute' },
+									]"
+								>
 								</MkSelect>
 
-								<MkSelect v-if="makeNotesFollowersOnlyBefore_type === 'relative'" v-model="makeNotesFollowersOnlyBefore_selection">
-									<option v-for="preset in makeNotesFollowersOnlyBefore_presets" :value="preset.value">{{ preset.label }}</option>
-									<option value="custom">{{ i18n.ts.custom }}</option>
+								<MkSelect
+									v-if="makeNotesFollowersOnlyBefore_type === 'relative'"
+									v-model="makeNotesFollowersOnlyBefore_selection"
+									:items="[
+										...makeNotesFollowersOnlyBefore_presets,
+										{ label: i18n.ts.custom, value: 'custom' },
+									]"
+								>
 								</MkSelect>
 
 								<MkInput
@@ -205,7 +200,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkInput>
 
 								<MkInput
-									v-if="makeNotesFollowersOnlyBefore_type === 'absolute'"
+									v-if="makeNotesFollowersOnlyBefore_type === 'absolute' && makeNotesFollowersOnlyBefore != null"
 									:modelValue="formatDateTimeString(new Date(makeNotesFollowersOnlyBefore * 1000), 'yyyy-MM-dd')"
 									type="date"
 									:manualSave="true"
@@ -226,22 +221,23 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 							<div class="_gaps_s">
 								<MkSelect
-									:items="[{
-										value: null,
-										label: i18n.ts.none
-									}, {
-										value: 'relative',
-										label: i18n.ts._accountSettings.notesHavePassedSpecifiedPeriod
-									}, {
-										value: 'absolute',
-										label: i18n.ts._accountSettings.notesOlderThanSpecifiedDateAndTime
-									}] as const" :modelValue="makeNotesHiddenBefore_type" @update:modelValue="makeNotesHiddenBefore = $event === 'relative' ? -604800 : $event === 'absolute' ? Math.floor(Date.now() / 1000) : null"
+									v-model="makeNotesHiddenBefore_type"
+									:items="[
+										{ label: i18n.ts.none, value: null },
+										{ label: i18n.ts._accountSettings.notesHavePassedSpecifiedPeriod, value: 'relative' },
+										{ label: i18n.ts._accountSettings.notesOlderThanSpecifiedDateAndTime, value: 'absolute' },
+									]"
 								>
 								</MkSelect>
 
-								<MkSelect v-if="makeNotesHiddenBefore_type === 'relative'" v-model="makeNotesHiddenBefore_selection">
-									<option v-for="preset in makeNotesHiddenBefore_presets" :value="preset.value">{{ preset.label }}</option>
-									<option value="custom">{{ i18n.ts.custom }}</option>
+								<MkSelect
+									v-if="makeNotesHiddenBefore_type === 'relative'"
+									v-model="makeNotesHiddenBefore_selection"
+									:items="[
+										...makeNotesHiddenBefore_presets,
+										{ label: i18n.ts.custom, value: 'custom' },
+									]"
+								>
 								</MkSelect>
 
 								<MkInput
@@ -254,7 +250,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkInput>
 
 								<MkInput
-									v-if="makeNotesHiddenBefore_type === 'absolute'"
+									v-if="makeNotesHiddenBefore_type === 'absolute' && makeNotesHiddenBefore != null"
 									:modelValue="formatDateTimeString(new Date(makeNotesHiddenBefore * 1000), 'yyyy-MM-dd')"
 									type="date"
 									:manualSave="true"
@@ -279,10 +275,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
+import type { MkSelectItem } from '@/components/MkSelect.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
 import MkSelect from '@/components/MkSelect.vue';
 import FormSection from '@/components/form/section.vue';
-import MkFolder from '@/components/MkFolder.vue';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
@@ -290,6 +286,7 @@ import { ensureSignin } from '@/i.js';
 import { definePage } from '@/page.js';
 import FormSlot from '@/components/form/slot.vue';
 import { formatDateTimeString } from '@/utility/format-time-string.js';
+import { useMkSelect } from '@/composables/use-mkselect.js';
 import MkInput from '@/components/MkInput.vue';
 import MkDisableSection from '@/components/MkDisableSection.vue';
 import MkInfo from '@/components/MkInfo.vue';
@@ -300,7 +297,7 @@ const $i = ensureSignin();
 
 const isLocked = ref($i.isLocked);
 const autoAcceptFollowed = ref($i.autoAcceptFollowed);
-const autoRejectFollowRequest = ref($i.autoRejectFollowRequest);
+const autoRejectFollowRequest = ref($i.autoRejectFollowRequest ?? false);
 const noCrawle = ref($i.noCrawle);
 const preventAiLearning = ref($i.preventAiLearning);
 const isExplorable = ref($i.isExplorable);
@@ -312,21 +309,89 @@ const hideSearchResult = ref($i.hideSearchResult);
 const publicReactions = ref($i.publicReactions);
 const hideActivity = ref($i.hideActivity);
 const hideProfileFiles = ref($i.hideProfileFiles);
-const notesVisibility = ref($i.notesVisibility);
-const followingVisibility = ref($i.followingVisibility);
-const followersVisibility = ref($i.followersVisibility);
-const ffVisibility = ref($i.ffVisibility);
+const {
+	model: notesVisibility,
+	def: notesVisibilityDef,
+} = useMkSelect({
+	items: [
+		{ label: i18n.ts._ffVisibility.public, value: 'public' },
+		{ label: i18n.ts._ffVisibility.followers, value: 'followers' },
+		{ label: i18n.ts._ffVisibility.private, value: 'private' },
+	],
+	initialValue: $i.notesVisibility,
+});
+const {
+	model: followingVisibility,
+	def: followingVisibilityDef,
+} = useMkSelect({
+	items: [
+		{ label: i18n.ts.public, value: 'public' },
+		{ label: i18n.ts.followers, value: 'followers' },
+		{ label: i18n.ts.private, value: 'private' },
+	],
+	initialValue: $i.followingVisibility,
+});
+const {
+	model: followersVisibility,
+	def: followersVisibilityDef,
+} = useMkSelect({
+	items: [
+		{ label: i18n.ts.public, value: 'public' },
+		{ label: i18n.ts.followers, value: 'followers' },
+		{ label: i18n.ts.private, value: 'private' },
+	],
+	initialValue: $i.followersVisibility,
+});
+const ffVisibility = ref(($i as any).ffVisibility ?? 'public');
 const activeStatusVisibility = ref($i.activeStatusVisibility);
-const chatScope = ref($i.chatScope);
+const {
+	model: activeStatusVisibilityType,
+	def: activeStatusVisibilityTypeDef,
+} = useMkSelect({
+	items: [
+		{ label: i18n.ts.public, value: 'all' },
+		{ label: i18n.ts.following, value: 'following' },
+		{ label: i18n.ts.followers, value: 'followers' },
+		{ label: i18n.ts.mutualFollow, value: 'mutualFollow' },
+		{ label: i18n.ts.followingOrFollower, value: 'followingOrFollower' },
+		{ label: i18n.ts.lists, value: 'list' },
+		{ label: i18n.ts.private, value: 'never' },
+	],
+	initialValue: $i.activeStatusVisibility?.type ?? 'all',
+});
+const {
+	model: chatScope,
+	def: chatScopeDef,
+} = useMkSelect({
+	items: [
+		{ label: i18n.ts._chat._chatAllowedUsers.everyone, value: 'everyone' },
+		{ label: i18n.ts._chat._chatAllowedUsers.followers, value: 'followers' },
+		{ label: i18n.ts._chat._chatAllowedUsers.following, value: 'following' },
+		{ label: i18n.ts._chat._chatAllowedUsers.mutual, value: 'mutual' },
+		{ label: i18n.ts._chat._chatAllowedUsers.none, value: 'none' },
+	],
+	initialValue: $i.chatScope,
+});
 
-const makeNotesFollowersOnlyBefore_type = computed(() => {
-	if (makeNotesFollowersOnlyBefore.value == null) {
-		return null;
-	} else if (makeNotesFollowersOnlyBefore.value >= 0) {
-		return 'absolute';
-	} else {
-		return 'relative';
-	}
+const makeNotesFollowersOnlyBefore_type = computed({
+	get: () => {
+		if (makeNotesFollowersOnlyBefore.value == null) {
+			return null;
+		} else if (makeNotesFollowersOnlyBefore.value >= 0) {
+			return 'absolute';
+		} else {
+			return 'relative';
+		}
+	},
+	set(value) {
+		if (value === 'relative') {
+			makeNotesFollowersOnlyBefore.value = -604800;
+		} else if (value === 'absolute') {
+			makeNotesFollowersOnlyBefore.value = Math.floor(Date.now() / 1000);
+		} else {
+			makeNotesFollowersOnlyBefore.value = null;
+		}
+	},
 });
 
 const makeNotesFollowersOnlyBefore_presets = [
@@ -337,7 +402,7 @@ const makeNotesFollowersOnlyBefore_presets = [
 	{ label: i18n.ts.oneMonth, value: -2592000 },
 	{ label: i18n.ts.threeMonths, value: -7776000 },
 	{ label: i18n.ts.oneYear, value: -31104000 },
-];
+] satisfies MkSelectItem[];
 
 const makeNotesFollowersOnlyBefore_isCustomMode = ref(
 	makeNotesFollowersOnlyBefore.value != null &&
@@ -360,14 +425,25 @@ const makeNotesFollowersOnlyBefore_customMonths = computed({
 	},
 });
 
-const makeNotesHiddenBefore_type = computed(() => {
-	if (makeNotesHiddenBefore.value == null) {
-		return null;
-	} else if (makeNotesHiddenBefore.value >= 0) {
-		return 'absolute';
-	} else {
-		return 'relative';
-	}
+const makeNotesHiddenBefore_type = computed({
+	get: () => {
+		if (makeNotesHiddenBefore.value == null) {
+			return null;
+		} else if (makeNotesHiddenBefore.value >= 0) {
+			return 'absolute';
+		} else {
+			return 'relative';
+		}
+	},
+	set(value) {
+		if (value === 'relative') {
+			makeNotesHiddenBefore.value = -604800;
+		} else if (value === 'absolute') {
+			makeNotesHiddenBefore.value = Math.floor(Date.now() / 1000);
+		} else {
+			makeNotesHiddenBefore.value = null;
+		}
+	},
 });
 
 const makeNotesHiddenBefore_presets = [
@@ -378,7 +454,7 @@ const makeNotesHiddenBefore_presets = [
 	{ label: i18n.ts.oneMonth, value: -2592000 },
 	{ label: i18n.ts.threeMonths, value: -7776000 },
 	{ label: i18n.ts.oneYear, value: -31104000 },
-];
+] satisfies MkSelectItem[];
 
 const makeNotesHiddenBefore_isCustomMode = ref(
 	makeNotesHiddenBefore.value != null &&
@@ -405,28 +481,49 @@ watch([makeNotesFollowersOnlyBefore, makeNotesHiddenBefore], () => {
 	save();
 });
 
+// activeStatusVisibilityType の変更を activeStatusVisibility に反映
+watch(activeStatusVisibilityType, (newType) => {
+	if (newType === 'list') {
+		// リストモードに変更された場合、既存のuserListIdを保持
+		if (activeStatusVisibility.value?.type !== 'list') {
+			activeStatusVisibility.value = {
+				type: 'list',
+				userListId: '' as any,
+			};
+		}
+	} else {
+		// リスト以外のモードに変更された場合
+		activeStatusVisibility.value = {
+			type: newType,
+		} as any;
+	}
+});
+
 // 選択されているリスト情報を取得する
 const selectedList = computed(() => {
-	if (activeStatusVisibility.value?.type !== 'list' || !activeStatusVisibility.value?.userListId) return null;
-	return userLists.value.find(list => list.id === activeStatusVisibility.value.userListId) || null;
+	const visibility = activeStatusVisibility.value;
+	if (visibility?.type !== 'list' || !visibility.userListId) return null;
+	return userLists.value.find(list => list.id === visibility.userListId) || null;
 });
 
 // リスト選択ダイアログを表示
 async function selectActiveStatusList() {
 	const lists = await misskeyApi('users/lists/list');
-	const { canceled, result: list } = await os.select({
+	const { canceled, result: listId } = await os.select({
 		title: i18n.ts.selectList,
 		items: lists.map(x => ({
-			value: x, text: x.name,
+			value: x.id,
+			text: x.name,
+			label: x.name,
 		})),
 	});
 	if (canceled) return;
-	if (list == null) return;
+	if (listId == null) return;
 
 	// 選択されたリストをセット
 	activeStatusVisibility.value = {
 		type: 'list',
-		userListId: list.id,
+		userListId: String(listId),
 	};
 	save();
 }
@@ -435,7 +532,7 @@ async function selectActiveStatusList() {
 function removeActiveStatusList() {
 	activeStatusVisibility.value = {
 		type: 'list',
-		userListId: null,
+		userListId: '' as any,
 	};
 	save();
 }
@@ -488,7 +585,13 @@ definePage(() => ({
 }));
 
 // ユーザーリストのデータ取得のみ保持
-const userLists = ref([]);
+const userLists = ref<Array<{
+	id: string;
+	createdAt: string;
+	name: string;
+	userIds?: string[];
+	isPublic: boolean;
+}>>([]);
 
 // コンポーネントマウント時にユーザーリストを取得
 onMounted(async () => {

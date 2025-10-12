@@ -15,6 +15,8 @@
  * pollEnded - 自分のアンケートもしくは自分が投票したアンケートが終了した
  * blocked - ブロックされた
  * unblocked - ブロック解除された
+ * scheduledNotePosted - 予約したノートが投稿された
+ * scheduledNotePostFailed - 予約したノートの投稿に失敗した
  * receiveFollowRequest - フォローリクエストされた
  * followRequestAccepted - 自分の送ったフォローリクエストが承認された
  * roleAssigned - ロールが付与された
@@ -23,8 +25,6 @@
  * exportCompleted - エクスポートが完了
  * login - ログイン
  * createToken - トークン作成
- * scheduledNoteFailed - 予約投稿に失敗
- * scheduledNotePosted - 予約投稿をノート
  * app - アプリ通知
  * test - テスト通知（サーバー側）
  */
@@ -40,6 +40,8 @@ export const notificationTypes = [
 	'pollEnded',
 	'blocked',
 	'unblocked',
+	'scheduledNotePosted',
+	'scheduledNotePostFailed',
 	'receiveFollowRequest',
 	'followRequestAccepted',
 	'roleAssigned',
@@ -48,8 +50,6 @@ export const notificationTypes = [
 	'exportCompleted',
 	'login',
 	'createToken',
-	'scheduledNoteFailed',
-	'scheduledNotePosted',
 	'app',
 	'test',
 ] as const;

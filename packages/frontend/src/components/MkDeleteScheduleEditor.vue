@@ -28,10 +28,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</MkInfo>
 	<section v-if="afterOnly || showDetail">
 		<div>
-			<MkSelect v-if="!afterOnly" v-model="expiration" small>
+			<MkSelect v-if="!afterOnly" v-model="expiration" :items="[
+				{ label: i18n.ts._poll.at, value: 'at' },
+				{ label: i18n.ts._poll.after, value: 'after' },
+			]" small>
 				<template #label>{{ i18n.ts._poll.expiration }}</template>
-				<option value="at">{{ i18n.ts._poll.at }}</option>
-				<option value="after">{{ i18n.ts._poll.after }}</option>
 			</MkSelect>
 			<section v-if="expiration === 'at'">
 				<MkInput v-model="atDate" small type="date" class="input">
@@ -48,11 +49,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 				>
 					<template #label>{{ i18n.ts._poll.duration }}</template>
 				</MkInput>
-				<MkSelect v-model="unit" small>
-					<option value="second">{{ i18n.ts._time.second }}</option>
-					<option value="minute">{{ i18n.ts._time.minute }}</option>
-					<option value="hour">{{ i18n.ts._time.hour }}</option>
-					<option value="day">{{ i18n.ts._time.day }}</option>
+				<MkSelect v-model="unit" :items="[
+					{ label: i18n.ts._time.second, value: 'second' },
+					{ label: i18n.ts._time.minute, value: 'minute' },
+					{ label: i18n.ts._time.hour, value: 'hour' },
+					{ label: i18n.ts._time.day, value: 'day' },
+				]" small>
 				</MkSelect>
 			</section>
 		</div>

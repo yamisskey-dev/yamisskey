@@ -248,6 +248,8 @@ export const paramDef = {
 				pollEnded: notificationRecieveConfig,
 				blocked: notificationRecieveConfig,
 				unblocked: notificationRecieveConfig,
+				scheduledNotePosted: notificationRecieveConfig,
+				scheduledNotePostFailed: notificationRecieveConfig,
 				receiveFollowRequest: notificationRecieveConfig,
 				followRequestAccepted: notificationRecieveConfig,
 				roleAssigned: notificationRecieveConfig,
