@@ -1,5 +1,25 @@
 # DIFFRENCE
 
+## Unreleased
+
+### Feat
+- チュートリアルにやみノートの説明を追加（日本語・英語・関西弁対応）
+
+### Fix
+- 型エラー150個以上を修正（本番コード完全解決）
+  - CreateSystemUserService/MfmService/NoteCreateService等の型定義を修正
+  - API endpoints: 適切な権限スコープ（kind）を追加
+  - yamisskey独自のセキュリティ設定（requireCredential, secure）を維持
+- ESLintエラーを修正
+- 新規ユーザーのプライバシーデフォルト値をpowerマイグレーションに追加
+  - publicReactions: false（リアクションを非公開）
+  - hideActivity: true（アクティビティを非公開）
+  - hideProfileFiles: true（プロフィールのファイルを非公開）
+- 通知設定から廃止済みのgroupInvited項目を除外
+
+### Chore
+- `pnpm build-misskey-js-with-types`の実行
+
 ## 2025.9.0-yami-1.9.20
 
 ### Feat
