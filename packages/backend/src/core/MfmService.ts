@@ -6,7 +6,7 @@
 import { URL } from 'node:url';
 import { Inject, Injectable } from '@nestjs/common';
 import * as parse5 from 'parse5';
-import { type Document, type HTMLParagraphElement, Window, XMLSerializer } from 'happy-dom';
+import { type Document, type HTMLParagraphElement, type Text as DOMText, Window, XMLSerializer } from 'happy-dom';
 import { DI } from '@/di-symbols.js';
 import type { Config } from '@/config.js';
 import { intersperse } from '@/misc/prelude/array.js';
@@ -464,7 +464,7 @@ export class MfmService {
 				const el = doc.createElement('span');
 				const nodes = node.props.text.split(/\r\n|\r|\n/).map(x => doc.createTextNode(x));
 
-				for (const x of intersperse<Text | 'br'>('br', nodes)) {
+				for (const x of intersperse<DOMText | 'br'>('br', nodes)) {
 					el.appendChild(x === 'br' ? doc.createElement('br') : x);
 				}
 

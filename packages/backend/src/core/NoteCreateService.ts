@@ -1023,6 +1023,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 		// Register host
 		if (this.userEntityService.isRemoteUser(user)) {
 			this.federatedInstanceService.fetch(user.host).then(async i => {
+				if (!i) return;
 				if (note.renote && note.text) {
 					this.instancesRepository.increment({ id: i.id }, 'notesCount', 1);
 				} else if (!note.renote) {
@@ -1564,6 +1565,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 		) {
 			return true;
 		}
+		return false;
 	}
 
 	@bindThis

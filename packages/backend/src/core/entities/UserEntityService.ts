@@ -551,7 +551,7 @@ export class UserEntityService implements OnModuleInit {
 				description: profile!.description,
 				location: profile!.location,
 				birthday: profile!.birthday,
-				listenbrainz: profile.listenbrainz,
+				listenbrainz: profile!.listenbrainz,
 				lang: profile!.lang,
 				fields: profile!.fields,
 				verifiedLinks: profile!.verifiedLinks,

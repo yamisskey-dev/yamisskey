@@ -123,7 +123,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				...(banner ? { bannerId: banner.id } : {}),
 				...(typeof ps.isSensitive === 'boolean' ? { isSensitive: ps.isSensitive } : {}),
 				...(typeof ps.allowRenoteToExternal === 'boolean' ? { allowRenoteToExternal: ps.allowRenoteToExternal } : {}),
-				...(ps.followersVisibility !== undefined ? { followersVisibility: ps.followersVisibility } : {}),
+				...(ps.followersVisibility !== undefined ? { followersVisibility: ps.followersVisibility as 'public' | 'followers' | 'private' } : {}),
 			});
 
 			return await this.channelEntityService.pack(channel.id, me);

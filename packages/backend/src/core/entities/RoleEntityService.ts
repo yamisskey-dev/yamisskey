@@ -74,7 +74,7 @@ export class RoleEntityService {
 			displayOrder: role.displayOrder,
 			policies: policies,
 			usersCount: assignedCount,
-			isOwner: role.userId != null ? role.userId === me?.id : false,
+			isOwner: false,
 		});
 	}
 

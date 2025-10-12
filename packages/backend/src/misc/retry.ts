@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { Logger } from '@/logger.js';
+import type Logger from '@/logger.js';
 
 export interface RetryOptions {
 	maxAttempts?: number;

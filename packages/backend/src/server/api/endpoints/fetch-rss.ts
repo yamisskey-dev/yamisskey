@@ -6,6 +6,7 @@
 import Parser from 'rss-parser';
 import { Injectable } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
+import { IsNull } from 'typeorm';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { HttpRequestService } from '@/core/HttpRequestService.js';
 import { DI } from '@/di-symbols.js';
@@ -250,7 +251,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				const username = match[1];
 
 				// ユーザーが存在するか確認
-				const user = await this.usersRepository.findOneBy({ username, host: null });
+				const user = await this.usersRepository.findOneBy({ username, host: IsNull() });
 				if (!user) {
 					throw new ApiError(meta.errors.noSuchUser);
 				}

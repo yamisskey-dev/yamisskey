@@ -450,7 +450,7 @@ export class UserFollowingService implements OnModuleInit {
 
 		// UnFollow
 		if (this.userEntityService.isLocalUser(followee)) {
-			this.userEntityService.pack(follower.id, followee).then(async packed => {
+			this.userEntityService.pack(follower.id, followee, { schema: 'UserDetailedNotMe' }).then(async packed => {
 				this.globalEventService.publishMainStream(followee.id, 'unfollow', packed);
 
 				const webhooks = (await this.webhookService.getActiveWebhooks()).filter(x => x.userId === followee.id && x.on.includes('unfollow'));

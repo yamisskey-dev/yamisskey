@@ -14,6 +14,7 @@ export const meta = {
 	tags: ['federation'],
 
 	requireCredential: true,
+	kind: 'read:following',
 
 	res: {
 		type: 'array',
