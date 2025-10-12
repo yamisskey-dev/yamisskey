@@ -39,7 +39,6 @@ export type RolePolicies = {
 	canYamiNote: boolean;
 	canPublicNote: boolean;
 	canFederateNote: boolean;
-	scheduleNoteMax: number;
 	mentionLimit: number;
 	canInvite: boolean;
 	inviteLimit: number;
@@ -82,6 +81,7 @@ export type RolePolicies = {
 	canEditCommunityRoles: boolean;
 	uploadableFileTypes: string[];
 	noteDraftLimit: number;
+	scheduledNoteLimit: number;
 	watermarkAvailable: boolean;
 };
 
@@ -92,7 +92,6 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	canYamiNote: false,
 	canPublicNote: false,
 	canFederateNote: false,
-	scheduleNoteMax: 15,
 	mentionLimit: 20,
 	canInvite: false,
 	inviteLimit: 0,
@@ -120,11 +119,11 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	avatarDecorationLimit: 1,
 	canFollow: true,
 	canFollowed: true,
-	canImportAntennas: true,
-	canImportBlocking: true,
-	canImportFollowing: true,
-	canImportMuting: true,
-	canImportUserLists: true,
+	canImportAntennas: false,
+	canImportBlocking: false,
+	canImportFollowing: false,
+	canImportMuting: false,
+	canImportUserLists: false,
 	canImportNotes: true,
 	chatAvailability: 'available',
 	canUseQuoteNotification: true,
@@ -134,13 +133,14 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	canViewCharts: false,
 	canEditCommunityRoles: false,
 	uploadableFileTypes: [
-		'text/plain',
+		'text/*',
 		'application/json',
 		'image/*',
 		'video/*',
 		'audio/*',
 	],
 	noteDraftLimit: 10,
+	scheduledNoteLimit: 1,
 	watermarkAvailable: true,
 };
 
@@ -438,7 +438,6 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			canYamiNote: calc('canYamiNote', vs => vs.some(v => v === true)),
 			canPublicNote: calc('canPublicNote', vs => vs.some(v => v === true)),
 			canFederateNote: calc('canFederateNote', vs => vs.some(v => v === true)),
-			scheduleNoteMax: calc('scheduleNoteMax', vs => Math.max(...vs)),
 			mentionLimit: calc('mentionLimit', vs => Math.max(...vs)),
 			canInvite: calc('canInvite', vs => vs.some(v => v === true)),
 			inviteLimit: calc('inviteLimit', vs => Math.max(...vs)),
@@ -490,6 +489,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 				return [...set];
 			}),
 			noteDraftLimit: calc('noteDraftLimit', vs => Math.max(...vs)),
+			scheduledNoteLimit: calc('scheduledNoteLimit', vs => Math.max(...vs)),
 			watermarkAvailable: calc('watermarkAvailable', vs => vs.some(v => v === true)),
 		};
 	}
