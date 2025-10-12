@@ -51,7 +51,6 @@ export type DefaultStoredWidget = {
 
 <script lang="ts" setup>
 import { defineAsyncComponent, ref, computed } from 'vue';
-import { isLink } from '@@/js/is-link.js';
 import { genId } from '@/utility/id.js';
 import MkSelect from '@/components/MkSelect.vue';
 import MkButton from '@/components/MkButton.vue';
