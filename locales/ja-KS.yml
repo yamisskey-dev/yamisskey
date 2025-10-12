@@ -1525,7 +1525,10 @@ _initialTutorial:
     title: "ノートの投稿設定"
     description1: "Misskeyにノートを投稿するとき、いろんなオプションが付けれるで。投稿画面はこんな感じや。"
     _yamiNote:
+      title: "やみノート"
       description: "やみモードユーザーは、通常ノートとやみノートを切り替えて投稿できんねん。やみノートはやみモードユーザーだけが見れる特殊な投稿やで。"
+      yamiNote: "やみモードユーザーだけが見れる投稿やで。投稿フォームの月アイコンボタンで切り替えられんねん。"
+      normalNote: "普通のノートや。公開範囲の設定通りに全員が見れるで。"
     _visibility:
       description: "ノートを見れる相手を制限できるわ。"
       public: "みんなに見せるで。"
@@ -3086,3 +3089,33 @@ _drafts:
   delete: "下書きをほかす"
   deleteAreYouSure: "下書きをほかしてもええか？"
   noDrafts: "下書きはあらへん"
+_yami:
+  switchMode: "モード切り替え"
+  yamiSet: "やみ設定"
+  searchEngineDescription: "リンクやMFMの検索機能で使う検索エンジンを選ぶで。"
+  yamiMode: "やみモード"
+  yamiModeShort: "やみ"
+  normalNote: "通常ノート"
+  yamiNote: "やみノート"
+  fixedYamiNote: "やみタイムライン内の投稿（変えられへん）"
+  fixedNormalNote: "通常タイムライン内の投稿（変えられへん）"
+  parentIsYamiNote: "親やみノートを継承"
+  enableYamiNoteConfirm: "やみノートに切り替えるか？"
+  enableYamiNoteConfirmWarn: "やみノートはやみモードユーザーだけが見れる特殊な投稿やで。見る人が限られてるから、もっと自由に表現できんねん。"
+  enableYamiNoteOk: "やみノートを使う"
+  defaultUseYamiNote: "やみノートが投稿できるときにデフォルトでやみノートで投稿する"
+  defaultUseYamiNoteDescription: "切ったら、やみノートが投稿できるときでも通常の投稿が初期状態になるで。"
+  yamiTimeline: "やみタイムライン"
+  showYamiNonFollowingPublicNotes: "フォローしてへんユーザーのパブリックやみノートを表示"
+  showYamiFollowingNotes: "フォローしてるユーザーのやみノートを表示"
+  yamiNoteFederationEnabled: 'やみノート連合を有効にする'
+  yamiNoteFederationTrustedInstances: '信頼済みやみモード対応インスタンス'
+  yamiNoteFederationTrustedInstancesDescription: 'やみノートを配信・閲覧するインスタンスのホスト名を改行で区切って入れるんや。'
+  yamiNoteFederationWarning: '警告: やみノートは信頼済みインスタンスにだけ配信されんねんけど、リモートインスタンスの実装状況によっては適切に処理されへん可能性があんねん。信頼できるインスタンスだけを追加しときや。'
+  switchToYamiMode: "やみモードに切り替え"
+  switchToNormalMode: "通常モードに切り替え"
+  switchModeButtonBehavior: "やみモード切り替えボタンの動作"
+  switchModeButtonMenu: "メニュー方式（誤クリック防止）"
+  switchModeButtonDirect: "直接切り替え方式（ワンクリック）"
+  enableYamiModeConfirm: "やみモードを有効にするか？他のユーザーのやみノートを見れるようになるで。"
+  disableYamiModeConfirm: "やみモードを無効にするか？他のユーザーのやみノートを見れへんようになるで。"
