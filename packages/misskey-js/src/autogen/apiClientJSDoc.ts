@@ -1418,7 +1418,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Credential required**: *Yes* / **Permission**: *read:channels*
      */
     request<E extends 'channels/followers', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -1473,7 +1473,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Credential required**: *Yes* / **Permission**: *read:channels*
      */
     request<E extends 'channels/timeline', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -2321,7 +2321,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Credential required**: *Yes* / **Permission**: *read:following*
      */
     request<E extends 'federation/followers', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -2332,7 +2332,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Credential required**: *Yes* / **Permission**: *read:following*
      */
     request<E extends 'federation/following', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -2343,7 +2343,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Credential required**: *Yes* / **Permission**: *read:federation*
      */
     request<E extends 'federation/instances', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -2354,7 +2354,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Credential required**: *Yes* / **Permission**: *read:federation*
      */
     request<E extends 'federation/show-instance', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -2376,7 +2376,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Credential required**: *Yes* / **Permission**: *write:admin:federation*
      */
     request<E extends 'federation/update-remote-user', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -2387,7 +2387,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Credential required**: *Yes* / **Permission**: *read:federation*
      */
     request<E extends 'federation/users', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -2443,7 +2443,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Credential required**: *Yes* / **Permission**: *read:flash*
      */
     request<E extends 'flash/featured', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -3730,7 +3730,8 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+     * **Credential required**: *Yes* / **Permission**: *read:notes*
      */
     request<E extends 'notes/featured', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -4541,7 +4542,8 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+     * **Credential required**: *Yes* / **Permission**: *read:users*
      */
     request<E extends 'users', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -4574,7 +4576,8 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Credential required**: *Yes*
+     * **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
+     * **Credential required**: *Yes* / **Permission**: *read:notes*
      */
     request<E extends 'users/featured-notes', P extends Endpoints[E]['req']>(
       endpoint: E,
