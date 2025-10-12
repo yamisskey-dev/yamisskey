@@ -1686,7 +1686,10 @@ _initialTutorial:
     title: "Note Posting Settings"
     description1: "When posting a note on Misskey, various options are available. The posting form looks like this."
     _yamiNote:
+      title: "Yami Note"
       description: "Yami mode users can switch between normal notes and Yami notes when posting. Yami notes are special posts that can only be viewed by Yami mode users."
+      yamiNote: "A special post that can only be viewed by Yami mode users. You can toggle it with the moon icon button in the posting form."
+      normalNote: "A normal note. All users can view it according to the visibility settings."
     _visibility:
       description: "You can limit who can view your note."
       public: "Your note will be visible for all users."
@@ -3206,7 +3209,7 @@ _yami:
   yamiMode: "Yami mode"
   yamiModeShort: "Yami"
   normalNote: "Normal note"
-  yamiNotes: "Yami notes"
+  yamiNote: "Yami note"
   fixedYamiNote: "Notes in the Yami Timeline (cannot be changed)"
   fixedNormalNote: "Notes in the normal timeline (cannot be changed)"
   parentIsYamiNote: "Inherit parent's Yami note"

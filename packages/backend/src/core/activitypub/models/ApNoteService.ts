@@ -130,6 +130,7 @@ export class ApNoteService {
 		if (note._misskey_isNoteInYamiMode !== true) return false;
 
 		// 送信元ホストの信頼確認
+		if (!note.id) return false;
 		const host = this.utilityService.extractDbHost(note.id);
 		if (!host) return false;
 

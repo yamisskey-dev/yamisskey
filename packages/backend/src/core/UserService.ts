@@ -69,7 +69,7 @@ export class UserService {
 	}
 
 	@bindThis
-	public async createUser(params): Promise<void> {
+	public async createUser(params: { userId: string }): Promise<void> {
 		await this.userProfilesRepository.insert({
 			userId: params.userId,
 			notificationRecieveConfig: {

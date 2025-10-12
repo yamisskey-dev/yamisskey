@@ -8,6 +8,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div style="text-align: center; padding: 0 16px;">{{ i18n.ts._initialTutorial._postNote.description1 }}</div>
 	<MkPostForm :class="$style.exampleRoot" :mock="true" :autofocus="false"/>
 	<MkFormSection>
+		<template #label>{{ i18n.ts._initialTutorial._postNote._yamiNote.title }}</template>
+		<div class="_gaps">
+			<div>{{ i18n.ts._initialTutorial._postNote._yamiNote.description }}</div>
+			<div><i class="ti ti-moon"></i> <b>{{ i18n.ts._yami.yamiNote }}</b> … {{ i18n.ts._initialTutorial._postNote._yamiNote.yamiNote }}</div>
+			<div><i class="ti ti-moon-off"></i> <b>{{ i18n.ts._yami.normalNote }}</b> … {{ i18n.ts._initialTutorial._postNote._yamiNote.normalNote }}</div>
+		</div>
+	</MkFormSection>
+	<MkFormSection>
 		<template #label>{{ i18n.ts.visibility }}</template>
 		<div class="_gaps">
 			<div>{{ i18n.ts._initialTutorial._postNote._visibility.description }}</div>

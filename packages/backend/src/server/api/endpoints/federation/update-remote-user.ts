@@ -12,6 +12,8 @@ export const meta = {
 	tags: ['federation'],
 
 	requireCredential: true,
+	requireModerator: true,
+	kind: 'write:admin:federation',
 } as const;
 
 export const paramDef = {

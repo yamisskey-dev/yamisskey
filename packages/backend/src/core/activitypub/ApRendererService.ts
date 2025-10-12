@@ -520,7 +520,7 @@ export class ApRendererService {
 				},
 			],
 			id: `${this.config.url}/notes/${note.id}`,
-			type: 'Note',
+			type: 'Note' as const,
 			attributedTo,
 			_misskey_isNoteInYamiMode: true,
 			published: this.idService.parse(note.id).date.toISOString(),
@@ -549,7 +549,7 @@ export class ApRendererService {
 			return {
 				...baseObject,
 				content: note.text,
-				summary: note.cw,
+				summary: note.cw ?? '',
 				attachment: files.map(x => this.renderDocument(x)),
 			};
 		} else {
