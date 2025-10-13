@@ -108,6 +108,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts" setup>
 import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import { openInstanceMenu } from './common.js';
+import type { BasicTimelineType } from '@/timelines.js';
 import * as os from '@/os.js';
 import { navbarItemDef } from '@/navbar.js';
 import { store } from '@/store.js';
@@ -121,6 +122,7 @@ import { $i } from '@/i.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { unisonReload } from '@/utility/unison-reload.js';
 import { claimAchievement } from '@/utility/achievements.js';
+import { isBasicTimeline, availableBasicTimelines } from '@/timelines.js';
 
 const router = useRouter();
 
@@ -205,6 +207,56 @@ function handleYamiModeClick(ev: MouseEvent) {
 
 async function toggleYamiMode() {
 	if (!$i) return;
+
+	// 現在のルートを取得
+	const currentRoute = router.currentRoute.value;
+
+	// タイムラインページにいる場合、モード切り替え後も閲覧可能かチェック
+	if (currentRoute.path === '/') {
+		const currentTl = store.s.tl.src;
+
+		// 基本タイムライン以外（list:xxx, channel:xxx など）の場合はスキップ
+		if (isBasicTimeline(currentTl)) {
+			// モード切り替え後に現在のTLが閲覧可能かチェック
+			// モード切り替え後の利用可能なタイムライン一覧を取得するために、
+			// 一時的にモードを切り替えた状態をシミュレート
+			const willBeInYamiMode = !$i.isInYamiMode;
+
+			// モード切り替え後に利用可能なタイムラインを取得
+			// $iの状態を直接変更せずに判定するため、利用可能性を個別にチェック
+			let willBeAvailable = false;
+
+			switch (currentTl) {
+				case 'home':
+					// ホームTLは常に利用可能（ログイン済みなので）
+					willBeAvailable = true;
+					break;
+				case 'yami':
+					// やみTLは、やみモード中のみ利用可能
+					willBeAvailable = willBeInYamiMode && $i.policies.yamiTlAvailable;
+					break;
+				case 'local':
+					// ローカルTLは、ユーザー設定による非表示チェック + ポリシーチェック
+					willBeAvailable = !prefer.s.hideLocalTimeLine && $i.policies.ltlAvailable;
+					break;
+				case 'social':
+					// ソーシャルTLは、ユーザー設定による非表示チェック + ポリシーチェック
+					willBeAvailable = !prefer.s.hideSocialTimeLine && $i.policies.ltlAvailable;
+					break;
+				case 'global':
+					// グローバルTLは、ユーザー設定による非表示チェック + ポリシーチェック
+					willBeAvailable = !prefer.s.hideGlobalTimeLine && $i.policies.gtlAvailable;
+					break;
+			}
+
+			// 閲覧不可能になる場合は、事前にホームTLに遷移
+			if (!willBeAvailable) {
+				store.set('tl', { ...store.s.tl, src: 'home' });
+				// 少し待ってからモード切り替えを実行（UI更新のため）
+				await new Promise(resolve => window.setTimeout(resolve, 100));
+			}
+		}
+	}
 
 	if ($i.isInYamiMode) {
 		// 通常モードに戻す
