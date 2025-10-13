@@ -247,6 +247,21 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private noteCreateService: NoteCreateService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			// scheduledDeleteのバリデーションと変換
+			if (ps.scheduledDelete) {
+				if (typeof ps.scheduledDelete.deleteAt === 'number') {
+					if (ps.scheduledDelete.deleteAt < Date.now()) {
+						throw new ApiError(meta.errors.cannotScheduleDeleteEarlierThanNow);
+					}
+				} else if (typeof ps.scheduledDelete.deleteAfter === 'number') {
+					ps.scheduledDelete.deleteAt = Date.now() + ps.scheduledDelete.deleteAfter;
+				}
+
+				if (ps.scheduledDelete.deleteAt && ps.scheduledDelete.deleteAt > Date.now() + ms('1year')) {
+					throw new ApiError(meta.errors.cannotScheduleDeleteLaterThanOneYear);
+				}
+			}
+
 			try {
 				const note = await this.noteCreateService.fetchAndCreate(me, {
 					createdAt: new Date(),

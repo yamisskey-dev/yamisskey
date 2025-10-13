@@ -489,10 +489,6 @@ const bottomItemActionDef: Record<keyof typeof bottomItemDef, {
 		active: scheduledNoteDelete,
 		action: toggleScheduledNoteDelete,
 	},
-	scheduleNote: {
-		active: scheduleNote,
-		action: toggleScheduleNote,
-	},
 	useCw: {
 		active: useCw,
 		action: () => useCw.value = !useCw.value,
@@ -1178,6 +1174,18 @@ function deleteDraft() {
 async function saveServerDraft(options: {
 	isActuallyScheduled?: boolean;
 } = {}) {
+	// Calculate deleteAt from deleteAfter if needed
+	let deleteAt: number | null = null;
+	if (scheduledNoteDelete.value) {
+		if (scheduledNoteDelete.value.deleteAt) {
+			deleteAt = scheduledNoteDelete.value.deleteAt;
+		} else if (scheduledNoteDelete.value.deleteAfter) {
+			// Convert relative time to absolute time
+			const baseTime = options.isActuallyScheduled && scheduledAt.value ? scheduledAt.value : Date.now();
+			deleteAt = baseTime + scheduledNoteDelete.value.deleteAfter;
+		}
+	}
+
 	return await os.apiWithDialog(serverDraftId.value == null ? 'notes/drafts/create' : 'notes/drafts/update', {
 		...(serverDraftId.value == null ? {} : { draftId: serverDraftId.value }),
 		text: text.value,
@@ -1195,6 +1203,7 @@ async function saveServerDraft(options: {
 		isNoteInYamiMode: isNoteInYamiMode.value, // やみノート状態をサーバー下書きにも保存
 		scheduledAt: scheduledAt.value,
 		isActuallyScheduled: options.isActuallyScheduled ?? false,
+		deleteAt: deleteAt,
 	});
 }
 
@@ -1343,7 +1352,7 @@ async function post(ev?: MouseEvent) {
 	}
 
 	posting.value = true;
-	misskeyApi(postData.scheduleNote ? 'notes/schedule/create' : 'notes/create', postData, token).then((res) => {
+	misskeyApi('notes/create', postData, token).then((res) => {
 		if (props.freezeAfterPosted) {
 			posted.value = true;
 		} else {
@@ -1620,6 +1629,13 @@ function showDraftMenu(ev: MouseEvent) {
 				replyTargetNote.value = draft.reply;
 				reactionAcceptance.value = draft.reactionAcceptance;
 				scheduledAt.value = draft.scheduledAt ?? null;
+				if (draft.deleteAt) {
+					scheduledNoteDelete.value = {
+						deleteAt: draft.deleteAt,
+						deleteAfter: null,
+						isValid: true,
+					};
+				}
 				if (draft.channel) targetChannel.value = draft.channel as unknown as Misskey.entities.Channel;
 
 				// やみノート状態を復元

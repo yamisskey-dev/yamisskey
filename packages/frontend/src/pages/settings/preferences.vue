@@ -1149,8 +1149,6 @@ const defaultActions = [
 	'emoji',
 	'addMfmFunction',
 	'scheduledNoteDelete',
-	'scheduleNote',
-	'schedulePostList',
 	'useCw',
 	'poll',
 	'hashtags',
