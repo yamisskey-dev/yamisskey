@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## Unreleased
+## 2025.10.0-yami-1.9.22
 
 ### Fix
 - 翻訳キーの追加と独自機能ラベルの統一
