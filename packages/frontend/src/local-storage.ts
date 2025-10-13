@@ -12,6 +12,8 @@ export type Keys = (
 	'latestDonationInfoShownAt' |
 	'neverShowDonationInfo' |
 	'neverShowLocalOnlyInfo' |
+	'neverShowExitYamiModeInfo' |
+	'neverShowEnterYamiModeInfo' |
 	'modifiedVersionMustProminentlyOfferInAgplV3Section13Read' |
 	'lastUsed' |
 	'lang' |
