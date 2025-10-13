@@ -22,6 +22,7 @@ class HybridTimelineChannel extends Channel {
 	private withReplies: boolean;
 	private withFiles: boolean;
 	private excludeBots: boolean;
+	private excludeChannelNotesNonFollowing: boolean;
 
 	constructor(
 		private metaService: MetaService,
@@ -44,6 +45,7 @@ class HybridTimelineChannel extends Channel {
 		this.withReplies = !!(params.withReplies ?? false);
 		this.withFiles = !!(params.withFiles ?? false);
 		this.excludeBots = !!(params.excludeBots ?? false);
+		this.excludeChannelNotesNonFollowing = !!(params.excludeChannelNotesNonFollowing ?? false);
 
 		// Subscribe events
 		this.subscriber.on('notesStream', this.onNote);
@@ -65,12 +67,22 @@ class HybridTimelineChannel extends Channel {
 		// チャンネルの投稿ではなく、その投稿のユーザーをフォローしている または
 		// チャンネルの投稿ではなく、全体公開のローカルの投稿 または
 		// フォローしているチャンネルの投稿 の場合だけ
-		if (!(
-			(note.channelId == null && isMe) ||
-			(note.channelId == null && Object.hasOwn(this.following, note.userId)) ||
-			(note.channelId == null && (note.user.host == null && note.visibility === 'public')) ||
-			(note.channelId != null && this.followingChannels.has(note.channelId))
-		)) return;
+		if (note.channelId != null) {
+			// チャンネル投稿の場合
+			if (!this.followingChannels.has(note.channelId)) return;
+
+			// excludeChannelNotesNonFollowing有効時: フォロー中ユーザーの投稿のみ
+			if (this.excludeChannelNotesNonFollowing) {
+				if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
+			}
+		} else {
+			// 非チャンネル投稿の場合
+			if (!(
+				isMe ||
+				Object.hasOwn(this.following, note.userId) ||
+				(note.user.host == null && note.visibility === 'public')
+			)) return;
+		}
 
 		if (note.visibility === 'followers') {
 			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;

@@ -20,7 +20,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<MkStreamingNotesTimeline
 		v-else-if="column.tl"
 		ref="timeline"
-		:key="column.tl + withRenotes + withReplies + onlyFiles + localOnly + remoteOnly + withHashtags + excludeBots + showYamiNonFollowingPublicNotes + showYamiFollowingNotes"
+		:key="column.tl + withRenotes + withReplies + onlyFiles + localOnly + remoteOnly + withHashtags + excludeBots + showYamiNonFollowingPublicNotes + showYamiFollowingNotes + excludeChannelNotesNonFollowing"
 		:src="column.tl"
 		:withRenotes="withRenotes"
 		:withReplies="withReplies"
@@ -32,6 +32,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		:excludeBots="excludeBots"
 		:showYamiNonFollowingPublicNotes="showYamiNonFollowingPublicNotes"
 		:showYamiFollowingNotes="showYamiFollowingNotes"
+		:excludeChannelNotesNonFollowing="excludeChannelNotesNonFollowing"
 		:sound="true"
 		:customSound="soundSetting"
 	/>
@@ -69,6 +70,7 @@ const withHashtags = ref(props.column.withHashtags ?? false);
 const excludeBots = ref(props.column.excludeBots ?? false);
 const showYamiNonFollowingPublicNotes = ref(props.column.showYamiNonFollowingPublicNotes ?? false);
 const showYamiFollowingNotes = ref(props.column.showYamiFollowingNotes ?? false);
+const excludeChannelNotesNonFollowing = ref(props.column.excludeChannelNotesNonFollowing ?? false);
 
 watch(withRenotes, v => {
 	updateColumn(props.column.id, {
@@ -131,6 +133,12 @@ watch(withHashtags, v => {
 watch(excludeBots, v => {
 	updateColumn(props.column.id, {
 		excludeBots: v,
+	});
+});
+
+watch(excludeChannelNotesNonFollowing, v => {
+	updateColumn(props.column.id, {
+		excludeChannelNotesNonFollowing: v,
 	});
 });
 
@@ -210,6 +218,15 @@ const menu = computed<MenuItem[]>(() => {
 			type: 'switch',
 			text: i18n.ts.timelineExcludeBots,
 			ref: excludeBots,
+		});
+	}
+
+	// ホーム・ソーシャルタイムラインでチャンネル投稿フィルター
+	if (['home', 'social'].includes(props.column.tl ?? '')) {
+		menuItems.push({
+			type: 'switch',
+			text: i18n.ts.excludeChannelNotesNonFollowing,
+			ref: excludeChannelNotesNonFollowing,
 		});
 	}
 

@@ -416,7 +416,10 @@ export class NoteCreateService implements OnApplicationShutdown {
 			}
 		}
 
-		if (data.isNoteInYamiMode == null) {
+		// チャンネル投稿は常に非やみノート（やみTLとの分離）
+		if (data.channel) {
+			data.isNoteInYamiMode = false;
+		} else if (data.isNoteInYamiMode == null) {
 			// リプライ先またはリノート元がやみノートの場合は強制的にやみノート
 			if ((data.reply && data.reply.isNoteInYamiMode) ||
 				(data.renote && data.renote.isNoteInYamiMode)) {
