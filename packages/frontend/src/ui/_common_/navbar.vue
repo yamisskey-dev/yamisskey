@@ -54,7 +54,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkA>
 		</div>
 		<div :class="$style.bottom">
-			<button v-if="showWidgetButton" class="_button" :class="[$style.widget]" @click="() => emit('widgetButtonClick')">
+			<button v-if="showWidgetButton" v-tooltip.noDelay.right="i18n.ts.widgets" class="_button" :class="[$style.widget]" @click="() => emit('widgetButtonClick')">
 				<i class="ti ti-apps ti-fw"></i>
 			</button>
 			<button v-if="iconOnly && $i" v-tooltip.noDelay.right="$i.isInYamiMode ? i18n.ts._yami.switchToNormalMode : i18n.ts._yami.switchToYamiMode" class="_button" :class="[$style.yamiMode, $i.isInYamiMode ? $style.on : null]" @click="handleYamiModeClick">

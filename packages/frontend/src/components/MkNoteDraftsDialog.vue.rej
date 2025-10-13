@@ -1,0 +1,14 @@
+--- packages/frontend/src/components/MkNoteDraftsDialog.vue
++++ packages/frontend/src/components/MkNoteDraftsDialog.vue
+@@ -104,7 +104,10 @@
+ 								<div :class="$style.draftFooter">
+ 									<div :class="$style.draftVisibility">
+ 										<span v-if="draft.isNoteInYamiMode === true" :title="draft.visibility === 'public' ? \`\${i18n.ts._visibility['public']} (\${i18n.ts._yami.yamiModeShort})\` : i18n.ts._yami.yamiNote"><i class="ti ti-moon"></i></span>
+-										<span :title="i18n.ts._visibility[draft.visibility]">
++										<span v-if="draft.visibility === 'specified' && (!draft.visibleUserIds || draft.visibleUserIds.length === 0)" :title="i18n.ts._visibility['private'] || i18n.ts._visibility['specified']">
++											<i class="ti ti-eye-off"></i>
++										</span>
++										<span v-else :title="i18n.ts._visibility[draft.visibility]">
+ 											<i v-if="draft.visibility === 'public'" class="ti ti-world"></i>
+ 											<i v-else-if="draft.visibility === 'home'" class="ti ti-home"></i>
+ 											<i v-else-if="draft.visibility === 'followers'" class="ti ti-lock"></i>

@@ -531,10 +531,6 @@ import type {
 	NotesRenotesResponse,
 	NotesRepliesRequest,
 	NotesRepliesResponse,
-	NotesScheduleCreateRequest,
-	NotesScheduleDeleteRequest,
-	NotesScheduleListRequest,
-	NotesScheduleListResponse,
 	NotesSearchRequest,
 	NotesSearchResponse,
 	NotesSearchByTagRequest,
@@ -1020,9 +1016,6 @@ export type Endpoints = {
 	'notes/reactions/delete': { req: NotesReactionsDeleteRequest; res: EmptyResponse };
 	'notes/renotes': { req: NotesRenotesRequest; res: NotesRenotesResponse };
 	'notes/replies': { req: NotesRepliesRequest; res: NotesRepliesResponse };
-	'notes/schedule/create': { req: NotesScheduleCreateRequest; res: EmptyResponse };
-	'notes/schedule/delete': { req: NotesScheduleDeleteRequest; res: EmptyResponse };
-	'notes/schedule/list': { req: NotesScheduleListRequest; res: NotesScheduleListResponse };
 	'notes/search': { req: NotesSearchRequest; res: NotesSearchResponse };
 	'notes/search-by-tag': { req: NotesSearchByTagRequest; res: NotesSearchByTagResponse };
 	'notes/show': { req: NotesShowRequest; res: NotesShowResponse };

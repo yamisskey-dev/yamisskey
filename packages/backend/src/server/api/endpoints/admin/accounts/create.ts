@@ -35,13 +35,22 @@ export const meta = {
 	res: {
 		type: 'object',
 		optional: false, nullable: false,
-		ref: 'MeDetailed',
-		properties: {
-			token: {
-				type: 'string',
-				optional: false, nullable: false,
+		allOf: [
+			{
+				type: 'object',
+				ref: 'MeDetailed',
 			},
-		},
+			{
+				type: 'object',
+				optional: false, nullable: false,
+				properties: {
+					token: {
+						type: 'string',
+						optional: false, nullable: false,
+					},
+				},
+			}
+		],
 	},
 } as const;
 
