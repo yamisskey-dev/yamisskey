@@ -149,9 +149,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</button>
 			</template>
 		</div>
-		<!-- <div :class="$style.footerRight">
-			<button v-tooltip="i18n.ts.emoji" :class="['_button', $style.footerButton]" @click="insertEmoji"><i class="ti ti-mood-happy"></i></button>
-		</div> -->
+		<div :class="$style.footerRight">
+			<button v-tooltip="i18n.ts.postFormButtons" class="_button" :class="$style.footerButton" @click="openPostFormSettings"><i class="ti ti-settings"></i></button>
+		</div>
 	</footer>
 	<datalist id="hashtags">
 		<option v-for="hashtag in recentHashtags" :key="hashtag" :value="hashtag"/>
@@ -960,6 +960,11 @@ function showOtherSettings() {
 	}] satisfies MenuItem[];
 
 	os.popupMenu(menuItems, otherSettingsButton.value);
+}
+
+function openPostFormSettings() {
+	// 投稿フォームボタン設定画面へ遷移
+	window.location.href = '/settings/postform-buttons';
 }
 //#endregion
 

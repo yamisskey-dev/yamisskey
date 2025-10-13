@@ -142,6 +142,10 @@ export const ROUTE_DEF = [{
 		name: 'statusbar',
 		component: page(() => import('@/pages/settings/statusbar.vue')),
 	}, {
+		path: '/postform-buttons',
+		name: 'postform-buttons',
+		component: page(() => import('@/pages/settings/postform-buttons.vue')),
+	}, {
 		path: '/sounds',
 		name: 'sounds',
 		component: page(() => import('@/pages/settings/sounds.vue')),

@@ -491,36 +491,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</SearchMarker>
 						</div>
 
-						<!-- 投稿フォームボタン設定 -->
-						<div class="_gaps_m">
-							<FormSlot>
-								<template #label>{{ i18n.ts.postFormButtons }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-								<MkContainer :showHeader="false">
-									<div class="_gaps_m">
-										<Sortable
-											v-model="postFormButtons"
-											:class="$style.items"
-											:itemKey="item => item.id"
-											:animation="100"
-											:delay="50"
-											:delayOnTouchOnly="true"
-										>
-											<template #item="{element}">
-												<button v-tooltip="bottomItemDef[element.type].title" class="_button" :class="$style.item" @click="removePostFormButton(element.type, $event)">
-													<i class="ti ti-fw" :class="[$style.itemIcon, bottomItemDef[element.type].icon]"></i>
-												</button>
-											</template>
-										</Sortable>
-									</div>
-								</MkContainer>
-							</FormSlot>
-							<div class="_buttons">
-								<MkButton @click="addPostFormButton"><i class="ti ti-plus"></i> {{ i18n.ts.addItem }}</MkButton>
-								<MkButton danger @click="resetPostFormButtons"><i class="ti ti-reload"></i> {{ i18n.ts.default }}</MkButton>
-								<MkButton primary @click="savePostFormButtons"><i class="ti ti-device-floppy"></i> {{ i18n.ts.save }}</MkButton>
-							</div>
-							<div style="font-size: 0.85em; padding: 8px 0;">{{ i18n.ts.postFormBottomSettingsDescription }}</div>
-						</div>
+						<hr>
+
+						<SearchMarker :keywords="['post', 'form', 'button', 'bottom']">
+							<FormLink to="/settings/postform-buttons">
+								<template #icon><i class="ti ti-forms"></i></template>
+								{{ i18n.ts.postFormButtons }}
+							</FormLink>
+						</SearchMarker>
 					</div>
 				</MkFolder>
 			</SearchMarker>
@@ -1101,6 +1079,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div class="_gaps_s">
 			<FormLink to="/settings/navbar"><template #icon><i class="ti ti-list"></i></template>{{ i18n.ts.navbar }}</FormLink>
 			<FormLink to="/settings/statusbar"><template #icon><i class="ti ti-list"></i></template>{{ i18n.ts.statusbar }}</FormLink>
+			<FormLink to="/settings/postform-buttons"><template #icon><i class="ti ti-forms"></i></template>{{ i18n.ts.postFormButtons }}</FormLink>
 			<FormLink to="/settings/deck"><template #icon><i class="ti ti-columns"></i></template>{{ i18n.ts.deck }}</FormLink>
 			<FormLink to="/settings/custom-css"><template #icon><i class="ti ti-code"></i></template>{{ i18n.ts.customCss }}</FormLink>
 		</div>
@@ -1137,23 +1116,7 @@ import { claimAchievement } from '@/utility/achievements.js';
 import { instance } from '@/instance.js';
 import { ensureSignin } from '@/i.js';
 import MkDeleteScheduleEditor from '@/components/MkDeleteScheduleEditor.vue';
-import MkContainer from '@/components/MkContainer.vue';
-import { bottomItemDef } from '@/utility/post-form.js';
-import FormSlot from '@/components/form/slot.vue';
 import { fontList } from '@/utility/font.js';
-
-// デフォルト値を設定
-const defaultActions = [
-	'mention',
-	'attachFile',
-	'emoji',
-	'addMfmFunction',
-	'scheduledNoteDelete',
-	'useCw',
-	'poll',
-	'hashtags',
-	'plugins',
-];
 
 // 投稿自動削除設定
 const defaultScheduledNoteDelete = prefer.model('defaultScheduledNoteDelete');
@@ -1499,65 +1462,6 @@ function testNotification(): void {
 	}, 300);
 }
 
-// 投稿フォームボタン用の状態管理
-const postFormButtons = ref((prefer.s.postFormActions || defaultActions).map(x => ({
-	id: Math.random().toString(),
-	type: x,
-})));
-
-// ボタン追加機能
-async function addPostFormButton() {
-	const currentItems = postFormButtons.value.map(x => x.type);
-	const availableButtons = Object.keys(bottomItemDef).filter(k => !currentItems.includes(k));
-
-	const { canceled, result: item } = await os.select({
-		title: i18n.ts.addItem,
-		items: availableButtons.map(k => ({
-			value: k, text: bottomItemDef[k].title,
-		})),
-	});
-
-	if (canceled || item == null) return;
-	postFormButtons.value = [...postFormButtons.value, {
-		id: Math.random().toString(),
-		type: item,
-	}];
-}
-
-// ボタン削除機能
-function removePostFormButton(type, ev) {
-	const item = bottomItemDef[type];
-	os.popupMenu([{
-		type: 'label',
-		text: item.title,
-	}, {
-		text: i18n.ts.remove,
-		action: () => {
-			postFormButtons.value = postFormButtons.value.filter(x => x.type !== type);
-		},
-	}], ev.currentTarget ?? ev.target);
-}
-
-// 設定保存
-function savePostFormButtons() {
-	prefer.commit('postFormActions', postFormButtons.value.map(x => x.type));
-}
-
-// デフォルト設定にリセット
-async function resetPostFormButtons() {
-	const result = await os.confirm({
-		type: 'warning',
-		text: i18n.ts.resetAreYouSure,
-	});
-
-	if (result.canceled) return;
-
-	postFormButtons.value = defaultActions.map(x => ({
-		id: Math.random().toString(),
-		type: x,
-	}));
-}
-
 const headerActions = computed(() => []);
 
 const headerTabs = computed(() => []);
@@ -1606,35 +1510,3 @@ definePage(() => ({
 	icon: 'ti ti-adjustments',
 }));
 </script>
-
-<style lang="scss" module>
-.items {
-  padding: 8px;
-  flex: 1;
-  display: grid;
-  grid-auto-flow: row;
-  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
-  grid-auto-rows: 40px;
-  min-height: 40px; /* ここを追加 */
-  background: var(--panel); /* ここを追加 */
-  border-radius: 6px; /* ここを追加 */
-}
-
-.item {
-  display: inline-block;
-  padding: 0;
-  margin: 0;
-  font-size: 1em;
-  width: auto;
-  height: 100%;
-  border-radius: 6px;
-
-  &:hover {
-    background: var(--X5);
-  }
-}
-
-.itemIcon { /* ここを追加 */
-  margin: auto;
-}
-</style>
