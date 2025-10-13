@@ -536,8 +536,6 @@ export const PREF_DEF = definePreferences({
 			'emoji',
 			'addMfmFunction',
 			'scheduledNoteDelete',
-			'scheduleNote',
-			'schedulePostList',
 			'useCw',
 			'poll',
 			'hashtags',

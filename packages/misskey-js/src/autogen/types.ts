@@ -37459,6 +37459,7 @@ export interface operations {
                     scheduledAt?: number | null;
                     /** @default false */
                     isActuallyScheduled?: boolean;
+                    deleteAt?: number | null;
                 };
             };
         };
@@ -37705,7 +37706,6 @@ export interface operations {
                     renoteId?: string | null;
                     /** Format: misskey:id */
                     channelId?: string | null;
-                    /** @default false */
                     isNoteInYamiMode?: boolean;
                     text?: string | null;
                     fileIds?: string[];
@@ -37717,6 +37717,7 @@ export interface operations {
                     } | null;
                     scheduledAt?: number | null;
                     isActuallyScheduled?: boolean;
+                    deleteAt?: number | null;
                 };
             };
         };

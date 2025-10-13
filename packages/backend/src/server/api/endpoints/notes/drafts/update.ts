@@ -148,6 +148,12 @@ export const meta = {
 			id: 'ed1952ac-2d26-4957-8b30-2deda76bedf7',
 		},
 
+		deleteAtMustBeAfterScheduledAt: {
+			message: 'Delete time must be after scheduled time.',
+			code: 'DELETE_AT_MUST_BE_AFTER_SCHEDULED_AT',
+			id: 'a1b2c3d4-5678-90ab-cdef-1234567890ab',
+		},
+
 		noSuchReply: {
 			message: 'No such reply.',
 			code: 'NO_SUCH_REPLY',
@@ -188,7 +194,7 @@ export const paramDef = {
 		replyId: { type: 'string', format: 'misskey:id', nullable: true },
 		renoteId: { type: 'string', format: 'misskey:id', nullable: true },
 		channelId: { type: 'string', format: 'misskey:id', nullable: true },
-		isNoteInYamiMode: { type: 'boolean', default: false },
+		isNoteInYamiMode: { type: 'boolean' },
 
 		// anyOf内にバリデーションを書いても最初の一つしかチェックされない
 		// See https://github.com/misskey-dev/misskey/pull/10082
@@ -224,6 +230,7 @@ export const paramDef = {
 		},
 		scheduledAt: { type: 'integer', nullable: true },
 		isActuallyScheduled: { type: 'boolean' },
+		deleteAt: { type: 'integer', nullable: true },
 	},
 	required: ['draftId'],
 } as const;
@@ -235,6 +242,11 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private noteDraftEntityService: NoteDraftEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			// Validate that deleteAt is after scheduledAt
+			if (ps.scheduledAt && ps.deleteAt && ps.deleteAt <= ps.scheduledAt) {
+				throw new ApiError(meta.errors.deleteAtMustBeAfterScheduledAt);
+			}
+
 			const draft = await this.noteDraftService.update(me, ps.draftId, {
 				fileIds: ps.fileIds,
 				pollChoices: ps.poll?.choices,
@@ -253,6 +265,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				channelId: ps.channelId,
 				scheduledAt: ps.scheduledAt ? new Date(ps.scheduledAt) : null,
 				isActuallyScheduled: ps.isActuallyScheduled,
+				deleteAt: ps.deleteAt ? new Date(ps.deleteAt) : null,
 				isNoteInYamiMode: ps.isNoteInYamiMode,
 			}).catch((err) => {
 				if (err instanceof IdentifiableError) {
