@@ -168,10 +168,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			const meOrFolloweeIds = [me.id, ...followees.map(f => f.followeeId)];
 			const followingChannelIds = followingChannels.map(x => x.followeeId);
 			query.andWhere(new Brackets(qb => {
-				qb // やみモードでないもののみ
+				qb
 					.where(new Brackets(qb2 => {
 						qb2
-							.where('note.userId IN (:...meOrFolloweeIds) AND note.isNoteInYamiMode = FALSE', { meOrFolloweeIds: meOrFolloweeIds })
+							.where('note.userId IN (:...meOrFolloweeIds)', { meOrFolloweeIds: meOrFolloweeIds })
 							.andWhere('note.channelId IS NULL');
 					}))
 					.orWhere('note.channelId IN (:...followingChannelIds)', { followingChannelIds });

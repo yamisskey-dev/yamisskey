@@ -1507,58 +1507,26 @@ export class NoteCreateService implements OnApplicationShutdown {
 			return !notToPushSet || !notToPushSet.has(prefix);
 		};
 
-		// チャンネル投稿の場合 - 元の実装を維持
+		// チャンネル投稿の場合（本家仕様）
 		if (note.channelId) {
-			// チャンネル情報を取得
-			const channel = await this.channelsRepository.findOneBy({ id: note.channelId });
-
-			// チャンネルタイムラインとホームタイムラインにパイプライン処理を準備
 			const r = this.redisForTimelines.pipeline();
 
-			// チャンネルタイムラインには常に配信（チャンネル自体のタイムラインなので）
-			if (shouldPush('channelTimeline')) {
-				this.fanoutTimelineService.push(`channelTimeline:${note.channelId}`, note.id, this.config.perChannelMaxNoteCacheCount, r);
-			}
+			// チャンネルタイムラインへ配信
+			this.fanoutTimelineService.push(`channelTimeline:${note.channelId}`, note.id, this.config.perChannelMaxNoteCacheCount, r);
 
-			// 投稿者自身のuserTimelineには常に配信する
-			if (shouldPush('userTimeline')) {
-				this.fanoutTimelineService.push(`userTimeline:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
-				if (note.fileIds.length > 0) {
-					this.fanoutTimelineService.push(`userTimelineWithFiles:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax / 2 : this.meta.perRemoteUserUserTimelineCacheMax / 2, r);
-				}
-			}
+			// 投稿者のuserTimelineWithChannelへ配信（本家仕様: チャンネル投稿専用タイムライン）
+			this.fanoutTimelineService.push(`userTimelineWithChannel:${user.id}`, note.id, user.host == null ? this.meta.perLocalUserUserTimelineCacheMax : this.meta.perRemoteUserUserTimelineCacheMax, r);
 
-			// チャンネルをフォローしている人のタイムラインへの配信ロジック
+			// チャンネルをフォローしている人のタイムラインへの配信ロジック（本家仕様）
 			const channelFollowings = await this.channelFollowingsRepository.find({
 				where: { followeeId: note.channelId },
 				select: ['followerId'],
 			});
 
-			// 投稿者をフォローしているユーザーを取得
-			const userFollowings = await this.followingsRepository.find({
-				where: { followeeId: note.userId },
-				select: ['followerId'],
-			});
-
-			// 投稿者自身のIDも含める
-			const userFollowerIds = new Set([...userFollowings.map(f => f.followerId), note.userId]);
-
-			for (const following of channelFollowings) {
-				// 自分自身のホームタイムラインには常に表示
-				if (following.followerId === note.userId) {
-					if (shouldPush('homeTimeline')) {
-						this.fanoutTimelineService.push(`homeTimeline:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax, r);
-						if (note.fileIds.length > 0) {
-							this.fanoutTimelineService.push(`homeTimelineWithFiles:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
-						}
-					} else if (channel && userFollowerIds.has(following.followerId)) {
-						if (shouldPush('homeTimeline')) {
-							this.fanoutTimelineService.push(`homeTimeline:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax, r);
-							if (note.fileIds.length > 0) {
-								this.fanoutTimelineService.push(`homeTimelineWithFiles:${following.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
-							}
-						}
-					}
+			for (const channelFollowing of channelFollowings) {
+				this.fanoutTimelineService.push(`homeTimeline:${channelFollowing.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax, r);
+				if (note.fileIds.length > 0) {
+					this.fanoutTimelineService.push(`homeTimelineWithFiles:${channelFollowing.followerId}`, note.id, this.meta.perUserHomeTimelineCacheMax / 2, r);
 				}
 			}
 
