@@ -477,7 +477,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<SearchMarker :keywords="['auto', 'delete', 'scheduled', 'note']">
 								<MkPreferenceContainer k="defaultScheduledNoteDelete">
 									<MkSwitch v-model="defaultScheduledNoteDelete">
-										<template #label><SearchLabel>{{ i18n.ts.defaultScheduledNoteDelete }}</SearchLabel></template>
+										<template #label><SearchLabel>{{ i18n.ts.defaultScheduledNoteDelete }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 									</MkSwitch>
 								</MkPreferenceContainer>
 							</SearchMarker>
