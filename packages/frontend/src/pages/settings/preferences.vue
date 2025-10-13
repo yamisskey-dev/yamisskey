@@ -432,7 +432,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 												<MkPreferenceContainer k="defaultIsNoteInYamiMode">
 													<MkSwitch v-model="defaultIsNoteInYamiMode">
 														<template #label>{{ i18n.ts._yami.defaultUseYamiNote }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-														<template #caption>{{ i18n.ts._yami.defaultUseYamiNoteDescription }}</template>
 													</MkSwitch>
 												</MkPreferenceContainer>
 											</template>
@@ -468,30 +467,28 @@ SPDX-License-Identifier: AGPL-3.0-only
 													{{ i18n.ts._visibility.disableFederation }}
 												</MkSwitch>
 											</MkPreferenceContainer>
+
+											<!-- 自動削除設定 -->
+											<SearchMarker :keywords="['auto', 'delete', 'scheduled', 'note']">
+												<MkPreferenceContainer k="defaultScheduledNoteDelete">
+													<MkSwitch v-model="defaultScheduledNoteDelete">
+														<template #label><SearchLabel>{{ i18n.ts.defaultScheduledNoteDelete }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+													</MkSwitch>
+												</MkPreferenceContainer>
+											</SearchMarker>
+
+											<!-- 自動削除時間設定（常に表示） -->
+											<MkPreferenceContainer k="defaultScheduledNoteDeleteTime">
+												<MkDeleteScheduleEditor
+													v-model="scheduledNoteDelete"
+													:afterOnly="true"
+													@update:modelValue="onScheduledNoteDeleteUpdate"
+												/>
+											</MkPreferenceContainer>
 										</div>
 									</MkFolder>
 								</MkDisableSection>
 							</SearchMarker>
-
-							<!-- 自動削除設定 -->
-							<SearchMarker :keywords="['auto', 'delete', 'scheduled', 'note']">
-								<MkPreferenceContainer k="defaultScheduledNoteDelete">
-									<MkSwitch v-model="defaultScheduledNoteDelete">
-										<template #label><SearchLabel>{{ i18n.ts.defaultScheduledNoteDelete }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-									</MkSwitch>
-								</MkPreferenceContainer>
-							</SearchMarker>
-						</div>
-
-						<!-- 自動削除時間設定（常に表示） -->
-						<div>
-							<MkPreferenceContainer k="defaultScheduledNoteDeleteTime">
-								<MkDeleteScheduleEditor
-									v-model="scheduledNoteDelete"
-									:afterOnly="true"
-									@update:modelValue="onScheduledNoteDeleteUpdate"
-								/>
-							</MkPreferenceContainer>
 						</div>
 
 						<!-- 投稿フォームボタン設定 -->

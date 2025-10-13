@@ -1627,7 +1627,7 @@ hideReactionCount: "Hide Reaction Count"
 postForm: "Post Form"
 postFormBottomSettingsDescription: "This setting will move the post form to the bottom of the screen."
 clearPost: "Clear post"
-defaultScheduledNoteDelete: "Default time bomb"
+defaultScheduledNoteDelete: "time bomb"
 
 _bubbleGame:
   howToPlay: "How to play"
