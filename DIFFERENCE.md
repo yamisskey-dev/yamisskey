@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## 2025.10.0-yami-1.9.21
+## Unreleased
 
 ### AI
 @claude このPRをレビューしてください。yamisskeyへの本家misskey-dev/misskey 2025.10.0リリースのマージPRです。
