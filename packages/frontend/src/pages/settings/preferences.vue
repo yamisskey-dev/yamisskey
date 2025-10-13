@@ -756,7 +756,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<SearchMarker :keywords="['nickname', 'custom', 'user', 'name']">
 							<MkPreferenceContainer k="nicknameEnabled">
 								<MkSwitch v-model="nicknameEnabled">
-									<template #label><SearchLabel>{{ i18n.ts.nicknameEnabled }}</SearchLabel></template>
+									<template #label><SearchLabel>{{ i18n.ts.nicknameEnabled }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 									<template #caption><SearchText>{{ i18n.ts.nicknameEnabledDescription }}</SearchText></template>
 								</MkSwitch>
 							</MkPreferenceContainer>
