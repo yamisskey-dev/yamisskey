@@ -96,6 +96,7 @@ const props = withDefaults(defineProps<{
 	excludeBots?: boolean;
 	showYamiNonFollowingPublicNotes?: boolean;
 	showYamiFollowingNotes?: boolean;
+	excludeChannelNotesNonFollowing?: boolean;
 }>(), {
 	withRenotes: true,
 	withReplies: false,
@@ -107,6 +108,7 @@ const props = withDefaults(defineProps<{
 	excludeBots: false,
 	showYamiNonFollowingPublicNotes: false,
 	showYamiFollowingNotes: true,
+	excludeChannelNotesNonFollowing: false,
 	sound: false,
 	customSound: null,
 });
@@ -130,6 +132,7 @@ if (props.src === 'antenna') {
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
 			excludeBots: props.excludeBots,
+			excludeChannelNotesNonFollowing: props.excludeChannelNotesNonFollowing,
 		})),
 		useShallowRef: true,
 	}));
@@ -162,6 +165,7 @@ if (props.src === 'antenna') {
 			withFiles: props.onlyFiles ? true : undefined,
 			localOnly: props.localOnly,
 			excludeBots: props.excludeBots,
+			excludeChannelNotesNonFollowing: props.excludeChannelNotesNonFollowing,
 		})),
 		useShallowRef: true,
 	}));
@@ -355,6 +359,7 @@ function connectChannel() {
 			withRenotes: props.withRenotes,
 			withFiles: props.onlyFiles ? true : undefined,
 			excludeBots: props.excludeBots,
+			excludeChannelNotesNonFollowing: props.excludeChannelNotesNonFollowing,
 		});
 		connections.main = stream.useChannel('main');
 		connections.homeTimeline.on('note', prepend);
@@ -382,6 +387,7 @@ function connectChannel() {
 			withFiles: props.onlyFiles ? true : undefined,
 			localOnly: props.localOnly,
 			excludeBots: props.excludeBots,
+			excludeChannelNotesNonFollowing: props.excludeChannelNotesNonFollowing,
 		});
 		connections.hybridTimeline.on('note', prepend);
 	} else if (props.src === 'global') {

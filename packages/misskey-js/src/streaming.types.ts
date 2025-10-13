@@ -72,6 +72,7 @@ export type Channels = {
 			withRenotes?: boolean;
 			withFiles?: boolean;
 			excludeBots?: boolean;
+			excludeChannelNotesNonFollowing?: boolean;
 		};
 		events: {
 			note: (payload: Note) => void;
@@ -97,6 +98,7 @@ export type Channels = {
 			withFiles?: boolean;
 			localOnly?: boolean;
 			excludeBots?: boolean;
+			excludeChannelNotesNonFollowing?: boolean;
 		};
 		events: {
 			note: (payload: Note) => void;

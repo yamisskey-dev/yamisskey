@@ -38219,6 +38219,8 @@ export interface operations {
                     localOnly?: boolean;
                     /** @default false */
                     excludeBots?: boolean;
+                    /** @default false */
+                    excludeChannelNotesNonFollowing?: boolean;
                 };
             };
         };
@@ -39580,6 +39582,8 @@ export interface operations {
                     withRenotes?: boolean;
                     /** @default false */
                     excludeBots?: boolean;
+                    /** @default false */
+                    excludeChannelNotesNonFollowing?: boolean;
                 };
             };
         };

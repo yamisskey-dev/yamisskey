@@ -12,7 +12,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<MkPostForm v-if="shouldShowFixedPostForm" :channel="currentChannel" :class="$style.postForm" class="_panel" fixed style="margin-bottom: var(--MI-margin);" :isInYamiTimeline="src === 'yami'" :isInNormalTimeline="src !== 'yami'"/>
 		<MkStreamingNotesTimeline
 			ref="tlComponent"
-			:key="src + withRenotes + withReplies + withHashtags + onlyFiles + localOnly + remoteOnly + excludeBots + withSensitive"
+			:key="src + withRenotes + withReplies + withHashtags + onlyFiles + localOnly + remoteOnly + excludeBots + withSensitive + excludeChannelNotesNonFollowing"
 			:class="$style.tl"
 			:src="(src.split(':')[0] as (BasicTimelineType | 'list'))"
 			:list="src.startsWith('list:') ? src.split(':')[1] : undefined"
@@ -27,6 +27,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			:excludeBots="excludeBots"
 			:showYamiNonFollowingPublicNotes="showYamiNonFollowingPublicNotes"
 			:showYamiFollowingNotes="showYamiFollowingNotes"
+			:excludeChannelNotesNonFollowing="excludeChannelNotesNonFollowing"
 			:sound="true"
 		/>
 	</div>
@@ -165,6 +166,11 @@ watch([withReplies, onlyFiles], ([withRepliesTo, onlyFilesTo]) => {
 const withSensitive = computed<boolean>({
 	get: () => store.r.tl.value.filter.withSensitive,
 	set: (x) => saveTlFilter('withSensitive', x),
+});
+
+const excludeChannelNotesNonFollowing = computed<boolean>({
+	get: () => store.r.tl.value.filter.excludeChannelNotesNonFollowing,
+	set: (x) => saveTlFilter('excludeChannelNotesNonFollowing', x),
 });
 
 // 闇モード関連の設定用の状態変数
@@ -410,6 +416,16 @@ const filterItems = computed(() => {
 			icon: 'ti ti-robot-off',
 			text: i18n.ts.timelineExcludeBots,
 			ref: excludeBots,
+		});
+	}
+
+	// ホーム・ソーシャルタイムラインにチャンネル投稿フィルターを追加
+	if (['home', 'social'].includes(src.value)) {
+		items.push({
+			type: 'switch',
+			icon: 'ti ti-affiliate',
+			text: i18n.ts.excludeChannelNotesNonFollowing,
+			ref: excludeChannelNotesNonFollowing,
 		});
 	}
 

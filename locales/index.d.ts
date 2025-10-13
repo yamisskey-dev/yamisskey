@@ -1779,6 +1779,10 @@ export interface Locale extends ILocale {
      */
     "timelineExcludeBots": string;
     /**
+     * フォロー中チャンネルのフォロー外ユーザーの投稿を除外
+     */
+    "excludeChannelNotesNonFollowing": string;
+    /**
      * 新しいノートを通知する
      */
     "notifyAntenna": string;

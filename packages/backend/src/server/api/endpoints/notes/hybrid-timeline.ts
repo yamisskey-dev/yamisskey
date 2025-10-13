@@ -68,6 +68,7 @@ export const paramDef = {
 		withReplies: { type: 'boolean', default: false },
 		localOnly: { type: 'boolean', default: false },
 		excludeBots: { type: 'boolean', default: false },
+		excludeChannelNotesNonFollowing: { type: 'boolean', default: false },
 	},
 	required: [],
 } as const;
@@ -115,6 +116,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					withFiles: ps.withFiles,
 					withReplies: ps.withReplies,
 					excludeBots: ps.excludeBots,
+					excludeChannelNotesNonFollowing: ps.excludeChannelNotesNonFollowing,
 				}, me);
 
 				process.nextTick(() => {
@@ -147,9 +149,17 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			const [
 				followings,
+				followingChannels,
 			] = await Promise.all([
 				this.cacheService.userFollowingsCache.fetch(me.id),
+				this.channelFollowingsRepository.find({
+					where: {
+						followerId: me.id,
+					},
+				}),
 			]);
+
+			const followingChannelIds = new Set(followingChannels.map(x => x.followeeId));
 
 			const redisTimeline = await this.fanoutTimelineEndpointService.timeline({
 				untilId,
@@ -170,6 +180,18 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					// ボットフィルタリング
 					if (ps.excludeBots && note.user?.isBot) return false;
 
+					// チャンネル投稿のフィルタリング
+					if (note.channelId) {
+						// フォロー中のチャンネルでない場合は除外
+						if (!followingChannelIds.has(note.channelId)) return false;
+
+						// excludeChannelNotesNonFollowing有効時: フォロー中ユーザーの投稿のみ
+						if (ps.excludeChannelNotesNonFollowing) {
+							const isMe = note.userId === me.id;
+							if (!isMe && !Object.hasOwn(followings, note.userId)) return false;
+						}
+					}
+
 					return true;
 				},
 				dbFallback: async (untilId, sinceId, limit) => await this.getFromDb({
@@ -182,6 +204,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					withFiles: ps.withFiles,
 					withReplies: ps.withReplies,
 					excludeBots: ps.excludeBots,
+					excludeChannelNotesNonFollowing: ps.excludeChannelNotesNonFollowing,
 				}, me),
 			});
 
@@ -203,6 +226,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		withFiles: boolean,
 		withReplies: boolean,
 		excludeBots: boolean,
+		excludeChannelNotesNonFollowing: boolean,
 	}, me: MiLocalUser) {
 		const followees = await this.userFollowingService.getFollowees(me.id);
 		const followingChannels = await this.channelFollowingsRepository.find({
@@ -234,10 +258,26 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		if (followingChannels.length > 0) {
 			const followingChannelIds = followingChannels.map(x => x.followeeId);
 
-			query.andWhere(new Brackets(qb => {
-				qb.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds });
-				qb.orWhere('note.channelId IS NULL');
-			}));
+			if (ps.excludeChannelNotesNonFollowing) {
+				// フォロー中ユーザーのチャンネル投稿のみ + 非チャンネル投稿
+				const meOrFolloweeIds = followees.length > 0 ? [me.id, ...followees.map(f => f.followeeId)] : [me.id];
+				query.andWhere(new Brackets(qb => {
+					// 非チャンネル投稿
+					qb.where('note.channelId IS NULL');
+					// またはフォロー中チャンネル内のフォロー中ユーザーの投稿
+					qb.orWhere(new Brackets(qb2 => {
+						qb2
+							.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds })
+							.andWhere('note.userId IN (:...meOrFolloweeIds)', { meOrFolloweeIds });
+					}));
+				}));
+			} else {
+				// 本家仕様: フォロー中チャンネルの全投稿 + 非チャンネル投稿
+				query.andWhere(new Brackets(qb => {
+					qb.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds });
+					qb.orWhere('note.channelId IS NULL');
+				}));
+			}
 		} else {
 			query.andWhere('note.channelId IS NULL');
 		}

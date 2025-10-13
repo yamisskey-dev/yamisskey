@@ -20,7 +20,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button v-if="$i.policies.noteDraftLimit > 0" v-tooltip="(postAccount != null && postAccount.id !== $i.id) ? null : i18n.ts.draftsAndScheduledNotes" class="_button" :class="$style.draftButton" :disabled="postAccount != null && postAccount.id !== $i.id" @click="showDraftMenu"><i class="ti ti-list"></i></button>
 		</div>
 		<div :class="$style.headerRight">
-			<template v-if="!(targetChannel != null && fixed)">
+			<template v-if="targetChannel == null">
 				<!-- やみノート切り替えボタン - canYamiNote権限がある場合に表示 -->
 				<button
 					v-if="$i.policies?.canYamiNote"
@@ -38,7 +38,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 				<!-- 既存の公開範囲ボタン -->
 				<button
-					v-if="props.targetChannel == null" ref="visibilityButton" v-tooltip="i18n.ts.visibility"
+					v-if="targetChannel == null" ref="visibilityButton" v-tooltip="i18n.ts.visibility"
 					:class="['_button', $style.headerRightItem, $style.visibility]" @click="setVisibility"
 				>
 					<span v-if="displayVisibility === 'public'"><i class="ti ti-world"></i></span>

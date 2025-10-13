@@ -67,6 +67,7 @@ export type Column = {
 	excludeBots?: boolean;
 	showYamiNonFollowingPublicNotes?: boolean;
 	showYamiFollowingNotes?: boolean;
+	excludeChannelNotesNonFollowing?: boolean;
 	soundSetting?: SoundStore;
 	// The cache for the name of the antenna, channel, list, or role
 	timelineNameCache?: string;
