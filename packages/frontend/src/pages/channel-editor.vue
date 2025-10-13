@@ -27,11 +27,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<template #label>{{ i18n.ts._channel.allowRenoteToExternal }}</template>
 			</MkSwitch>
 
-			<MkSelect v-model="followersVisibility" @update:modelValue="save()">
+			<MkSelect v-model="followersVisibility" :items="followersVisibilityItems" @update:modelValue="save()">
 				<template #label>{{ i18n.ts.followersVisibility }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<option value="public">{{ i18n.ts._ffVisibility.public }}</option>
-				<option value="followers">{{ i18n.ts._ffVisibility.followers }}</option>
-				<option value="private">{{ i18n.ts._ffVisibility.private }}</option>
 			</MkSelect>
 
 			<div>
@@ -108,7 +105,13 @@ const color = ref('#000');
 const isSensitive = ref(false);
 const allowRenoteToExternal = ref(true);
 const pinnedNotes = ref<{ id: Misskey.entities.Note['id'] }[]>([]);
-const followersVisibility = ref('public');
+const followersVisibility = ref<'public' | 'followers' | 'private'>('public');
+
+const followersVisibilityItems = [
+	{ label: i18n.ts._ffVisibility.public, value: 'public' },
+	{ label: i18n.ts._ffVisibility.followers, value: 'followers' },
+	{ label: i18n.ts._ffVisibility.private, value: 'private' },
+];
 
 watch(() => bannerId.value, async () => {
 	if (bannerId.value == null) {

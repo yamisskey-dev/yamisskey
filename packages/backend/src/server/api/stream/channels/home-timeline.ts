@@ -19,6 +19,7 @@ class HomeTimelineChannel extends Channel {
 	private withRenotes: boolean;
 	private withFiles: boolean;
 	private excludeBots: boolean;
+	private excludeChannelNotesNonFollowing: boolean;
 
 	constructor(
 		private noteEntityService: NoteEntityService,
@@ -35,6 +36,7 @@ class HomeTimelineChannel extends Channel {
 		this.withRenotes = !!(params.withRenotes ?? true);
 		this.withFiles = !!(params.withFiles ?? false);
 		this.excludeBots = !!(params.excludeBots ?? false);
+		this.excludeChannelNotesNonFollowing = !!(params.excludeChannelNotesNonFollowing ?? false);
 
 		this.subscriber.on('notesStream', this.onNote);
 	}
@@ -52,9 +54,15 @@ class HomeTimelineChannel extends Channel {
 		if (this.withFiles && (note.fileIds == null || note.fileIds.length === 0)) return;
 
 		if (note.channelId) {
+			// チャンネル投稿のフィルタリング
 			if (!this.followingChannels.has(note.channelId)) return;
+
+			// excludeChannelNotesNonFollowing有効時: フォロー中ユーザーの投稿のみ
+			if (this.excludeChannelNotesNonFollowing) {
+				if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
+			}
 		} else {
-			// その投稿のユーザーをフォローしていなかったら弾く
+			// 非チャンネル投稿: その投稿のユーザーをフォローしていなかったら弾く
 			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
 		}
 

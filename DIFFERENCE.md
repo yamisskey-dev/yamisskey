@@ -1,6 +1,37 @@
 # DIFFRENCE
 
-## 2025.10.0-yami-1.9.22
+## 2025.10.0-yami-1.9.23
+
+### Feat
+- **チャンネル投稿フィルタリング機能の追加**
+  - ホーム・ソーシャルタイムラインに「フォロー中チャンネルのフォロー外ユーザーの投稿を除外」オプションを追加
+  - デフォルトはOFF（本家Misskey仕様：フォロー中チャンネルの全ユーザーの投稿を表示）
+  - ONにすると、フォロー中チャンネル内でもフォロー中のユーザー（または自分）の投稿のみを表示
+  - 通常タイムラインとDeck UIの両方に対応
+  - 設定は永続化され、タイムラインごとに個別に設定可能
+
+### Fix
+- **やみノートとチャンネル投稿の分離**
+  - チャンネル投稿が強制的に非やみノートに設定されるように修正
+  - やみタイムラインとチャンネルタイムラインを明確に分離
+  - チャンネル内投稿時にやみノートボタンが表示されないように修正（固定フォーム・ポップアップ両方）
+- チャンネル編集画面でフォロワー公開範囲の選択肢が表示されない問題を修正（MkSelectコンポーネントの仕様変更に対応）
+
+### Technical Details
+- **Backend実装**
+  - `NoteCreateService.ts`: チャンネル投稿を強制的に非やみノートに設定
+  - `notes/timeline.ts`, `notes/hybrid-timeline.ts`: エンドポイントにフィルタリングロジック追加（DB直接取得とFanout timeline両方に対応）
+  - `stream/channels/home-timeline.ts`, `stream/channels/hybrid-timeline.ts`: ストリーミングにフィルタリングロジック追加
+- **Frontend実装**
+  - `store.ts`: `excludeChannelNotesNonFollowing` フィルター設定を追加
+  - `timeline.vue`, `tl-column.vue`: UI切り替えとパラメータ渡し
+  - `MkStreamingNotesTimeline.vue`: Paginator/Streamingへのパラメータ伝播
+  - `MkPostForm.vue`: チャンネル投稿時のやみノートボタン非表示化
+  - `channel-editor.vue`: MkSelectコンポーネントの修正
+- **misskey-js**: `streaming.types.ts`, `autogen/types.ts` に型定義追加
+- **i18n**: 日本語・英語のロケールファイルに翻訳追加
+
+## 2025.10.1-yami-1.9.22
 
 ### Fix
 - 翻訳キーの追加と独自機能ラベルの統一

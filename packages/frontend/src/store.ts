@@ -68,6 +68,7 @@ export const store = markRaw(new Pizzax('base', {
 				withHashtags: false,
 				showYamiNonFollowingPublicNotes: true,
 				showYamiFollowingNotes: true,
+				excludeChannelNotesNonFollowing: false,
 			},
 		},
 	},
