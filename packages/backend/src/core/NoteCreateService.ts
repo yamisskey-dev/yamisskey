@@ -253,6 +253,8 @@ export class NoteCreateService implements OnApplicationShutdown {
 		localOnly: boolean;
 		reactionAcceptance: MiNote['reactionAcceptance'];
 		poll: IPoll | null;
+		isNoteInYamiMode?: boolean;
+		deleteAt?: Date | null;
 		apMentions?: MinimumUser[] | null;
 		apHashtags?: string[] | null;
 		apEmojis?: string[] | null;
@@ -388,6 +390,8 @@ export class NoteCreateService implements OnApplicationShutdown {
 			visibility: data.visibility,
 			visibleUsers,
 			channel,
+			isNoteInYamiMode: data.isNoteInYamiMode,
+			deleteAt: data.deleteAt,
 			apMentions: data.apMentions,
 			apHashtags: data.apHashtags,
 			apEmojis: data.apEmojis,

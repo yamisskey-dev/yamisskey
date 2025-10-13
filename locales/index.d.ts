@@ -6578,7 +6578,7 @@ export interface Locale extends ILocale {
      */
     "clearPost": string;
     /**
-     * デフォルトでノートが時限消滅するように
+     * 時限消滅
      */
     "defaultScheduledNoteDelete": string;
     "_bubbleGame": {
@@ -12688,13 +12688,9 @@ export interface Locale extends ILocale {
          */
         "enableYamiNoteOk": string;
         /**
-         * やみノートが投稿できる時にデフォルトでやみノートで投稿する
+         * やみモードのときやみノートを使う
          */
         "defaultUseYamiNote": string;
-        /**
-         * オフにすると、やみノートが投稿できる時でも通常の投稿が初期状態になります。
-         */
-        "defaultUseYamiNoteDescription": string;
         /**
          * やみタイムライン
          */

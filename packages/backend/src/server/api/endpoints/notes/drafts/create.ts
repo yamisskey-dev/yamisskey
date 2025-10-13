@@ -135,6 +135,12 @@ export const meta = {
 			code: 'CANNOT_RENOTE_TO_EXTERNAL',
 			id: 'ed1952ac-2d26-4957-8b30-2deda76bedf7',
 		},
+
+		deleteAtMustBeAfterScheduledAt: {
+			message: 'Delete time must be after scheduled time.',
+			code: 'DELETE_AT_MUST_BE_AFTER_SCHEDULED_AT',
+			id: 'a1b2c3d4-5678-90ab-cdef-1234567890ab',
+		},
 	},
 
 	limit: {
@@ -192,6 +198,7 @@ export const paramDef = {
 		},
 		scheduledAt: { type: 'integer', nullable: true },
 		isActuallyScheduled: { type: 'boolean', default: false },
+		deleteAt: { type: 'integer', nullable: true },
 	},
 	required: [],
 } as const;
@@ -203,6 +210,11 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private noteDraftEntityService: NoteDraftEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			// Validate that deleteAt is after scheduledAt
+			if (ps.scheduledAt && ps.deleteAt && ps.deleteAt <= ps.scheduledAt) {
+				throw new ApiError(meta.errors.deleteAtMustBeAfterScheduledAt);
+			}
+
 			const draft = await this.noteDraftService.create(me, {
 				fileIds: ps.fileIds ?? [],
 				pollChoices: ps.poll?.choices ?? [],
@@ -222,6 +234,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				channelId: ps.channelId ?? null,
 				scheduledAt: ps.scheduledAt ? new Date(ps.scheduledAt) : null,
 				isActuallyScheduled: ps.isActuallyScheduled,
+				deleteAt: ps.deleteAt ? new Date(ps.deleteAt) : null,
 				isNoteInYamiMode: ps.isNoteInYamiMode,
 			}).catch((err) => {
 				if (err instanceof IdentifiableError) {

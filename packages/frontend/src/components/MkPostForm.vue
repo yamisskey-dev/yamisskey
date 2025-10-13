@@ -279,6 +279,11 @@ const isNoteInYamiMode = ref(
 );
 // そしてshouldLocalOnlyを定義
 const shouldLocalOnly = computed<boolean>(() => {
+	// 管理者が連合を禁止している場合は連合なし強制
+	if ($i.policies.canFederateNote === false) {
+		return true;
+	}
+	// やみノートで連合が無効の場合も連合なし強制
 	return isNoteInYamiMode.value && !yamiNoteFederationEnabled.value;
 });
 // 最後にlocalOnlyを定義
@@ -484,10 +489,6 @@ const bottomItemActionDef: Record<keyof typeof bottomItemDef, {
 		active: scheduledNoteDelete,
 		action: toggleScheduledNoteDelete,
 	},
-	scheduleNote: {
-		active: scheduleNote,
-		action: toggleScheduleNote,
-	},
 	useCw: {
 		active: useCw,
 		action: () => useCw.value = !useCw.value,
@@ -556,17 +557,20 @@ const displayVisibility = computed(() => {
 // 連合ボタンの無効化条件
 const isFederationToggleDisabled = computed(() => {
 	return props.channel != null ||
-    visibility.value === 'specified' ||
+    (visibility.value === 'specified' && (visibleUsers.value.length > 0 || isDmIntent.value)) || // DMの場合のみ無効化
+    isPrivatePost.value || // privateの場合は連合なし強制
     $i.policies.canFederateNote === false ||
     (isNoteInYamiMode.value && !yamiNoteFederationEnabled.value);
 });
 
-// 自分のみ投稿の場合は強制的にlocalOnlyをtrueに
+// 公開範囲に応じてlocalOnlyを自動設定
 watch([visibility, visibleUsers], () => {
 	if (isPrivatePost.value) {
+		// privateの場合は連合なし強制
 		localOnly.value = true;
-	} else if (visibility.value === 'specified' && visibleUsers.value.length > 0 && !isNoteInYamiMode.value) {
-		// DMの場合で、やみノートでない場合は連合設定を解除する
+	} else if (visibility.value === 'specified' && visibleUsers.value.length > 0) {
+		// 宛先ありDMの場合は連合あり強制
+		// （localOnly=trueの場合はDMボタンが無効化されるので、ここには到達しない）
 		localOnly.value = false;
 	}
 }, { deep: true, immediate: true });
@@ -1170,6 +1174,18 @@ function deleteDraft() {
 async function saveServerDraft(options: {
 	isActuallyScheduled?: boolean;
 } = {}) {
+	// Calculate deleteAt from deleteAfter if needed
+	let deleteAt: number | null = null;
+	if (scheduledNoteDelete.value) {
+		if (scheduledNoteDelete.value.deleteAt) {
+			deleteAt = scheduledNoteDelete.value.deleteAt;
+		} else if (scheduledNoteDelete.value.deleteAfter) {
+			// Convert relative time to absolute time
+			const baseTime = options.isActuallyScheduled && scheduledAt.value ? scheduledAt.value : Date.now();
+			deleteAt = baseTime + scheduledNoteDelete.value.deleteAfter;
+		}
+	}
+
 	return await os.apiWithDialog(serverDraftId.value == null ? 'notes/drafts/create' : 'notes/drafts/update', {
 		...(serverDraftId.value == null ? {} : { draftId: serverDraftId.value }),
 		text: text.value,
@@ -1187,6 +1203,7 @@ async function saveServerDraft(options: {
 		isNoteInYamiMode: isNoteInYamiMode.value, // やみノート状態をサーバー下書きにも保存
 		scheduledAt: scheduledAt.value,
 		isActuallyScheduled: options.isActuallyScheduled ?? false,
+		deleteAt: deleteAt,
 	});
 }
 
@@ -1335,7 +1352,7 @@ async function post(ev?: MouseEvent) {
 	}
 
 	posting.value = true;
-	misskeyApi(postData.scheduleNote ? 'notes/schedule/create' : 'notes/create', postData, token).then((res) => {
+	misskeyApi('notes/create', postData, token).then((res) => {
 		if (props.freezeAfterPosted) {
 			posted.value = true;
 		} else {
@@ -1612,6 +1629,13 @@ function showDraftMenu(ev: MouseEvent) {
 				replyTargetNote.value = draft.reply;
 				reactionAcceptance.value = draft.reactionAcceptance;
 				scheduledAt.value = draft.scheduledAt ?? null;
+				if (draft.deleteAt) {
+					scheduledNoteDelete.value = {
+						deleteAt: draft.deleteAt,
+						deleteAfter: null,
+						isValid: true,
+					};
+				}
 				if (draft.channel) targetChannel.value = draft.channel as unknown as Misskey.entities.Channel;
 
 				// やみノート状態を復元

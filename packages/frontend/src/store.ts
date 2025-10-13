@@ -253,8 +253,6 @@ export const store = markRaw(new Pizzax('base', {
 			'emoji',
 			'addMfmFunction',
 			'scheduledNoteDelete',
-			'scheduleNote',
-			'schedulePostList',
 			'useCw',
 			'poll',
 			'hashtags',

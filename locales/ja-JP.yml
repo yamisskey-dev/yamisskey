@@ -1658,7 +1658,7 @@ postForm: "投稿フォーム"
 postFormButtons: "投稿フォームの項目ボタン"
 postFormBottomSettingsDescription: "投稿フォームの下部に表示される項目の並び替えが出来ます。項目をクリックすると削除できます。"
 clearPost: "投稿フォームをリセット"
-defaultScheduledNoteDelete: "デフォルトでノートが時限消滅するように"
+defaultScheduledNoteDelete: "時限消滅"
 
 _bubbleGame:
   howToPlay: "遊び方"
@@ -3381,8 +3381,7 @@ _yami:
   enableYamiNoteConfirm: "やみノートに切り替えますか？"
   enableYamiNoteConfirmWarn: "やみノートはやみモードユーザーのみが閲覧できる特殊な投稿です。閲覧対象が限られるため、より自由な表現が可能です。"
   enableYamiNoteOk: "やみノートを使用する"
-  defaultUseYamiNote: "やみノートが投稿できる時にデフォルトでやみノートで投稿する"
-  defaultUseYamiNoteDescription: "オフにすると、やみノートが投稿できる時でも通常の投稿が初期状態になります。"
+  defaultUseYamiNote: "やみモードのときやみノートを使う"
   yamiTimeline: "やみタイムライン"
   showYamiNonFollowingPublicNotes: "フォロー外ユーザーのパブリックやみノートを表示"
   showYamiFollowingNotes: "フォローしているユーザーのやみノートを表示"

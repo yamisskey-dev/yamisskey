@@ -170,4 +170,10 @@ export class MiNoteDraft {
 		default: false,
 	})
 	public isActuallyScheduled: boolean;
+
+	// 時限消滅の日時
+	@Column('timestamp with time zone', {
+		nullable: true,
+	})
+	public deleteAt: Date | null;
 }
