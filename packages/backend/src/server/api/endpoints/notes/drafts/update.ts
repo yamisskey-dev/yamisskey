@@ -188,7 +188,7 @@ export const paramDef = {
 		replyId: { type: 'string', format: 'misskey:id', nullable: true },
 		renoteId: { type: 'string', format: 'misskey:id', nullable: true },
 		channelId: { type: 'string', format: 'misskey:id', nullable: true },
-		isNoteInYamiMode: { type: 'boolean', default: false },
+		isNoteInYamiMode: { type: 'boolean' },
 
 		// anyOf内にバリデーションを書いても最初の一つしかチェックされない
 		// See https://github.com/misskey-dev/misskey/pull/10082
