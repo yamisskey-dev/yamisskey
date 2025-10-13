@@ -1587,9 +1587,8 @@ const defaultDisplayVisibility = computed({
 			defaultIsDmIntent.value = true; // DM意図はオン
 			defaultNoteLocalOnly.value = false; // 連合あり強制
 		} else {
-			// その他の公開範囲はそのまま設定
+			// その他の公開範囲（public/home/followers）はそのまま設定
 			defaultNoteVisibility.value = value;
-			// DM意図をリセット（必要に応じて）
 			defaultIsDmIntent.value = false;
 		}
 	},

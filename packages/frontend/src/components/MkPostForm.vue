@@ -279,6 +279,11 @@ const isNoteInYamiMode = ref(
 );
 // そしてshouldLocalOnlyを定義
 const shouldLocalOnly = computed<boolean>(() => {
+	// 管理者が連合を禁止している場合は連合なし強制
+	if ($i.policies.canFederateNote === false) {
+		return true;
+	}
+	// やみノートで連合が無効の場合も連合なし強制
 	return isNoteInYamiMode.value && !yamiNoteFederationEnabled.value;
 });
 // 最後にlocalOnlyを定義
@@ -556,17 +561,20 @@ const displayVisibility = computed(() => {
 // 連合ボタンの無効化条件
 const isFederationToggleDisabled = computed(() => {
 	return props.channel != null ||
-    visibility.value === 'specified' ||
+    (visibility.value === 'specified' && (visibleUsers.value.length > 0 || isDmIntent.value)) || // DMの場合のみ無効化
+    isPrivatePost.value || // privateの場合は連合なし強制
     $i.policies.canFederateNote === false ||
     (isNoteInYamiMode.value && !yamiNoteFederationEnabled.value);
 });
 
-// 自分のみ投稿の場合は強制的にlocalOnlyをtrueに
+// 公開範囲に応じてlocalOnlyを自動設定
 watch([visibility, visibleUsers], () => {
 	if (isPrivatePost.value) {
+		// privateの場合は連合なし強制
 		localOnly.value = true;
-	} else if (visibility.value === 'specified' && visibleUsers.value.length > 0 && !isNoteInYamiMode.value) {
-		// DMの場合で、やみノートでない場合は連合設定を解除する
+	} else if (visibility.value === 'specified' && visibleUsers.value.length > 0) {
+		// 宛先ありDMの場合は連合あり強制
+		// （localOnly=trueの場合はDMボタンが無効化されるので、ここには到達しない）
 		localOnly.value = false;
 	}
 }, { deep: true, immediate: true });
