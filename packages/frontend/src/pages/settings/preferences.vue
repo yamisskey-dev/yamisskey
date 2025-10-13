@@ -175,11 +175,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkSwitch>
 
 								<div v-if="collapseRenotes" style="padding-left: 46px;">
-									<MkSelect v-model="collapseRenotesTrigger" :items="[
-										{ label: i18n.ts._collapseRenotesTrigger.action, value: 'action' },
-										{ label: i18n.ts._collapseRenotesTrigger.see, value: 'see' },
-										{ label: i18n.ts._collapseRenotesTrigger.all, value: 'all' },
-									]">
+									<MkSelect
+										v-model="collapseRenotesTrigger" :items="[
+											{ label: i18n.ts._collapseRenotesTrigger.action, value: 'action' },
+											{ label: i18n.ts._collapseRenotesTrigger.see, value: 'see' },
+											{ label: i18n.ts._collapseRenotesTrigger.all, value: 'all' },
+										]"
+									>
 										<template #label>{{ i18n.ts.collapseRenotesTrigger }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 									</MkSelect>
 
@@ -311,12 +313,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<!-- リアクション数非表示（独自機能） -->
 							<SearchMarker :keywords="['reaction', 'hide', 'count']">
 								<MkPreferenceContainer k="hideReactionCount">
-									<MkSelect v-model="hideReactionCount" :items="[
-										{ label: i18n.ts._hideReactionCount.none, value: 'none' },
-										{ label: i18n.ts._hideReactionCount.self, value: 'self' },
-										{ label: i18n.ts._hideReactionCount.others, value: 'others' },
-										{ label: i18n.ts._hideReactionCount.all, value: 'all' },
-									]">
+									<MkSelect
+										v-model="hideReactionCount" :items="[
+											{ label: i18n.ts._hideReactionCount.none, value: 'none' },
+											{ label: i18n.ts._hideReactionCount.self, value: 'self' },
+											{ label: i18n.ts._hideReactionCount.others, value: 'others' },
+											{ label: i18n.ts._hideReactionCount.all, value: 'all' },
+										]"
+									>
 										<template #label><SearchLabel>{{ i18n.ts.hideReactionCount }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 									</MkSelect>
 								</MkPreferenceContainer>
@@ -444,12 +448,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 										<div class="_gaps_m">
 											<MkPreferenceContainer k="defaultNoteVisibility">
 												<MkSelect
-													v-model="defaultNoteVisibility"
+													v-model="defaultDisplayVisibility"
 													:items="[
 														{ label: i18n.ts._visibility.public, value: 'public' },
 														{ label: i18n.ts._visibility.home, value: 'home' },
 														{ label: i18n.ts._visibility.followers, value: 'followers' },
 														{ label: i18n.ts._visibility.specified, value: 'specified' },
+														{ label: i18n.ts._visibility.private, value: 'private' },
 													]"
 												>
 												</MkSelect>
@@ -740,10 +745,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<!-- システムフォントを使用しない場合のみカスタムフォントを選択可能 -->
 						<div v-if="!useSystemFont" style="margin-top: 8px;">
 							<MkPreferenceContainer k="customFont">
-								<MkSelect v-model="customFont" :items="[
-									{ label: i18n.ts.default, value: null },
-									...Object.entries(customFontList).map(([name, font]) => ({ label: font.name, value: name })),
-								]">
+								<MkSelect
+									v-model="customFont" :items="[
+										{ label: i18n.ts.default, value: null },
+										...Object.entries(customFontList).map(([name, font]) => ({ label: font.name, value: name })),
+									]"
+								>
 									<template #label><SearchLabel>{{ i18n.ts.customFont }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 								</MkSelect>
 							</MkPreferenceContainer>
@@ -1072,14 +1079,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 						<SearchMarker :keywords="['search', 'engine', 'searx', 'yami']">
 							<MkPreferenceContainer k="searchEngine">
-								<MkSelect v-model="searchEngine" :items="[
-									{ label: 'Google Search (google.com)', value: 'https://google.com/search?' },
-									{ label: 'DuckDuckGo (duckduckgo.com)', value: 'https://duckduckgo.com/?' },
-									{ label: 'Yahoo! Search (search.yahoo.com)', value: 'https://search.yahoo.com/search?' },
-									{ label: 'Ecosia (ecosia.org)', value: 'https://www.ecosia.org/search?' },
-									{ label: 'Startpage (startpage.com)', value: 'https://www.startpage.com/do/search?' },
-									{ label: 'SearXNG (search.disroot.org)', value: 'https://search.disroot.org/search?' },
-								]">
+								<MkSelect
+									v-model="searchEngine" :items="[
+										{ label: 'Google Search (google.com)', value: 'https://google.com/search?' },
+										{ label: 'DuckDuckGo (duckduckgo.com)', value: 'https://duckduckgo.com/?' },
+										{ label: 'Yahoo! Search (search.yahoo.com)', value: 'https://search.yahoo.com/search?' },
+										{ label: 'Ecosia (ecosia.org)', value: 'https://www.ecosia.org/search?' },
+										{ label: 'Startpage (startpage.com)', value: 'https://www.startpage.com/do/search?' },
+										{ label: 'SearXNG (search.disroot.org)', value: 'https://search.disroot.org/search?' },
+									]"
+								>
 									<template #label><SearchLabel>{{ i18n.ts.searchEngine }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 									<template #caption><SearchText>{{ i18n.ts._yami.searchEngineDescription }}</SearchText></template>
 								</MkSelect>
