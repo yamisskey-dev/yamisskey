@@ -2,6 +2,37 @@
 
 ## Unreleased
 
+### Fix
+- **やみモード切り替え時の閲覧不可能なタイムラインへの遷移を防止**
+  - やみモード切り替え時に、ロール設定により閲覧不可能になるタイムラインを表示していた場合、エラーメッセージが表示される問題を修正
+  - モード切り替え前に、切り替え後も現在のTLが閲覧可能かを実際のロール権限（`$i.policies`）とユーザー設定（`prefer.s`）で判定
+  - 閲覧不可能になる場合は、事前にホームTLに自動遷移してエラーを回避
+  - 各TL（yami/local/social/global）の権限を個別に評価し、決め打ちではなく柔軟に対応
+- **投稿フォームボタン設定のエラー修正とUI改善**
+  - 不正なボタン定義によるTypeError (`Cannot read properties of undefined (reading 'icon')`) を修正
+  - 保存された設定に不正なキーが含まれていても自動的にフィルタリングして動作するように改善
+  - UIをnavbar/statusbar設定と同じスタイルに統一（ドラッグハンドル + アイコン + テキスト + 削除ボタン）
+  - スマホでの操作性を向上（タッチでドラッグしやすく、項目が判別しやすい）
+
+### Feat
+- **投稿フォームボタン設定の独立ページ化**
+  - `/settings/postform-buttons` に専用設定ページを新設
+  - 投稿フォームのフッターバー右端に設定アイコン（⚙️）を追加
+  - 3つのアクセス経路を用意：投稿フォームから直接 / 設定の投稿フォームセクション内 / 設定トップのリンクエリア
+  - navbar/statusbarと統一されたUIパターンで一貫性を向上
+
+### Technical Details
+- **Frontend実装**
+  - `navbar.vue`: `toggleYamiMode()` 関数にTL閲覧可否チェックロジックを追加
+  - `local-storage.ts`: やみモード切り替え確認ダイアログのキー（`neverShowExitYamiModeInfo`, `neverShowEnterYamiModeInfo`）を`Keys`型に追加して型エラーを解消
+  - `postform-buttons.vue`: 新規設定ページ作成（navbar.vueをベースに実装）
+  - `MkPostForm.vue`: フッター右側に設定ボタン追加、`openPostFormSettings()` 関数実装
+  - `preferences.vue`: 投稿フォームセクション内と下部リンクエリアにpostform-buttonsへのリンク追加、旧実装を削除
+  - `router.definition.ts`: `/settings/postform-buttons` ルート定義追加
+  - `post-form.ts`: `bottomItemDef` のアイコン定義は変更なし（`ti-` プレフィックス付き）
+
+## 2025.10.0-yami-1.9.23
+
 ### Feat
 - **チャンネル投稿フィルタリング機能の追加**
   - ホーム・ソーシャルタイムラインに「フォロー中チャンネルのフォロー外ユーザーの投稿を除外」オプションを追加
