@@ -1779,7 +1779,7 @@ export interface Locale extends ILocale {
      */
     "timelineExcludeBots": string;
     /**
-     * フォロー中チャンネルのフォロー外ユーザーの投稿を除外
+     * フォロー外ユーザーのチャンネル投稿を除外
      */
     "excludeChannelNotesNonFollowing": string;
     /**
