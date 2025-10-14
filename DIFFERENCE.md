@@ -1,5 +1,54 @@
 # DIFFRENCE
 
+## 2025.10.0-yami-1.9.25
+
+### Feat
+- **新規ユーザーセットアップにコミュニティロール割り当て機能を追加**
+  - 初期設定ウィザードに新しいステップ4「コミュニティロール」を追加
+  - ユーザーがアカウント作成時にコミュニティロールを自分に割り当て可能に
+  - UI改善: 折りたたみ可能なセクションで見やすさ向上
+  - 多言語対応: 日本語・英語・関西弁でコミュニティロール説明を追加
+- **投稿フォームの設定ボタン表示を切り替え可能に**
+  - ナビゲーションバーと同様に、投稿フォームの設定ボタンを表示/非表示できる新設定を追加
+  - 新しい設定項目 `showPostFormSubButtons` を追加（デフォルト: true）
+  - 設定画面 `/settings/postform-buttons` にトグルスイッチを追加
+  - シンプルなUIを好むユーザーに対応
+
+### Enhance
+- **コミュニティロール管理UIのリアクティブ性とUXを改善**
+  - API呼び出しを並列化してパフォーマンスを向上（Promise.allで並列実行）
+  - ローディング状態とエラーハンドリングを追加
+  - 空リスト表示をMkResultコンポーネントに統一
+  - TypeScript型定義を厳密化してタイプセーフティを向上
+  - ロール割り当て後のリスト更新を自動化
+  - canEditCommunityRolesポリシーのスキーマ定義を追加
+
+### Fix
+- **設定画面のTypeScript型エラーを修正**
+  - MkSelectコンポーネントの型チェックを満たすため、検索エンジン選択肢を別定数として定義
+  - deleteオペレータの代わりにオブジェクト分割代入を使用してcustomFontListを生成
+
+### Refactor
+- **チャンネル投稿フィルタリングオプションの表記を簡潔化**
+  - タイムラインフィルター設定の翻訳文字列を簡潔に改善
+
+### Technical Details
+- **Frontend実装**
+  - `MkUserSetupDialog.CommunityRole.vue`: 新規ユーザーセットアップステップを実装
+  - `MkUserSetupDialog.vue`: コミュニティロールステップを統合
+  - `role-add-dialog.vue`: MkFolderを使用したUI改善、セットアップダイアログと共通化
+  - `DialogRole.vue`, `explore.roles.vue`, `channel.vue`: コミュニティロール管理のUX改善
+  - `MkPostForm.vue`: 設定ボタンの表示制御機能を追加
+  - `postform-buttons.vue`: 設定ボタン表示のトグルスイッチを追加
+  - `preferences.vue`: 検索エンジン選択の型定義を修正
+- **Backend実装**
+  - `role.ts`: canEditCommunityRolesポリシーのスキーマ定義を追加
+- **misskey-js**
+  - `autogen/types.ts`: canEditCommunityRolesポリシーの型定義を追加
+- **i18n**
+  - `communityRoleDescription`キーを追加（日本語・英語・関西弁）
+  - `showPostFormSubButtons`キーを追加（日本語・英語）
+
 ## 2025.10.0-yami-1.9.24
 
 ### Fix
@@ -35,7 +84,7 @@
 
 ### Feat
 - **チャンネル投稿フィルタリング機能の追加**
-  - ホーム・ソーシャルタイムラインに「フォロー中チャンネルのフォロー外ユーザーの投稿を除外」オプションを追加
+  - ホーム・ソーシャルタイムラインに「フォロー外ユーザーのチャンネル投稿を除外」オプションを追加
   - デフォルトはOFF（本家Misskey仕様：フォロー中チャンネルの全ユーザーの投稿を表示）
   - ONにすると、フォロー中チャンネル内でもフォロー中のユーザー（または自分）の投稿のみを表示
   - 通常タイムラインとDeck UIの両方に対応

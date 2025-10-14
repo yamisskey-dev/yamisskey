@@ -360,6 +360,10 @@ export const packedRolePoliciesSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
+		canEditCommunityRoles: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
 		noteDraftLimit: {
 			type: 'integer',
 			optional: false, nullable: false,

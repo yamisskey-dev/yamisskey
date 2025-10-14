@@ -1491,6 +1491,7 @@ _initialAccountSetting:
   theseSettingsCanEditLater: "この設定はあとから変えれるで。"
   youCanEditMoreSettingsInSettingsPageLater: "これ以外にもいろんな設定を「設定」ページからできるで。後で確認してみてな。"
   followUsers: "タイムラインを構築するために、気になるユーザーをフォローしてみ。"
+  communityRoleDescription: "コミュニティロールを自分に割り当てて、自己紹介とかバッジを表示してみてな。"
   pushNotificationDescription: "プッシュ通知を有効にすると{name}の通知をあんたのデバイスで受け取れるで。"
   initialAccountSettingCompleted: "初期設定終わりや！"
   haveFun: "{name}、楽しんでな～"

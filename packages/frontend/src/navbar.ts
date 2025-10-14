@@ -17,11 +17,12 @@ import { claimAchievement } from '@/utility/achievements.js';
 
 const roleManager = async () => {
 	try {
-		await os.popup(
+		os.popup(
 			defineAsyncComponent(() => import('@/pages/role-add-dialog.vue')),
 			{},
-			{},
-			'closed',
+			{
+				closed: () => {},
+			},
 		);
 	} catch (error) {
 		console.error(error);

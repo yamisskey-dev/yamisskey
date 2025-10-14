@@ -150,7 +150,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</template>
 		</div>
 		<div :class="$style.footerRight">
-			<button v-tooltip="i18n.ts.postFormButtons" class="_button" :class="$style.footerButton" @click="openPostFormSettings"><i class="ti ti-settings"></i></button>
+			<button v-if="prefer.r.showPostFormSubButtons.value" v-tooltip="i18n.ts.postFormButtons" class="_button" :class="$style.footerButton" @click="openPostFormSettings"><i class="ti ti-settings"></i></button>
 		</div>
 	</footer>
 	<datalist id="hashtags">
