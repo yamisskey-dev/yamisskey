@@ -392,6 +392,9 @@ export const PREF_DEF = definePreferences({
 	showNavbarSubButtons: {
 		default: true,
 	},
+	showPostFormSubButtons: {
+		default: true,
+	},
 	showTitlebar: {
 		default: false,
 	},

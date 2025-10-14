@@ -1558,6 +1558,7 @@ _settings:
   enableHighQualityImagePlaceholders: "Display placeholders for high quality images"
   uiAnimations: "UI Animations"
   showNavbarSubButtons: "Show sub-buttons on the navigation bar"
+  showPostFormSubButtons: "Show settings button on post form buttons"
   ifOn: "When turned on"
   ifOff: "When turned off"
   enableSyncThemesBetweenDevices: "Synchronize installed themes across devices"

@@ -1577,6 +1577,7 @@ _settings:
   enableHighQualityImagePlaceholders: "高品質な画像のプレースホルダを表示"
   uiAnimations: "UIのアニメーション"
   showNavbarSubButtons: "ナビゲーションバーに副ボタンを表示"
+  showPostFormSubButtons: "投稿フォームの項目ボタンに設定ボタンを表示"
   ifOn: "オンのとき"
   ifOff: "オフのとき"
   enableSyncThemesBetweenDevices: "デバイス間でインストールしたテーマを同期"

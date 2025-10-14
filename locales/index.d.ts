@@ -6294,6 +6294,10 @@ export interface Locale extends ILocale {
          */
         "showNavbarSubButtons": string;
         /**
+         * 投稿フォームの項目ボタンに設定ボタンを表示
+         */
+        "showPostFormSubButtons": string;
+        /**
          * オンのとき
          */
         "ifOn": string;
