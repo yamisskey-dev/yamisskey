@@ -58,7 +58,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<MkInfo warn>{{ i18n.ts.notesSearchNotAvailable }}</MkInfo>
 			</div>
 		</div>
-		<div v-else-if="tab === 'followers'" class="_gaps">
+		<div v-else-if="channel && tab === 'followers'" class="_gaps">
 			<MkInfo v-if="channel.followersVisibility === 'followers'" warn>
 				{{ i18n.ts._ffVisibility.followers }}
 			</MkInfo>

@@ -4,7 +4,7 @@
  */
 
 <template>
-<button v-adaptive-bg tabindex="-1" class="_panel" :class="$style.root" :style="{ '--color': role.color }" @click="roleAction">
+<button v-adaptive-bg tabindex="-1" class="_panel" :class="$style.root" :style="{ '--color': role.color ?? 'transparent' }" @click="roleAction">
 	<div :class="$style.title">
 		<span :class="$style.icon">
 			<template v-if="role.iconUrl">
@@ -18,9 +18,9 @@
 
 <script lang="ts" setup>
 import { defineAsyncComponent, ref, computed } from 'vue';
+import type { RolePolicies } from 'misskey-js/autogen/models.js';
 import * as os from '@/os';
 import { i18n } from '@/i18n';
-import { misskeyApi } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
 
 const props = defineProps<{
@@ -28,22 +28,29 @@ const props = defineProps<{
 		id: string,
 		name: string,
 		description: string,
-		iconUrl: string,
-		color: string,
-		isOwner: boolean,
+		iconUrl: string | null,
+		color: string | null,
+		isOwner?: boolean,
+		asBadge: boolean,
+		isPublic: boolean,
+		isExplorable: boolean,
 	},
 	isAssigned: boolean,
 }>();
 
+const emit = defineEmits<{
+	(ev: 'refresh'): void
+}>();
+
 // 権限チェック（計算プロパティ）
 const canEditCommunityRoles = computed(() => {
-	return $i && $i.policies.canEditCommunityRoles;
+	return $i && ($i.policies as RolePolicies & Record<string, unknown>).canEditCommunityRoles;
 });
 
-function roleAction(ev) {
+function roleAction(ev: MouseEvent) {
 	const menuItems = [
 		{
-			type: 'label',
+			type: 'label' as const,
 			text: props.role.name,
 		},
 		(props.isAssigned ? {
@@ -59,6 +66,9 @@ function roleAction(ev) {
 				await os.apiWithDialog('roles/unassign', {
 					roleId: props.role.id,
 				});
+
+				// 親コンポーネントにリスト再取得を指示
+				emit('refresh');
 			},
 		} : {
 			text: i18n.ts.assign,
@@ -67,6 +77,9 @@ function roleAction(ev) {
 				await os.apiWithDialog('roles/assign', {
 					roleId: props.role.id,
 				});
+
+				// 親コンポーネントにリスト再取得を指示
+				emit('refresh');
 			},
 		}),
 	];
@@ -76,7 +89,7 @@ function roleAction(ev) {
 		menuItems.push({
 			text: i18n.ts.edit,
 			icon: 'ti ti-edit',
-			action: () => {
+			action: async () => {
 				editRole(props.role); // 編集時には既存ロール情報を渡す
 			},
 		});
@@ -85,8 +98,8 @@ function roleAction(ev) {
 	os.popupMenu(menuItems, ev.currentTarget ?? ev.target);
 }
 
-// 編集用関数（createRoleではなく）
-function editRole(role) {
+// 編集用関数
+function editRole(role: typeof props.role) {
 	// 権限チェック - 編集権限がない場合かつ所有者でもない場合は実行しない
 	if (!canEditCommunityRoles.value && !role.isOwner) {
 		os.alert({
@@ -98,8 +111,13 @@ function editRole(role) {
 	}
 
 	os.popup(defineAsyncComponent(() => import('./role-add-dialog.vue')), {
-		role: role, // 既存のロール情報を渡す
-	}, {}, 'closed');
+		role: role,
+	}, {
+		closed: () => {
+			// ダイアログが閉じられたらリストを更新
+			emit('refresh');
+		},
+	});
 }
 </script>
 

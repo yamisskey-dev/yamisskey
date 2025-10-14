@@ -4,11 +4,11 @@
  */
 
 <template>
-<MkModalWindow ref="dialog" :width="400" @close="dialog.close()" @closed="$emit('closed')">
+<MkModalWindow ref="dialog" :width="400" @close="dialog?.close()" @closed="$emit('closed')">
 	<template v-if="!props.role" #header>
 		<div :class="$style.header">
 			<span>{{ i18n.ts.communityRole }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></span>
-			<XTabs :class="$style.tabs" :rootEl="dialog" :tab="tab" :tabs="headerTabs" @update:tab="key => tab = key"/>
+			<XTabs v-if="dialog?.$el" :class="$style.tabs" :rootEl="dialog.$el" :tab="tab" :tabs="headerTabs" @update:tab="key => tab = key"/>
 		</div>
 	</template>
 	<template v-else #header>{{ i18n.ts.changes }}</template>
@@ -45,18 +45,23 @@
 	</div>
 
 	<div v-else-if="tab === 'manage'">
-		<div class="_gaps_m">
+		<div v-if="isLoadingRoles" style="text-align: center; padding: 16px;">
+			<MkLoading/>
+		</div>
+		<div v-else class="_gaps_m">
 			<div class="_gaps_s">
 				<MkFoldableSection>
 					<template #header>{{ i18n.ts.assignedRoles }}</template>
-					<div class="_gaps_s">
-						<DialogRole v-for="role in rolesAssigned" :key="role.id" :role="role" :isAssigned="true"/>
+					<MkResult v-if="assignedList.length === 0" type="empty"/>
+					<div v-else class="_gaps_s">
+						<DialogRole v-for="role in assignedList" :key="role.id" :role="role" :isAssigned="true" @refresh="refreshRoleLists"/>
 					</div>
 				</MkFoldableSection>
 				<MkFoldableSection>
 					<template #header>{{ i18n.ts.assignableRoles }}</template>
-					<div class="_gaps_s">
-						<DialogRole v-for="role in roles" :key="role.id" :role="role" :isAssigned="false"/>
+					<MkResult v-if="roleList.length === 0" type="empty"/>
+					<div v-else class="_gaps_s">
+						<DialogRole v-for="role in roleList" :key="role.id" :role="role" :isAssigned="false" @refresh="refreshRoleLists"/>
 					</div>
 				</MkFoldableSection>
 			</div>
@@ -70,6 +75,8 @@ import { onMounted, ref, computed, watch } from 'vue';
 import MkModalWindow from '@/components/MkModalWindow.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkInput from '@/components/MkInput.vue';
+import MkLoading from '@/components/global/MkLoading.vue';
+import MkResult from '@/components/global/MkResult.vue';
 import * as os from '@/os';
 import { i18n } from '@/i18n';
 import MkSwitch from '@/components/MkSwitch.vue';
@@ -81,24 +88,35 @@ import DialogRole from '@/pages/DialogRole.vue';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
 
+type Role = {
+	id: string;
+	name: string;
+	description: string;
+	iconUrl: string | null;
+	color: string | null;
+	isOwner?: boolean;
+	asBadge: boolean;
+	isPublic: boolean;
+	isExplorable: boolean;
+	[key: string]: unknown;
+};
+
 const props = defineProps<{
-	role?: any,
+	role?: Role,
 }>();
 
-const dialog = ref(null);
+const dialog = ref<InstanceType<typeof MkModalWindow>>();
 const name = ref(props.role ? props.role.name : '');
 const description = ref(props.role ? props.role.description : '');
-const color = ref(props.role ? props.role.color : '#000000');
+const color = ref(props.role ? (props.role.color ?? '#000000') : '#000000');
 const isExplorable = ref(props.role ? props.role.isExplorable : true);
 const isPublic = ref(props.role ? props.role.isPublic : true);
 const asBadge = ref(props.role ? props.role.asBadge : false);
-const iconUrl = ref(props.role ? props.role.iconUrl : null); // iconUrl 変数を追加
+const iconUrl = ref<string | null>(props.role ? props.role.iconUrl : null); // iconUrl 変数を追加
 
-const assignedList = ref([]); // 修正: リアクティブにする
-const roleList = ref([]); // 修正: リアクティブにする
-
-const rolesAssigned = computed(() => assignedList.value);
-const roles = computed(() => roleList.value);
+const assignedList = ref<Role[]>([]);
+const roleList = ref<Role[]>([]);
+const isLoadingRoles = ref(false);
 
 // ユーザーの権限チェック - 編集権限のみをチェック
 const canEditCommunityRoles = computed(() => {
@@ -107,7 +125,7 @@ const canEditCommunityRoles = computed(() => {
 
 // タブ定義を権限に応じて変更
 const headerTabs = computed(() => {
-	const tabs = [];
+	const tabs: { key: string; title: string }[] = [];
 
 	// 編集タブは編集権限または所有者のみ表示
 	if (props.role) {
@@ -165,16 +183,35 @@ watch(() => canEditCommunityRoles.value, (hasEditPermission) => {
 	}
 }, { immediate: true });
 
-onMounted(async () => {
-	assignedList.value = await misskeyApi('roles/list', {
-		assignedOnly: true,
-	});
+async function refreshRoleLists() {
+	isLoadingRoles.value = true;
 
-	roleList.value = await misskeyApi('roles/list', {
-		communityPublicOnly: true,
-	}).then(v => v.filter(r =>
-		!assignedList.value.some(ra => r.id === ra.id),
-	));
+	try {
+		// API呼び出しを並列化
+		const [assigned, allRoles] = await Promise.all([
+			misskeyApi('roles/list', { assignedOnly: true }),
+			misskeyApi('roles/list', { communityPublicOnly: true }),
+		]);
+
+		assignedList.value = assigned as Role[];
+
+		// 割り当て済みを除外
+		roleList.value = (allRoles as Role[]).filter(r =>
+			!assignedList.value.some(ra => r.id === ra.id),
+		);
+	} catch (error) {
+		console.error('Failed to fetch role lists:', error);
+		os.alert({
+			type: 'error',
+			text: String(i18n.ts.failedToLoad),
+		});
+	} finally {
+		isLoadingRoles.value = false;
+	}
+}
+
+onMounted(() => {
+	refreshRoleLists();
 });
 
 const emit = defineEmits<{
@@ -186,7 +223,7 @@ async function done() {
 	if (!name.value?.trim()) {
 		os.alert({
 			type: 'error',
-			text: i18n.ts.inputRequired,
+			text: String(i18n.ts.inputRequired),
 		});
 		return;
 	}
