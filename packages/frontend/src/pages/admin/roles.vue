@@ -465,10 +465,12 @@ import { useRouter } from '@/router.js';
 import { deepClone } from '@/utility/clone.js';
 import MkTextarea from '@/components/MkTextarea.vue';
 
+type RoleWithCommunity = Misskey.entities.Role & { isCommunity?: boolean };
+
 const router = useRouter();
 const baseRoleQ = ref('');
 
-const roles = await misskeyApi('admin/roles/list');
+const roles = await misskeyApi('admin/roles/list') as RoleWithCommunity[];
 
 const policies = reactive(deepClone(instance.policies));
 

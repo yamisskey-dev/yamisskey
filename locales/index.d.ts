@@ -1779,7 +1779,7 @@ export interface Locale extends ILocale {
      */
     "timelineExcludeBots": string;
     /**
-     * フォロー中チャンネルのフォロー外ユーザーの投稿を除外
+     * フォロー外ユーザーのチャンネル投稿を除外
      */
     "excludeChannelNotesNonFollowing": string;
     /**
@@ -6294,6 +6294,10 @@ export interface Locale extends ILocale {
          */
         "showNavbarSubButtons": string;
         /**
+         * 投稿フォームの項目ボタンに設定ボタンを表示
+         */
+        "showPostFormSubButtons": string;
+        /**
          * オンのとき
          */
         "ifOn": string;
@@ -6730,6 +6734,10 @@ export interface Locale extends ILocale {
          * タイムラインを構築するため、気になるユーザーをフォローしてみましょう。
          */
         "followUsers": string;
+        /**
+         * コミュニティロールを自分に割り当てて、自己紹介やバッジを表示しましょう。
+         */
+        "communityRoleDescription": string;
         /**
          * プッシュ通知を有効にすると{name}の通知をお使いのデバイスで受け取ることができます。
          */

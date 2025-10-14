@@ -36,6 +36,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<MkButton primary class="save" @click="save"><i class="ti ti-device-floppy"></i> {{ i18n.ts.save }}</MkButton>
 		</div>
 		<div style="font-size: 0.85em; padding: 8px 0;">{{ i18n.ts.postFormBottomSettingsDescription }}</div>
+
+		<SearchMarker :keywords="['postform', 'button', 'settings', 'sub']">
+			<MkPreferenceContainer k="showPostFormSubButtons">
+				<MkSwitch v-model="showPostFormSubButtons">
+					<template #label><SearchLabel>{{ i18n.ts._settings.showPostFormSubButtons }}</SearchLabel></template>
+				</MkSwitch>
+			</MkPreferenceContainer>
+		</SearchMarker>
 	</div>
 </SearchMarker>
 </template>
@@ -43,6 +51,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts" setup>
 import { computed, defineAsyncComponent, ref } from 'vue';
 import MkButton from '@/components/MkButton.vue';
+import MkSwitch from '@/components/MkSwitch.vue';
+import MkPreferenceContainer from '@/components/MkPreferenceContainer.vue';
 import FormSlot from '@/components/form/slot.vue';
 import MkContainer from '@/components/MkContainer.vue';
 import * as os from '@/os.js';
@@ -74,6 +84,8 @@ const items = ref((prefer.s.postFormActions || defaultActions)
 		id: genId(),
 		type: x,
 	})));
+
+const showPostFormSubButtons = prefer.model('showPostFormSubButtons');
 
 async function addItem() {
 	const currentItems = items.value.map(x => x.type);

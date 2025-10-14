@@ -34,6 +34,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { ref, computed, defineAsyncComponent } from 'vue';
+import type { RolePolicies } from 'misskey-js/autogen/models.js';
 import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
 import MkRolePreview from '@/components/MkRolePreview.vue';
@@ -42,15 +43,17 @@ import { i18n } from '@/i18n.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { $i } from '@/i.js';
 
+type RoleWithCommunity = Misskey.entities.Role & { isCommunity?: boolean };
+
 const rolesManual = ref<Misskey.entities.Role[] | null>(null);
 const rolesConditional = ref<Misskey.entities.Role[] | null>(null);
 const rolesCommunity = ref<Misskey.entities.Role[] | null>(null);
 const canEditCommunityRoles = computed(() => {
-	return $i && $i.policies.canEditCommunityRoles;
+	return $i && ($i.policies as RolePolicies & Record<string, unknown>).canEditCommunityRoles;
 });
 
 misskeyApi('roles/list').then(res => {
-	const roles = res.sort((a, b) => b.displayOrder - a.displayOrder);
+	const roles = (res as RoleWithCommunity[]).sort((a, b) => b.displayOrder - a.displayOrder);
 	rolesManual.value = roles.filter(x => x.target === 'manual' && !x.isCommunity);
 	rolesConditional.value = roles.filter(x => x.target === 'conditional' && !x.isCommunity);
 	rolesCommunity.value = roles.filter(x => x.isCommunity);
@@ -68,7 +71,9 @@ function createRole() {
 	}
 
 	// 権限がある場合のみダイアログを表示
-	os.popup(defineAsyncComponent(() => import('./role-add-dialog.vue')), {}, {}, 'closed');
+	os.popup(defineAsyncComponent(() => import('./role-add-dialog.vue')), {}, {
+		closed: () => {},
+	});
 }
 </script>
 

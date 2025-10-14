@@ -11141,6 +11141,7 @@ export type components = {
             canUseBlockedNotification: boolean;
             canUseUnBlockedNotification: boolean;
             canViewCharts: boolean;
+            canEditCommunityRoles: boolean;
             noteDraftLimit: number;
             scheduledNoteLimit: number;
             watermarkAvailable: boolean;
