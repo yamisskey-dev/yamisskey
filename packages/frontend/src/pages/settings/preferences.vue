@@ -1055,14 +1055,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<SearchMarker :keywords="['search', 'engine', 'searx', 'yami']">
 							<MkPreferenceContainer k="searchEngine">
 								<MkSelect
-									v-model="searchEngine" :items="[
-										{ label: 'Google Search (google.com)', value: 'https://google.com/search?' },
-										{ label: 'DuckDuckGo (duckduckgo.com)', value: 'https://duckduckgo.com/?' },
-										{ label: 'Yahoo! Search (search.yahoo.com)', value: 'https://search.yahoo.com/search?' },
-										{ label: 'Ecosia (ecosia.org)', value: 'https://www.ecosia.org/search?' },
-										{ label: 'Startpage (startpage.com)', value: 'https://www.startpage.com/do/search?' },
-										{ label: 'SearXNG (search.disroot.org)', value: 'https://search.disroot.org/search?' },
-									]"
+									v-model="searchEngine" :items="searchEngineItems"
 								>
 									<template #label><SearchLabel>{{ i18n.ts.searchEngine }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 									<template #caption><SearchText>{{ i18n.ts._yami.searchEngineDescription }}</SearchText></template>
@@ -1224,12 +1217,20 @@ const useSystemFont = ref(miLocalStorage.getItem('useSystemFont') != null);
 const customFont = prefer.model('customFont');
 const customFontList = computed(() => {
 	// browser-default があれば削除したリストを返す
-	const list = { ...fontList };
-	delete list['browser-default'];
+	const { 'browser-default': _, ...list } = fontList;
 	return list;
 });
 const collapseRenotesTrigger = prefer.model('collapseRenotesTrigger');
 const collapseSelfRenotes = prefer.model('collapseSelfRenotes');
+
+const searchEngineItems = [
+	{ label: 'Google Search (google.com)', value: 'https://google.com/search?' },
+	{ label: 'DuckDuckGo (duckduckgo.com)', value: 'https://duckduckgo.com/?' },
+	{ label: 'Yahoo! Search (search.yahoo.com)', value: 'https://search.yahoo.com/search?' },
+	{ label: 'Ecosia (ecosia.org)', value: 'https://www.ecosia.org/search?' },
+	{ label: 'Startpage (startpage.com)', value: 'https://www.startpage.com/do/search?' },
+	{ label: 'SearXNG (search.disroot.org)', value: 'https://search.disroot.org/search?' },
+];
 
 watch(lang, () => {
 	miLocalStorage.setItem('lang', lang.value as string);
