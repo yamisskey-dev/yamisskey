@@ -50,20 +50,19 @@
 		</div>
 		<div v-else class="_gaps_m">
 			<div class="_gaps_s">
-				<MkFoldableSection>
-					<template #header>{{ i18n.ts.assignedRoles }}</template>
-					<MkResult v-if="assignedList.length === 0" type="empty"/>
-					<div v-else class="_gaps_s">
+				<MkFolder v-if="assignedList.length > 0" :defaultOpen="true">
+					<template #label>{{ i18n.ts.assignedRoles }}</template>
+					<div class="_gaps_s">
 						<DialogRole v-for="role in assignedList" :key="role.id" :role="role" :isAssigned="true" @refresh="refreshRoleLists"/>
 					</div>
-				</MkFoldableSection>
-				<MkFoldableSection>
-					<template #header>{{ i18n.ts.assignableRoles }}</template>
+				</MkFolder>
+				<MkFolder :defaultOpen="true">
+					<template #label>{{ i18n.ts.assignableRoles }}</template>
 					<MkResult v-if="roleList.length === 0" type="empty"/>
 					<div v-else class="_gaps_s">
 						<DialogRole v-for="role in roleList" :key="role.id" :role="role" :isAssigned="false" @refresh="refreshRoleLists"/>
 					</div>
-				</MkFoldableSection>
+				</MkFolder>
 			</div>
 		</div>
 	</div>
@@ -81,7 +80,7 @@ import * as os from '@/os';
 import { i18n } from '@/i18n';
 import MkSwitch from '@/components/MkSwitch.vue';
 import XTabs from '@/components/global/MkPageHeader.tabs.vue';
-import MkFoldableSection from '@/components/MkFoldableSection.vue';
+import MkFolder from '@/components/MkFolder.vue';
 import MkColorInput from '@/components/MkColorInput.vue';
 import MkTextarea from '@/components/MkTextarea.vue';
 import DialogRole from '@/pages/DialogRole.vue';

@@ -6735,6 +6735,10 @@ export interface Locale extends ILocale {
          */
         "followUsers": string;
         /**
+         * コミュニティロールを自分に割り当てて、自己紹介やバッジを表示しましょう。
+         */
+        "communityRoleDescription": string;
+        /**
          * プッシュ通知を有効にすると{name}の通知をお使いのデバイスで受け取ることができます。
          */
         "pushNotificationDescription": ParameterizedString<"name">;
