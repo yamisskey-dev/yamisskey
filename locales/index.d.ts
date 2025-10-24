@@ -3195,6 +3195,10 @@ export interface Locale extends ILocale {
      */
     "disableShowingAnimatedImages": string;
     /**
+     * この設定に関わらずアニメーション画像が再生されないときは、ブラウザ・OSのアクセシビリティ設定や省電力設定等が干渉している場合があります。
+     */
+    "disableShowingAnimatedImages_caption": string;
+    /**
      * メディアがセンシティブであることを分かりやすく表示
      */
     "highlightSensitiveMedia": string;
@@ -4898,6 +4902,10 @@ export interface Locale extends ILocale {
      * ユーザーごとのIdenticon生成を有効にする
      */
     "enableIdenticonGeneration": string;
+    /**
+     * リモートユーザーに付与したロールバッジを表示する
+     */
+    "showRoleBadgesOfRemoteUsers": string;
     /**
      * オフにするとパフォーマンスが向上します。
      */
@@ -13217,6 +13225,10 @@ export interface Locale extends ILocale {
          * 敷き詰める
          */
         "repeat": string;
+        /**
+         * 回転時はみ出ないように調整する
+         */
+        "preserveBoundingRect": string;
         /**
          * 不透明度
          */
