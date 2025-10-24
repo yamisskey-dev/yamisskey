@@ -27,6 +27,7 @@ export type Keys = (
 	'bootloaderLocales' |
 	'theme' |
 	'themeId' |
+	'themeCachedVersion' |
 	'customCss' |
 	'chatMessageDrafts' |
 	'scratchpad' |

@@ -17,7 +17,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button v-click-anime v-tooltip="i18n.ts.switchAccount" :class="$style.account" class="_button" @click="openAccountMenu">
 				<img :class="$style.avatar" :src="(postAccount ?? $i).avatarUrl" style="border-radius: 100%;"/>
 			</button>
-			<button v-if="$i.policies.noteDraftLimit > 0" v-tooltip="(postAccount != null && postAccount.id !== $i.id) ? null : i18n.ts.draftsAndScheduledNotes" class="_button" :class="$style.draftButton" :disabled="postAccount != null && postAccount.id !== $i.id" @click="showDraftMenu"><i class="ti ti-list"></i></button>
 		</div>
 		<div :class="$style.headerRight">
 			<template v-if="targetChannel == null">
@@ -191,7 +190,7 @@ import MkInfo from '@/components/MkInfo.vue';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
 import { ensureSignin, notesCount, incNotesCount } from '@/i.js';
-import { getAccounts, openAccountMenu as openAccountMenu_ } from '@/accounts.js';
+import { getAccounts, getAccountMenu } from '@/accounts.js';
 import { deepClone } from '@/utility/clone.js';
 import MkRippleEffect from '@/components/MkRippleEffect.vue';
 import { miLocalStorage } from '@/local-storage.js';
@@ -933,6 +932,19 @@ function showOtherSettings() {
 		action: () => {
 			toggleReactionAcceptance();
 		},
+	}, { type: 'divider' }, {
+		type: 'button',
+		text: i18n.ts._drafts.saveToDraft,
+		icon: 'ti ti-cloud-upload',
+		action: async () => {
+			if (!canSaveAsServerDraft.value) {
+				return os.alert({
+					type: 'error',
+					text: i18n.ts._drafts.cannotCreateDraft,
+				});
+			}
+			saveServerDraft();
+		},
 	}, ...($i.policies.scheduledNoteLimit > 0 ? [{
 		icon: 'ti ti-calendar-time',
 		text: i18n.ts.schedulePost + '...',
@@ -1508,10 +1520,69 @@ function showActions(ev: MouseEvent) {
 
 const postAccount = ref<Misskey.entities.UserDetailed | null>(null);
 
-function openAccountMenu(ev: MouseEvent) {
+async function openAccountMenu(ev: MouseEvent) {
 	if (props.mock) return;
 
-	openAccountMenu_({
+	function showDraftsDialog(scheduled: boolean) {
+		const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkNoteDraftsDialog.vue')), {
+			scheduled,
+		}, {
+			restore: async (draft: Misskey.entities.NoteDraft) => {
+				text.value = draft.text ?? '';
+				useCw.value = draft.cw != null;
+				cw.value = draft.cw ?? null;
+				visibility.value = draft.visibility;
+				localOnly.value = draft.localOnly ?? false;
+				files.value = draft.files ?? [];
+				hashtags.value = draft.hashtag ?? '';
+				if (draft.hashtag) withHashtags.value = true;
+				if (draft.poll) {
+					// 投票を一時的に空にしないと反映されないため
+					poll.value = null;
+					nextTick(() => {
+						poll.value = {
+							choices: draft.poll!.choices,
+							multiple: draft.poll!.multiple,
+							expiresAt: draft.poll!.expiresAt ? (new Date(draft.poll!.expiresAt)).getTime() : null,
+							expiredAfter: null,
+						};
+					});
+				}
+				if (draft.visibleUserIds) {
+					misskeyApi('users/show', { userIds: draft.visibleUserIds }).then(users => {
+						users.forEach(u => pushVisibleUser(u));
+					});
+				}
+				quoteId.value = draft.renoteId ?? null;
+				renoteTargetNote.value = draft.renote;
+				replyTargetNote.value = draft.reply;
+				reactionAcceptance.value = draft.reactionAcceptance;
+				scheduledAt.value = draft.scheduledAt ?? null;
+				if (draft.channel) targetChannel.value = draft.channel as unknown as Misskey.entities.Channel;
+				// やみノートモードの復元（muyami独自機能）
+				isNoteInYamiMode.value = draft.isNoteInYamiMode ?? false;
+
+				visibleUsers.value = [];
+				draft.visibleUserIds?.forEach(uid => {
+					if (!visibleUsers.value.some(u => u.id === uid)) {
+						misskeyApi('users/show', { userId: uid }).then(user => {
+							pushVisibleUser(user);
+						});
+					}
+				});
+
+				serverDraftId.value = draft.id;
+			},
+			cancel: () => {
+
+			},
+			closed: () => {
+				dispose();
+			},
+		});
+	}
+
+	const items = await getAccountMenu({
 		withExtraOperation: false,
 		includeCurrentAccount: true,
 		active: postAccount.value != null ? postAccount.value.id : $i.id,
@@ -1522,7 +1593,23 @@ function openAccountMenu(ev: MouseEvent) {
 				postAccount.value = account;
 			}
 		},
-	}, ev);
+	});
+
+	os.popupMenu([{
+		type: 'button',
+		text: i18n.ts._drafts.listDrafts,
+		icon: 'ti ti-cloud-download',
+		action: () => {
+			showDraftsDialog(false);
+		},
+	}, {
+		type: 'button',
+		text: i18n.ts._drafts.listScheduledNotes,
+		icon: 'ti ti-clock-down',
+		action: () => {
+			showDraftsDialog(true);
+		},
+	}, { type: 'divider' }, ...items], ev.currentTarget ?? ev.target);
 }
 
 function toggleScheduleNote() {
@@ -1596,106 +1683,6 @@ function showPerUploadItemMenu(item: UploaderItem, ev: MouseEvent) {
 function showPerUploadItemMenuViaContextmenu(item: UploaderItem, ev: MouseEvent) {
 	const menu = uploader.getMenu(item);
 	os.contextMenu(menu, ev);
-}
-
-function showDraftMenu(ev: MouseEvent) {
-	function showDraftsDialog(scheduled: boolean) {
-		const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkNoteDraftsDialog.vue')), {
-			scheduled,
-		}, {
-			restore: async (draft: Misskey.entities.NoteDraft) => {
-				text.value = draft.text ?? '';
-				useCw.value = draft.cw != null;
-				cw.value = draft.cw ?? null;
-				visibility.value = draft.visibility;
-				localOnly.value = draft.localOnly ?? false;
-				files.value = draft.files ?? [];
-				hashtags.value = draft.hashtag ?? '';
-				if (draft.hashtag) withHashtags.value = true;
-				if (draft.poll) {
-					// 投票を一時的に空にしないと反映されないため
-					poll.value = null;
-					nextTick(() => {
-						poll.value = {
-							choices: draft.poll!.choices,
-							multiple: draft.poll!.multiple,
-							expiresAt: draft.poll!.expiresAt ? (new Date(draft.poll!.expiresAt)).getTime() : null,
-							expiredAfter: null,
-						};
-					});
-				}
-				if (draft.visibleUserIds) {
-					misskeyApi('users/show', { userIds: draft.visibleUserIds }).then(users => {
-						users.forEach(u => pushVisibleUser(u));
-					});
-				}
-				quoteId.value = draft.renoteId ?? null;
-				renoteTargetNote.value = draft.renote;
-				replyTargetNote.value = draft.reply;
-				reactionAcceptance.value = draft.reactionAcceptance;
-				scheduledAt.value = draft.scheduledAt ?? null;
-				if (draft.deleteAt) {
-					scheduledNoteDelete.value = {
-						deleteAt: draft.deleteAt,
-						deleteAfter: null,
-						isValid: true,
-					};
-				}
-				if (draft.channel) targetChannel.value = draft.channel as unknown as Misskey.entities.Channel;
-
-				// やみノート状態を復元
-				if (!props.fixed && !parentIsYamiNote.value && $i.policies.canYamiNote) {
-					isNoteInYamiMode.value = draft.isNoteInYamiMode ?? false;
-				}
-
-				visibleUsers.value = [];
-				draft.visibleUserIds?.forEach(uid => {
-					if (!visibleUsers.value.some(u => u.id === uid)) {
-						misskeyApi('users/show', { userId: uid }).then(user => {
-							pushVisibleUser(user);
-						});
-					}
-				});
-
-				serverDraftId.value = draft.id;
-			},
-			cancel: () => {
-
-			},
-			closed: () => {
-				dispose();
-			},
-		});
-	}
-
-	os.popupMenu([{
-		type: 'button',
-		text: i18n.ts._drafts.saveToDraft,
-		icon: 'ti ti-cloud-upload',
-		action: async () => {
-			if (!canSaveAsServerDraft.value) {
-				return os.alert({
-					type: 'error',
-					text: i18n.ts._drafts.cannotCreateDraft,
-				});
-			}
-			saveServerDraft();
-		},
-	}, {
-		type: 'button',
-		text: i18n.ts._drafts.listDrafts,
-		icon: 'ti ti-cloud-download',
-		action: () => {
-			showDraftsDialog(false);
-		},
-	}, { type: 'divider' }, {
-		type: 'button',
-		text: i18n.ts._drafts.listScheduledNotes,
-		icon: 'ti ti-clock-down',
-		action: () => {
-			showDraftsDialog(true);
-		},
-	}], (ev.currentTarget ?? ev.target ?? undefined) as HTMLElement | undefined);
 }
 
 async function schedule() {
@@ -1875,20 +1862,6 @@ defineExpose({
 	width: 28px;
 	height: 28px;
 	margin: auto;
-}
-
-.draftButton {
-	padding: 8px;
-	font-size: 90%;
-	border-radius: 6px;
-
-	&:hover {
-		background: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
-	}
-
-	&:disabled {
-		background: none;
-	}
 }
 
 .headerRight {
