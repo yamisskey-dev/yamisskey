@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## 2025.10.2
+## 2025.10.1
 
 ### AI
 @claude このPRをレビューしてください。yamisskeyへの本家misskey-dev/misskey 2025.10.1リリースのマージPRです。
