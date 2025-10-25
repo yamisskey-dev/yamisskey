@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import * as Misskey from 'misskey-js';
+import type { MiNote } from '@/models/Note.js';
+import type { NotesRepository } from '@/models/_.js';
 
 /**
  * プライベートノート判定（自分のみ閲覧可能なノート）
@@ -14,10 +15,20 @@ import * as Misskey from 'misskey-js';
  *   - visibleUserIds が空配列、null、または undefined
  *   - visibleUserIds が [自分のID] のみを含む（長さ1で、その要素が自分のID）
  *
- * @param note ノートオブジェクト
+ * @param note ノートオブジェクトまたは最低限必要なプロパティを持つオブジェクト
  * @returns プライベートノートの場合 true
  */
-export function isPrivateNote(note: Misskey.entities.Note): boolean {
+export function isPrivateNote(note: MiNote): boolean;
+export function isPrivateNote(note: {
+	visibility: string;
+	visibleUserIds?: string[] | null;
+	userId: string;
+}): boolean;
+export function isPrivateNote(note: {
+	visibility: string;
+	visibleUserIds?: string[] | null;
+	userId: string;
+}): boolean {
 	if (note.visibility !== 'specified') {
 		return false;
 	}
@@ -42,20 +53,29 @@ export function isPrivateNote(note: Misskey.entities.Note): boolean {
  * 1. 指定されたノート自体がプライベートノートである
  * 2. リプライチェーンを辿った先にプライベートノートが存在する
  *
- * リプライ作成時にこの関数で判定し、trueの場合は自動的にプライベートノートとして作成する。
- *
  * @param note チェック対象のノート
+ * @param notesRepository ノートリポジトリ（リプライを取得するために使用）
  * @returns プライベートノートチェーンの場合 true
  */
-export function isPrivateNoteInReplyChain(note: Misskey.entities.Note): boolean {
+export async function isPrivateNoteInReplyChain(
+	note: MiNote,
+	notesRepository: NotesRepository,
+): Promise<boolean> {
 	// 直接のプライベートノート判定
 	if (isPrivateNote(note)) {
 		return true;
 	}
 
 	// リプライチェーンを再帰的にチェック
-	if (note.reply) {
-		return isPrivateNoteInReplyChain(note.reply);
+	if (note.replyId) {
+		try {
+			const reply = await notesRepository.findOneBy({ id: note.replyId });
+			if (!reply) return false;
+			return await isPrivateNoteInReplyChain(reply, notesRepository);
+		} catch (err) {
+			console.error(`Error checking private note in reply chain: ${err}`);
+			return false;
+		}
 	}
 
 	return false;
