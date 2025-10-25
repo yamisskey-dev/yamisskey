@@ -202,7 +202,7 @@ import MkScheduleEditor from '@/components/MkScheduleEditor.vue';
 import { prefer } from '@/preferences.js';
 import { getPluginHandlers } from '@/plugin.js';
 import { DI } from '@/di.js';
-import { shouldReplyBePrivate } from '@/utility/private-note.js';
+import { isPrivateNoteInReplyChain } from '@/utility/private-note.js';
 import { globalEvents } from '@/events.js';
 import { checkDragDataType, getDragData } from '@/drag-and-drop.js';
 import { useUploader } from '@/composables/use-uploader.js';
@@ -520,7 +520,7 @@ const isDmIntent = ref(props.initialDmIntent ??
   (visibility.value === 'specified' ? prefer.s.defaultIsDmIntent : false));
 
 // 自分のみ投稿の判定を改善
-const isPrivatePost = computed(() => {
+const isPrivateNote = computed(() => {
 	// 基本的な自分のみ投稿
 	if (visibility.value === 'specified' && visibleUsers.value.length === 0 && !isDmIntent.value) {
 		return true;
@@ -531,7 +531,7 @@ const isPrivatePost = computed(() => {
         visibleUsers.value.length === 1 &&
         visibleUsers.value[0].id === $i.id &&
         props.reply) {
-		return shouldReplyBePrivate(props.reply);
+		return isPrivateNoteInReplyChain(props.reply);
 	}
 
 	return false;
@@ -539,7 +539,7 @@ const isPrivatePost = computed(() => {
 
 // リプライ先の変更を監視して自動的にプライベート設定を適用
 watch(() => props.reply, (newReply) => {
-	if (newReply && shouldReplyBePrivate(newReply)) {
+	if (newReply && isPrivateNoteInReplyChain(newReply)) {
 		visibility.value = 'specified';
 		visibleUsers.value = []; // 自分のみ閲覧可能に設定
 	}
@@ -547,7 +547,7 @@ watch(() => props.reply, (newReply) => {
 
 // 表示用の公開範囲
 const displayVisibility = computed(() => {
-	if (isPrivatePost.value) {
+	if (isPrivateNote.value) {
 		return 'private';
 	}
 	return visibility.value;
@@ -557,14 +557,14 @@ const displayVisibility = computed(() => {
 const isFederationToggleDisabled = computed(() => {
 	return props.channel != null ||
     (visibility.value === 'specified' && (visibleUsers.value.length > 0 || isDmIntent.value)) || // DMの場合のみ無効化
-    isPrivatePost.value || // privateの場合は連合なし強制
+    isPrivateNote.value || // privateの場合は連合なし強制
     $i.policies.canFederateNote === false ||
     (isNoteInYamiMode.value && !yamiNoteFederationEnabled.value);
 });
 
 // 公開範囲に応じてlocalOnlyを自動設定
 watch([visibility, visibleUsers], () => {
-	if (isPrivatePost.value) {
+	if (isPrivateNote.value) {
 		// privateの場合は連合なし強制
 		localOnly.value = true;
 	} else if (visibility.value === 'specified' && visibleUsers.value.length > 0) {
@@ -838,7 +838,7 @@ async function toggleLocalOnly() {
 	}
 
 	// 自分のみ投稿の場合は連合なし固定
-	if (isPrivatePost.value) {
+	if (isPrivateNote.value) {
 		localOnly.value = true;
 		return;
 	}

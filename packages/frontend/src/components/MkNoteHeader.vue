@@ -48,7 +48,7 @@ import { notePage } from '@/filters/note.js';
 import { userPage } from '@/filters/user.js';
 import { dateTimeFormat } from '@/utility/intl-const.js';
 import { DI } from '@/di.js';
-import { isPrivateNoteInReplyChain } from '@/utility/private-note.js';
+import { isPrivateNote } from '@/utility/private-note.js';
 
 defineProps<{
 	note: Misskey.entities.Note & {
@@ -58,10 +58,6 @@ defineProps<{
 }>();
 
 const mock = inject(DI.mock, false);
-
-function isPrivateNote(note: Misskey.entities.Note): boolean {
-	return isPrivateNoteInReplyChain(note);
-}
 
 function getVisibilityTooltip(note: Misskey.entities.Note): string {
 	const visibilityKey = isPrivateNote(note) ? 'private' : note.visibility;

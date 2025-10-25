@@ -59,6 +59,7 @@ import { CollapsedQueue } from '@/misc/collapsed-queue.js';
 import { CacheService } from '@/core/CacheService.js';
 import { MetaService } from '@/core/MetaService.js';
 import { isQuote, isRenote } from '@/misc/is-renote.js';
+import { isPrivateNote, isPrivateNoteInReplyChain } from '@/misc/private-note.js';
 
 type NotificationType = 'reply' | 'renote' | 'quote' | 'mention';
 
@@ -408,11 +409,15 @@ export class NoteCreateService implements OnApplicationShutdown {
 	}, data: Option, silent = false): Promise<MiNote> {
 		// リプライ先がプライベートノートチェーンの場合、自動的にプライベート設定を適用
 		if (data.reply) {
-			const isReplyToPrivateChain = await this.isPrivateNoteInReplyChain(data.reply);
+			const isReplyToPrivateChain = await isPrivateNoteInReplyChain(data.reply, this.notesRepository);
 			if (isReplyToPrivateChain) {
-				data.visibility = 'specified';
-				data.visibleUsers = []; // 自分のみ閲覧可能に設定
-				data.localOnly = true; // 連合なし強制
+				// DMリプライ（複数人宛）の場合は既存の宛先を保持
+				// プライベートノートへのリプライの場合のみ自分のみに設定
+				if (!data.visibleUsers || data.visibleUsers.length === 0) {
+					data.visibility = 'specified';
+					data.visibleUsers = []; // 自分のみ閲覧可能に設定
+					data.localOnly = true; // 連合なし強制
+				}
 			}
 		}
 
@@ -497,7 +502,12 @@ export class NoteCreateService implements OnApplicationShutdown {
 			}
 		}
 
-		if (data.visibility === 'specified' && (!data.visibleUsers || data.visibleUsers.length === 0)) {
+		// プライベートノート（自分のみ閲覧可能）の場合は連合なし強制
+		if (isPrivateNote({
+			visibility: data.visibility,
+			visibleUserIds: data.visibleUsers ? data.visibleUsers.map(u => u.id) : [],
+			userId: user.id,
+		})) {
 			data.localOnly = true;
 		}
 
@@ -690,7 +700,12 @@ export class NoteCreateService implements OnApplicationShutdown {
 		if (data.channel != null) data.visibleUsers = [];
 		if (data.channel != null) data.localOnly = true;
 
-		if (data.visibility === 'specified' && (!data.visibleUsers || data.visibleUsers.length === 0)) {
+		// プライベートノート（自分のみ閲覧可能）の場合は連合なし強制
+		if (isPrivateNote({
+			visibility: data.visibility,
+			visibleUserIds: data.visibleUsers ? data.visibleUsers.map(u => u.id) : [],
+			userId: user.id,
+		})) {
 			data.localOnly = true;
 		}
 
@@ -1398,36 +1413,6 @@ export class NoteCreateService implements OnApplicationShutdown {
 		);
 
 		return mentionedUsers;
-	}
-
-	@bindThis
-	private async isPrivateNoteInReplyChain(note: MiNote): Promise<boolean> {
-		// 直接のプライベートノート
-		if (note.visibility === 'specified' && (!note.visibleUserIds || note.visibleUserIds.length === 0)) {
-			return true;
-		}
-
-		// 自分のみ宛てのノート
-		if (note.visibility === 'specified' &&
-			note.visibleUserIds &&
-			note.visibleUserIds.length === 1 &&
-			note.visibleUserIds[0] === note.userId) {
-			return true;
-		}
-
-		// リプライチェーンを再帰的にチェック
-		if (note.replyId) {
-			try {
-				const reply = await this.notesRepository.findOneBy({ id: note.replyId });
-				if (!reply) return false;
-				return await this.isPrivateNoteInReplyChain(reply);
-			} catch (err) {
-				console.error(`Error checking private note in reply chain: ${err}`);
-				return false;
-			}
-		}
-
-		return false;
 	}
 
 	@bindThis
