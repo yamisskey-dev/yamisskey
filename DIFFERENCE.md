@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## 2025.10.1-yami-1.9.25
+## Unreleased
 
 ### AI
 @claude このPRをレビューしてください。yamisskeyのプライベートノートとやみノートに関する修正PRです。
@@ -85,7 +85,7 @@
     - `MkNoteHeader.vue`: `isPrivateNote()` を直接使用
     - `MkVisibilityPicker.vue`: ローカル変数名を `isPrivate` に変更
 
-## 2025.10.0-yami-1.9.25
+## 2025.10.1-yami-1.9.25
 
 ### AI
 @claude このPRをレビューしてください。yamisskeyへの本家misskey-dev/misskey 2025.10.1リリースのマージPRです。
