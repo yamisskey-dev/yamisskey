@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## Unreleased
+## 2025.10.1-yami-1.9.26
 
 ### AI
 @claude このPRをレビューしてください。yamisskeyのプライベートノートとやみノートに関する修正PRです。
