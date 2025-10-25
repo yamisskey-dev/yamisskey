@@ -115,38 +115,35 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				useDbFallback: true, // DBフォールバックを常に有効化
 				redisTimelines: redisTimelines,
 				noteFilter: (note) => {
-					// クライアントサイドでの追加フィルタリング (Redis結果用)
+					// やみノート以外は除外
 					if (!note.isNoteInYamiMode) return false;
+
+					// メンタルヘルス保護: やみモードOFFの場合はすべて非表示
+					if (!me.isInYamiMode) return false;
 
 					// ボットフィルタリング
 					if (ps.excludeBots && note.user?.isBot) return false;
 
-					// 投稿が自分のものかどうか判定
-					const isMyNote = note.userId === me.id;
-
-					// 自分がやみモードでない場合は自分の投稿だけ表示
-					if (!me.isInYamiMode) {
-						return isMyNote;
-					}
-
 					// 自分の投稿は常に表示
-					if (isMyNote) return true;
+					if (note.userId === me.id) return true;
 
-					// ダイレクト投稿で自分が含まれていれば表示
+					// ダイレクト投稿で自分が宛先なら表示
 					if (note.visibility === 'specified' && note.visibleUserIds.includes(me.id)) return true;
 
-					// フォロー状態を確認（同期的に判定）
-					// フォロー外ユーザーのパブリック投稿
-					if (note.visibility === 'public') {
-						return ps.showYamiNonFollowingPublicNotes;
-					}
+					// パブリック投稿 → showYamiNonFollowingPublicNotes で制御
+					if (note.visibility === 'public') return ps.showYamiNonFollowingPublicNotes;
 
-					// その他の投稿はフォロー関係に基づいて判定
+					// その他(home/followers) → showYamiFollowingNotes で制御
 					return ps.showYamiFollowingNotes;
 				},
 				excludePureRenotes: !ps.withRenotes,
 				localOnly: ps.localOnly,
 				dbFallback: async (untilId, sinceId, limit) => {
+					// メンタルヘルス保護: やみモードOFFの場合は空の結果を返す
+					if (!me.isInYamiMode) {
+						return [];
+					}
+
 					const query = this.queryService.makePaginationQuery(this.notesRepository.createQueryBuilder('note'),
 						sinceId, untilId)
 						.innerJoinAndSelect('note.user', 'user')
@@ -156,89 +153,84 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 						.leftJoinAndSelect('renote.user', 'renoteUser')
 						.andWhere('note.isNoteInYamiMode = TRUE');
 
-					// 自分がやみモードでない場合は自分の投稿だけ表示
-					if (!me.isInYamiMode) {
-						query.andWhere('note.userId = :meId', { meId: me.id });
-					} else {
-						// やみモードONの場合は通常のフィルタリング
-						const followings = await this.followingsRepository.find({
-							where: { followerId: me.id },
-							select: ['followeeId'],
-						});
+					// フォロー情報を取得
+					const followings = await this.followingsRepository.find({
+						where: { followerId: me.id },
+						select: ['followeeId'],
+					});
 
-						const followingIds = followings.map(x => x.followeeId);
-						query.andWhere(new Brackets(qb => {
-							// 条件1: 自分の投稿は常に表示
-							qb.where('note.userId = :meId', { meId: me.id });
+					const followingIds = followings.map(x => x.followeeId);
+					query.andWhere(new Brackets(qb => {
+						// 条件1: 自分の投稿は常に表示
+						qb.where('note.userId = :meId', { meId: me.id });
 
-							// 条件2: フォロー中のユーザーの投稿 (showYamiFollowingNotes が true の場合のみ)
-							if (followingIds.length > 0 && ps.showYamiFollowingNotes) {
-								qb.orWhere(new Brackets(qb2 => {
-									// フォローしているユーザーのノート（可視性に応じて制限）
-									qb2.where(new Brackets(qb3 => {
-										// localOnlyパラメータがtrueの場合は追加の条件を設定
-										const baseCondition = ps.localOnly
-											? 'note.userId IN (:...followingIds) AND note.visibility = :public AND note.userHost IS NULL'
-											: 'note.userId IN (:...followingIds) AND note.visibility = :public';
-
-										// パブリック投稿
-										qb3.where(baseCondition, { followingIds, public: 'public' });
-
-										// フォロワー限定投稿 (ローカルユーザーのみで絞る場合)
-										if (ps.localOnly) {
-											qb3.orWhere('note.userId IN (:...followingIds) AND note.visibility = :followers AND note.userHost IS NULL',
-												{ followingIds, followers: 'followers' });
-										} else {
-											qb3.orWhere('note.userId IN (:...followingIds) AND note.visibility = :followers',
-												{ followingIds, followers: 'followers' });
-										}
-
-										// ホーム投稿 (ローカルユーザーのみで絞る場合)
-										if (ps.localOnly) {
-											qb3.orWhere('note.userId IN (:...followingIds) AND note.visibility = :home AND note.userHost IS NULL',
-												{ followingIds, home: 'home' });
-										} else {
-											qb3.orWhere('note.userId IN (:...followingIds) AND note.visibility = :home',
-												{ followingIds, home: 'home' });
-										}
-									}));
-								}));
-							}
-
-							// ダイレクト投稿 (localOnly が true の場合はローカルユーザーからのみに制限)
+						// 条件2: フォロー中のユーザーの投稿 (showYamiFollowingNotes が true の場合のみ)
+						if (followingIds.length > 0 && ps.showYamiFollowingNotes) {
 							qb.orWhere(new Brackets(qb2 => {
-								qb2.where('note.visibility = :specified', { specified: 'specified' })
-									.andWhere(':meId = ANY(note."visibleUserIds")', { meId: me.id });
+								// フォローしているユーザーのノート（可視性に応じて制限）
+								qb2.where(new Brackets(qb3 => {
+									// localOnlyパラメータがtrueの場合は追加の条件を設定
+									const baseCondition = ps.localOnly
+										? 'note.userId IN (:...followingIds) AND note.visibility = :public AND note.userHost IS NULL'
+										: 'note.userId IN (:...followingIds) AND note.visibility = :public';
+
+									// パブリック投稿
+									qb3.where(baseCondition, { followingIds, public: 'public' });
+
+									// フォロワー限定投稿 (ローカルユーザーのみで絞る場合)
+									if (ps.localOnly) {
+										qb3.orWhere('note.userId IN (:...followingIds) AND note.visibility = :followers AND note.userHost IS NULL',
+											{ followingIds, followers: 'followers' });
+									} else {
+										qb3.orWhere('note.userId IN (:...followingIds) AND note.visibility = :followers',
+											{ followingIds, followers: 'followers' });
+									}
+
+									// ホーム投稿 (ローカルユーザーのみで絞る場合)
+									if (ps.localOnly) {
+										qb3.orWhere('note.userId IN (:...followingIds) AND note.visibility = :home AND note.userHost IS NULL',
+											{ followingIds, home: 'home' });
+									} else {
+										qb3.orWhere('note.userId IN (:...followingIds) AND note.visibility = :home',
+											{ followingIds, home: 'home' });
+									}
+								}));
+							}));
+						}
+
+						// ダイレクト投稿 (localOnly が true の場合はローカルユーザーからのみに制限)
+						qb.orWhere(new Brackets(qb2 => {
+							qb2.where('note.visibility = :specified', { specified: 'specified' })
+								.andWhere(':meId = ANY(note."visibleUserIds")', { meId: me.id });
+
+							// localOnlyパラメータがtrueの場合のみローカルに限定
+							if (ps.localOnly) {
+								qb2.andWhere('note.userHost IS NULL');
+							}
+						}));
+
+						// 条件3: パブリックやみノート - showYamiNonFollowingPublicNotes が true の場合のみ
+						if (ps.showYamiNonFollowingPublicNotes) {
+							qb.orWhere(new Brackets(qb3 => {
+								// パブリック投稿の基本条件
+								qb3.where('note.visibility = :public', { public: 'public' });
 
 								// localOnlyパラメータがtrueの場合のみローカルに限定
 								if (ps.localOnly) {
-									qb2.andWhere('note.userHost IS NULL');
+									qb3.andWhere('note.userHost IS NULL');
+								}
+								// ここでは userHost の条件を付けない（リモートユーザーのノートも表示するため）
+
+								// フォローしているユーザーのノートは条件2で既に処理されているため除外
+								if (followingIds.length > 0) {
+									qb3.andWhere('note.userId NOT IN (:...followingIds)', { followingIds });
+								} else {
+									// フォローがない場合は自分自身のIDのみ除外
+									qb3.andWhere('note.userId != :meId', { meId: me.id });
 								}
 							}));
-
-							// 条件3: パブリックやみノート - showYamiNonFollowingPublicNotes が true の場合のみ
-							if (ps.showYamiNonFollowingPublicNotes) {
-								qb.orWhere(new Brackets(qb3 => {
-									// パブリック投稿の基本条件
-									qb3.where('note.visibility = :public', { public: 'public' });
-
-									// localOnlyパラメータがtrueの場合のみローカルに限定
-									if (ps.localOnly) {
-										qb3.andWhere('note.userHost IS NULL');
-									}
-									// ここでは userHost の条件を付けない（リモートユーザーのノートも表示するため）
-
-									// フォローしているユーザーのノートは条件2で既に処理されているため除外
-									if (followingIds.length > 0) {
-										qb3.andWhere('note.userId NOT IN (:...followingIds)', { followingIds });
-									} else {
-										// フォローがない場合は自分自身のIDのみ除外
-										qb3.andWhere('note.userId != :meId', { meId: me.id });
-									}
-								}));
-							}
-						}));
-					}
+						}
+					}));
 
 					// 他のフィルター条件を追加
 					if (ps.withFiles) {
