@@ -72,9 +72,11 @@ export class FanoutTimelineEndpointService {
 					return true;
 				}
 
-				// 自分自身のユーザータイムラインでは表示
-				if (ps.redisTimelines.some(t => t.startsWith('userTimeline:')) && ps.me?.id === note.userId) {
-					return true;
+				// メンタルヘルス保護のため、ユーザータイムラインでも
+				// やみモードでない場合は自分のやみノートも非表示
+				if (ps.redisTimelines.some(t => t.startsWith('userTimeline:'))) {
+					// parentFilterに判定を委ねる（やみモードチェックはそちらで行う）
+					return parentFilter(note);
 				}
 
 				// LTL/HTL/STLではやみモードノートを表示しない

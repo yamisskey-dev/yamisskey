@@ -142,7 +142,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					if (note.visibility === 'followers' && !isFollowing && !isSelf) return false;
 
 					// やみモード投稿のフィルタリングを追加
-					if (note.isNoteInYamiMode && !isSelf && !(me?.isInYamiMode)) return false;
+					// メンタルヘルス保護のため、自分のやみノートも非表示にする
+					if (note.isNoteInYamiMode && !(me?.isInYamiMode)) return false;
 
 					return true;
 				},
@@ -196,7 +197,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			excludeUserFromMute: ps.userId,
 		});
 
-		if (!isSelf && !(me?.isInYamiMode)) {
+		// メンタルヘルス保護のため、自分のやみノートも非表示にする
+		if (!(me?.isInYamiMode)) {
 			query.andWhere('note.isNoteInYamiMode = FALSE');
 		}
 

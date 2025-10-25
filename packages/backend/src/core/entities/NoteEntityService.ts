@@ -129,27 +129,27 @@ export class NoteEntityService implements OnModuleInit {
 	}
 
 	@bindThis
-	private async hideNote(packedNote: Packed<'Note'>, meId: MiUser['id'] | null): Promise<void> {
-		// 自分のノートは常に表示
-		if (meId === packedNote.userId) return;
+	private async isViewerInYamiMode(meId: MiUser['id'] | null): Promise<boolean> {
+		if (meId == null) return false;
+		const viewer = await this.usersRepository.findOneBy({ id: meId });
+		return viewer?.isInYamiMode ?? false;
+	}
 
+	@bindThis
+	private async hideNote(packedNote: Packed<'Note'>, meId: MiUser['id'] | null): Promise<void> {
 		let hide = false;
 
 		// やみノートの処理を追加
+		// メンタルヘルス保護のため、自分のやみノートも非表示にする
 		if (packedNote.isNoteInYamiMode) {
-			// 未ログインならやみノートは常に非表示
-			if (meId == null) {
+			const viewerInYamiMode = await this.isViewerInYamiMode(meId);
+			if (!viewerInYamiMode) {
 				hide = true;
-			} else {
-				// 自分がやみモードでない場合は非表示
-				const hasYamiMode = await this.usersRepository.findOneBy({ id: meId })
-					.then(u => u?.isInYamiMode ?? false);
-
-				if (!hasYamiMode) {
-					hide = true;
-				}
 			}
 		}
+
+		// やみノート以外の自分のノートは常に表示
+		if (!hide && meId === packedNote.userId) return;
 
 		// 既存の表示条件チェック
 		if (!hide && packedNote.user.requireSigninToViewContents && meId == null) {
@@ -330,15 +330,14 @@ export class NoteEntityService implements OnModuleInit {
 	@bindThis
 	public async isVisibleForMe(note: MiNote, meId: MiUser['id'] | null): Promise<boolean> {
 		// やみノートの場合の特別な処理
+		// メンタルヘルス保護のため、自分のやみノートもやみモードOFFの時は見えない
 		if (note.isNoteInYamiMode) {
-			if (meId == null) return false;
+			// 自分がやみモードでない場合は見えない（自分のノートも含む）
+			const viewerInYamiMode = await this.isViewerInYamiMode(meId);
+			if (!viewerInYamiMode) return false;
 
-			// 自分の投稿は常に見える
-			if (meId === note.userId) return true;
-
-			// 自分がやみモードでない場合は見えない
-			const viewer = await this.usersRepository.findOneBy({ id: meId });
-			if (!viewer || !viewer.isInYamiMode) return false;
+			// この時点で meId は非null（isViewerInYamiMode が true なので）
+			if (meId == null) return false; // TypeScript の型ガード
 
 			// ダイレクトメッセージは対象者のみ
 			if (note.visibility === 'specified') {
