@@ -46,6 +46,8 @@ describe('User', () => {
 					'lastFetchedAt',
 					'publicReactions',
 					'requireSigninToViewContents', // yamisskey-specific field
+					'hideActivity', // yamisskey: may not federate immediately
+					'hideProfileFiles', // yamisskey: may not federate immediately
 				]);
 			});
 		});

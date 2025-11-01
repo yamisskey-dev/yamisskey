@@ -114,8 +114,12 @@ export async function createAccount(host: Host): Promise<LoginUser> {
 
 	const client = new Misskey.api.APIClient({ origin: `https://${host}`, credential: signinRes.i });
 
-	// yamisskey: Set isLocked to false for testing (default is true in yamisskey)
-	await client.request('i/update', { isLocked: false });
+	// yamisskey: Set privacy defaults to false for testing (yamisskey defaults are privacy-focused)
+	await client.request('i/update', {
+		isLocked: false,
+		hideActivity: false,
+		hideProfileFiles: false,
+	});
 
 	return {
 		...signinRes,
