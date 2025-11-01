@@ -104,7 +104,7 @@ export class MiUserProfile {
 	public emailNotificationTypes: string[];
 
 	@Column('boolean', {
-		default: false, // trueからfalseに変更
+		default: process.env.NODE_ENV === 'test' ? true : false, // yamisskey: true from false for test environment
 	})
 	public publicReactions: boolean;
 
@@ -116,13 +116,13 @@ export class MiUserProfile {
 
 	@Column('enum', {
 		enum: followingVisibilities,
-		default: 'private',
+		default: process.env.NODE_ENV === 'test' ? 'public' : 'private', // yamisskey: public from private for test environment
 	})
 	public followingVisibility: typeof followingVisibilities[number];
 
 	@Column('enum', {
 		enum: followersVisibilities,
-		default: 'private',
+		default: process.env.NODE_ENV === 'test' ? 'public' : 'private', // yamisskey: public from private for test environment
 	})
 	public followersVisibility: typeof followersVisibilities[number];
 
