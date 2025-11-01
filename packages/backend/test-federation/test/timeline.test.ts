@@ -44,10 +44,12 @@ describe('Timeline', () => {
 	) {
 		let note: Misskey.entities.Note | undefined;
 		const text = noteParams.text ?? crypto.randomUUID();
+		// yamisskey: Default to 'public' visibility for federation tests
+		const visibility = noteParams.visibility ?? 'public';
 		const streamingFired = await isFired(
 			'b.test', bob, timelineChannel,
 			async () => {
-				note = (await alice.client.request('notes/create', { text, ...noteParams })).createdNote;
+				note = (await alice.client.request('notes/create', { text, visibility, ...noteParams })).createdNote;
 			},
 			'note', msg => msg.text === text,
 			channelParams,
