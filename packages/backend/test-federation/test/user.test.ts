@@ -45,6 +45,7 @@ describe('User', () => {
 					'createdAt',
 					'lastFetchedAt',
 					'publicReactions',
+					'requireSigninToViewContents', // yamisskey-specific field
 				]);
 			});
 		});
@@ -72,13 +73,13 @@ describe('User', () => {
 				await sleep();
 			});
 
-			test('Visibility set public by default', async () => {
+			test('Visibility set private by default (yamisskey)', async () => {
 				for (const user of await Promise.all([
 					alice.client.request('users/show', { userId: bobInA.id }),
 					bob.client.request('users/show', { userId: aliceInB.id }),
 				])) {
-					strictEqual(user.followersVisibility, 'public');
-					strictEqual(user.followingVisibility, 'public');
+					strictEqual(user.followersVisibility, 'private');
+					strictEqual(user.followingVisibility, 'private');
 				}
 			});
 

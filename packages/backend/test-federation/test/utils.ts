@@ -112,9 +112,14 @@ export async function createAccount(host: Host): Promise<LoginUser> {
 	await admin.client.request('admin/accounts/create', { username, password });
 	const signinRes = await signin(host, { username, password });
 
+	const client = new Misskey.api.APIClient({ origin: `https://${host}`, credential: signinRes.i });
+
+	// yamisskey: Set isLocked to false for testing (default is true in yamisskey)
+	await client.request('i/update', { isLocked: false });
+
 	return {
 		...signinRes,
-		client: new Misskey.api.APIClient({ origin: `https://${host}`, credential: signinRes.i }),
+		client,
 		username,
 		password,
 	};
