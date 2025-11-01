@@ -211,7 +211,7 @@ export class MiUser {
 
 	@Index()
 	@Column('boolean', {
-		default: false, // true から false に変更
+		default: process.env.NODE_ENV === 'test' ? true : false, // yamisskey: true from false for test environment
 		comment: 'Whether the User is explorable.',
 	})
 	public isExplorable: boolean;
