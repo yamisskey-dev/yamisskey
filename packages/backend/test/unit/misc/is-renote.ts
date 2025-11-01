@@ -20,6 +20,7 @@ const base: MiNote = {
 	user: null,
 	localOnly: false,
 	isNoteInYamiMode: false,
+	deleteAt: null,
 	reactionAcceptance: null,
 	renoteCount: 0,
 	repliesCount: 0,
