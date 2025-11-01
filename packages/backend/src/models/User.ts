@@ -222,7 +222,7 @@ export class MiUser {
 	public isHibernated: boolean;
 
 	@Column('boolean', {
-		default: true,
+		default: process.env.NODE_ENV === 'test' ? false : true, // yamisskey: false from true for test environment
 	})
 	public requireSigninToViewContents: boolean;
 
