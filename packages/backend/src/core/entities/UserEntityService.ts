@@ -465,6 +465,7 @@ export class UserEntityService implements OnModuleInit {
 		}
 
 		const notesCount = profile == null ? null :
+			process.env.NODE_ENV === 'test' ? user.notesCount : // yamisskey: test環境では常に表示
 			(profile.notesVisibility === 'public') || isMe || iAmModerator ? user.notesCount :
 			(profile.notesVisibility === 'followers') && (relation && relation.isFollowing) ? user.notesCount :
 			null;

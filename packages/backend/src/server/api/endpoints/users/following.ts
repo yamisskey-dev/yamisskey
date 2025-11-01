@@ -133,6 +133,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 						},
 					});
 					if (!isFollowing) {
+						throw new ApiError(meta.errors.forbidden);
 					}
 				}
 			}

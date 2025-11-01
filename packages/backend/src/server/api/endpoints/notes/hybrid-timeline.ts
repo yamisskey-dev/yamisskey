@@ -170,6 +170,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				redisTimelines: timelineConfig,
 				useDbFallback: this.serverSettings.enableFanoutTimelineDbFallback,
 				alwaysIncludeMyNotes: true,
+				excludeReplies: !ps.withReplies,
 				excludePureRenotes: !ps.withRenotes,
 				localOnly: ps.localOnly, // ローカルのみフィルター
 				noteFilter: note => {
