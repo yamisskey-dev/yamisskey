@@ -10,12 +10,18 @@ import * as Misskey from 'misskey-js';
 import { directives } from '@/directives/index.js';
 import { components } from '@/components/index.js';
 import XHome from '@/pages/user/home.vue';
+import { Suspense, h } from 'vue';
 import 'intersection-observer';
 
 describe('XHome', () => {
 	const renderHome = (user: Partial<Misskey.entities.UserDetailed>): RenderResult => {
-		return render(XHome, {
-			props: { user: user as Misskey.entities.UserDetailed, disableNotes: true },
+		return render({
+			setup() {
+				return () => h(Suspense, null, {
+					default: () => h(XHome, { user: user as Misskey.entities.UserDetailed, disableNotes: true }),
+				});
+			},
+		}, {
 			global: { directives, components },
 		});
 	};
