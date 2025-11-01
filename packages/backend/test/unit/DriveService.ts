@@ -22,6 +22,7 @@ import type { TestingModule } from '@nestjs/testing';
 describe('DriveService', () => {
 	let app: TestingModule;
 	let driveService: DriveService;
+	// @ts-expect-error - Smithy types version mismatch between 4.6.0 and 4.8.0
 	const s3Mock = mockClient(S3Client);
 
 	beforeAll(async () => {
@@ -43,6 +44,7 @@ describe('DriveService', () => {
 
 	describe('Object storage', () => {
 		test('delete a file', async () => {
+			// @ts-expect-error - Smithy types version mismatch
 			s3Mock.on(DeleteObjectCommand)
 				.resolves({} as DeleteObjectCommandOutput);
 
@@ -50,6 +52,7 @@ describe('DriveService', () => {
 		});
 
 		test('delete a file then unexpected error', async () => {
+			// @ts-expect-error - Smithy types version mismatch
 			s3Mock.on(DeleteObjectCommand)
 				.rejects(new InvalidObjectState({ $metadata: {}, message: '' }));
 
@@ -58,6 +61,7 @@ describe('DriveService', () => {
 
 		test('delete a file with no valid key', async () => {
 			// Some S3 implementations returns 404 Not Found on deleting with a non-existent key
+			// @ts-expect-error - Smithy types version mismatch
 			s3Mock.on(DeleteObjectCommand)
 				.rejects(new NoSuchKey({ $metadata: {}, message: 'allowed error.' }));
 
