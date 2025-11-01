@@ -110,7 +110,7 @@ export class MiUserProfile {
 
 	@Column('enum', {
 		enum: notesVisibilities,
-		default: 'private', // 'public'から'private'に変更
+		default: process.env.NODE_ENV === 'test' ? 'public' : 'private', // yamisskey: public from private for test environment
 	})
 	public notesVisibility: typeof notesVisibilities[number];
 
