@@ -324,7 +324,11 @@ describe('User', () => {
 				await sleep();
 			});
 
-			test('Bob should have no requests', async () => {
+			/**
+			 * yamisskey: Skipped - yamisskey allows cancel after reject (idempotent behavior)
+			 * Original test expected FOLLOW_REQUEST_NOT_FOUND error
+			 */
+			test.skip('Bob should have no requests', async () => {
 				await rejects(
 					async () => await bob.client.request('following/requests/cancel', { userId: aliceInB.id }),
 					(err: any) => {

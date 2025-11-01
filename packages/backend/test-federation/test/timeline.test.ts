@@ -116,10 +116,10 @@ describe('Timeline', () => {
 			});
 
 			/**
-			 * FIXME: can receive this
-			 * @see https://github.com/misskey-dev/misskey/issues/14083
+			 * yamisskey: This test now passes correctly (privacy fix)
+			 * Original issue: @see https://github.com/misskey-dev/misskey/issues/14083
 			 */
-			test.failing('Don\'t receive remote followee\'s invisible and mentioned specified-only Note', async () => {
+			test('Don\'t receive remote followee\'s invisible and mentioned specified-only Note', async () => {
 				await postAndCheckReception(homeTimeline, false, { text: `@${bob.username}@b.test Hello`, visibility: 'specified' });
 			});
 
