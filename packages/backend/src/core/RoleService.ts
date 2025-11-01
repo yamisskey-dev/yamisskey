@@ -87,12 +87,12 @@ export type RolePolicies = {
 
 export const DEFAULT_POLICIES: RolePolicies = {
 	// yamisskey: Enable timelines and public notes in test environment
-	gtlAvailable: process.env.NODE_ENV === 'test' ? true : false,
-	ltlAvailable: process.env.NODE_ENV === 'test' ? true : false,
+	gtlAvailable: process.env.NODE_ENV === 'test',
+	ltlAvailable: process.env.NODE_ENV === 'test',
 	yamiTlAvailable: false,
 	canYamiNote: false,
-	canPublicNote: process.env.NODE_ENV === 'test' ? true : false,
-	canFederateNote: process.env.NODE_ENV === 'test' ? true : false,
+	canPublicNote: process.env.NODE_ENV === 'test',
+	canFederateNote: process.env.NODE_ENV === 'test',
 	mentionLimit: 20,
 	canInvite: false,
 	inviteLimit: 0,
