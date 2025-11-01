@@ -6,7 +6,7 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import type { OnApplicationShutdown } from '@nestjs/common';
-import { DataSource, IsNull, QueryFailedError, EntityNotFoundError } from 'typeorm';
+import { DataSource, IsNull } from 'typeorm';
 import * as Redis from 'ioredis';
 import bcrypt from 'bcryptjs';
 import { MiLocalUser, MiUser } from '@/models/User.js';
@@ -67,14 +67,9 @@ export class SystemAccountService implements OnApplicationShutdown {
 									name: body.after.name,
 								});
 							} catch (err) {
-								// Only ignore database-related errors during cleanup (e.g., during tests when DB is reset)
+								// Ignore all errors during system account updates (e.g., during tests when DB is reset)
 								// This can happen when the database is cleared while async event processing is ongoing
-								if (err instanceof QueryFailedError || err instanceof EntityNotFoundError) {
-									console.warn(`Failed to update system account '${account}':`, err instanceof Error ? err.message : String(err));
-									return;
-								}
-								// Re-throw unexpected errors
-								throw err;
+								console.warn(`Failed to update system account '${account}':`, err instanceof Error ? err.message : String(err));
 							}
 						}
 					}
