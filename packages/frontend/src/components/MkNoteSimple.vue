@@ -61,14 +61,16 @@ async function deleteScheduleNote() {
 		cancelText: i18n.ts.cancel,
 	});
 	if (canceled) return;
-	await os.apiWithDialog('notes/schedule/delete', { noteId: props.note.id })
+	await os.apiWithDialog('notes/drafts/delete', { noteId: props.note?.id })
 		.then(() => {
 			isDeleted.value = true;
 		});
 }
 
 async function editScheduleNote() {
-	await os.apiWithDialog('notes/schedule/delete', { noteId: props.note.id })
+	if (!props.note) return;
+
+	await os.apiWithDialog('notes/drafts/delete', { noteId: props.note.id })
 		.then(() => {
 			isDeleted.value = true;
 		});

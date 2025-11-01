@@ -3579,6 +3579,7 @@ type SigninFlowRequest = {
     'g-recaptcha-response'?: string | null;
     'turnstile-response'?: string | null;
     'm-captcha-response'?: string | null;
+    'testcaptcha-response'?: string | null;
 };
 
 // @public (undocumented)
@@ -3599,6 +3600,9 @@ type SigninFlowResponse = {
 type SigninWithPasskeyInitResponse = {
     option: PublicKeyCredentialRequestOptionsJSON_2;
     context: string;
+    signinResponse?: SigninFlowResponse & {
+        finished: true;
+    };
 };
 
 // @public (undocumented)
@@ -3623,6 +3627,7 @@ type SignupPendingRequest = {
 type SignupPendingResponse = {
     id: User['id'];
     i: string;
+    pendingApproval?: boolean;
 };
 
 // @public (undocumented)

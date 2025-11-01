@@ -174,5 +174,10 @@ export const packedNoteDraftSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
+		deleteAt: {
+			type: 'string',
+			optional: true, nullable: true,
+			format: 'date-time',
+		},
 	},
 } as const;

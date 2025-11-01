@@ -263,6 +263,7 @@ export function userLite(id = 'someuserid', username = 'miskist', host: entities
 export function userDetailed(id = 'someuserid', username = 'miskist', host: entities.UserDetailed['host'] = 'misskey-hub.net', name: entities.UserDetailed['name'] = 'Misskey User'): entities.UserDetailed {
 	return {
 		...userLite(id, username, host, name),
+		approved: true,
 		bannerBlurhash: 'eQA^IW^-MH8w9tE8I=S^o{$*R4RikXtSxutRozjEnNR.RQadoyozog',
 		bannerUrl: 'https://github.com/misskey-dev/misskey/blob/master/packages/frontend/assets/fedi.jpg?raw=true',
 		birthday: '2014-06-20',

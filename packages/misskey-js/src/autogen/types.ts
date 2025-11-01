@@ -9752,6 +9752,16 @@ export type components = {
                 iconUrl: string | null;
                 displayOrder: number;
             }[];
+            communityRoles?: {
+                id: string;
+                name: string;
+                color: string | null;
+                iconUrl: string | null;
+                description: string;
+                isModerator: boolean;
+                isAdministrator: boolean;
+                displayOrder: number;
+            }[];
         };
         UserDetailedNotMeOnly: {
             /** Format: url */
@@ -10222,6 +10232,7 @@ export type components = {
             clippedCount?: number;
             hasPoll?: boolean;
             myReaction?: string | null;
+            isSchedule?: boolean;
         };
         NoteDraft: {
             /**
@@ -10271,6 +10282,8 @@ export type components = {
             isNoteInYamiMode?: boolean;
             scheduledAt: number | null;
             isActuallyScheduled: boolean;
+            /** Format: date-time */
+            deleteAt?: string | null;
         };
         NoteReaction: {
             /** Format: id */
@@ -10770,6 +10783,8 @@ export type components = {
             userId: string | null;
             /** Format: url */
             bannerUrl: string | null;
+            /** Format: id */
+            bannerId: string | null;
             pinnedNoteIds: string[];
             color: string;
             isArchived: boolean;
@@ -18358,6 +18373,8 @@ export interface operations {
                                 userListId: string;
                             };
                         };
+                        approved: boolean;
+                        rejected: boolean;
                         isModerator: boolean;
                         isSilenced: boolean;
                         isSuspended: boolean;

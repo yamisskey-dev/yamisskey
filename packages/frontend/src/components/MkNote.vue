@@ -316,8 +316,8 @@ const hideReactionCount = computed(() => {
 	switch (prefer.s.hideReactionCount) {
 		case 'none': return false;
 		case 'all': return true;
-		case 'self': return appearNote.userId === $i.id;
-		case 'others': return appearNote.userId !== $i.id;
+		case 'self': return $i && appearNote.userId === $i.id;
+		case 'others': return $i && appearNote.userId !== $i.id;
 		default: return false;
 	}
 });
