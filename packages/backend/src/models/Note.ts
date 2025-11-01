@@ -94,6 +94,7 @@ export class MiNote {
 	})
 	public localOnly: boolean;
 
+	@Index('IDX_a7845b9f6c07a39ad85ae50388')
 	@Column('boolean', {
 		default: false,
 	})

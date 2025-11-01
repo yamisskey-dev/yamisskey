@@ -116,13 +116,13 @@ export class MiUserProfile {
 
 	@Column('enum', {
 		enum: followingVisibilities,
-		default: 'public',
+		default: 'private',
 	})
 	public followingVisibility: typeof followingVisibilities[number];
 
 	@Column('enum', {
 		enum: followersVisibilities,
-		default: 'public',
+		default: 'private',
 	})
 	public followersVisibility: typeof followersVisibilities[number];
 
@@ -202,7 +202,7 @@ export class MiUserProfile {
 	public autoAcceptFollowed: boolean;
 
 	@Column('boolean', {
-		default: false,
+		default: true,
 		comment: 'Whether reject index by crawler.',
 	})
 	public noCrawle: boolean;

@@ -205,7 +205,7 @@ export class MiUser {
 
 	@Column('boolean', {
 		default: false,
-		comment: 'Whether the User is in yami Mode.',
+		comment: 'Whether the User is in Yami Mode.',
 	})
 	public isInYamiMode: boolean;
 
@@ -222,7 +222,7 @@ export class MiUser {
 	public isHibernated: boolean;
 
 	@Column('boolean', {
-		default: true, // false から true に変更
+		default: true,
 	})
 	public requireSigninToViewContents: boolean;
 
@@ -306,7 +306,7 @@ export class MiUser {
 	})
 	public token: string | null;
 
-	@Index()
+	@Index('IDX_USER_APPROVED')
 	@Column('boolean', {
 		default: false,
 	})

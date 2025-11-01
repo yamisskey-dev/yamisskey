@@ -690,7 +690,7 @@ export class MiMeta {
 	@Column('boolean', { default: false })
 	public yamiNoteFederationEnabled: boolean;
 
-	@Column('jsonb', { default: [], array: true })
+	@Column('jsonb', { default: [] })
 	public yamiNoteFederationTrustedInstances: string[];
 
 	@Column('jsonb', {
