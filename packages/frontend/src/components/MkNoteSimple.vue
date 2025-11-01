@@ -54,6 +54,7 @@ const emit = defineEmits<{
 }>();
 
 async function deleteScheduleNote() {
+	if (!props.note) return;
 	const { canceled } = await os.confirm({
 		type: 'warning',
 		text: i18n.ts.deleteConfirm,
@@ -61,7 +62,7 @@ async function deleteScheduleNote() {
 		cancelText: i18n.ts.cancel,
 	});
 	if (canceled) return;
-	await os.apiWithDialog('notes/drafts/delete', { noteId: props.note?.id })
+	await os.apiWithDialog('notes/drafts/delete', { draftId: props.note.id })
 		.then(() => {
 			isDeleted.value = true;
 		});
@@ -70,7 +71,7 @@ async function deleteScheduleNote() {
 async function editScheduleNote() {
 	if (!props.note) return;
 
-	await os.apiWithDialog('notes/drafts/delete', { noteId: props.note.id })
+	await os.apiWithDialog('notes/drafts/delete', { draftId: props.note.id })
 		.then(() => {
 			isDeleted.value = true;
 		});

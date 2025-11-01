@@ -9851,6 +9851,7 @@ export type components = {
             autoSensitive: boolean;
             carefulBot: boolean;
             autoAcceptFollowed: boolean;
+            autoRejectFollowRequest: boolean;
             noCrawle: boolean;
             preventAiLearning: boolean;
             isExplorable: boolean;

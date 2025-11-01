@@ -7,7 +7,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div>
 	<MkPagination v-slot="{items}" :paginator="followersPaginator" withControl>
 		<div :class="$style.users">
-			<MkUserInfo v-for="user in items.map(x => x.follower)" :key="user.id" :user="user"/>
+			<MkUserInfo v-for="user in items.map(x => x.follower).filter(x => x != null)" :key="user!.id" :user="user!"/>
 		</div>
 	</MkPagination>
 </div>
@@ -15,7 +15,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { computed, markRaw } from 'vue';
-import * as Misskey from 'misskey-js';
 import MkUserInfo from '@/components/MkUserInfo.vue';
 import MkPagination from '@/components/MkPagination.vue';
 import { Paginator } from '@/utility/paginator.js';
