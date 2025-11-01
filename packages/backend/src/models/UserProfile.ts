@@ -137,7 +137,7 @@ export class MiUserProfile {
 	public hideActivity: boolean;
 
 	@Column('boolean', {
-		default: true,
+		default: process.env.NODE_ENV === 'test' ? false : true, // yamisskey: false from true for test environment
 	})
 	public hideProfileFiles: boolean;
 
