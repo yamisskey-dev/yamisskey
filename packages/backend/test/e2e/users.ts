@@ -71,6 +71,7 @@ describe('ユーザー', () => {
 			description: user.description,
 			location: user.location,
 			birthday: user.birthday,
+			listenbrainz: user.listenbrainz, // yamisskey独自
 			lang: user.lang,
 			fields: user.fields,
 			verifiedLinks: user.verifiedLinks,
@@ -82,11 +83,15 @@ describe('ユーザー', () => {
 			pinnedPageId: user.pinnedPageId,
 			pinnedPage: user.pinnedPage,
 			publicReactions: user.publicReactions,
+			hideActivity: user.hideActivity, // yamisskey独自
+			hideProfileFiles: user.hideProfileFiles, // yamisskey独自
+			notesVisibility: user.notesVisibility, // yamisskey独自
 			followingVisibility: user.followingVisibility,
 			followersVisibility: user.followersVisibility,
 			chatScope: user.chatScope,
 			canChat: user.canChat,
 			roles: user.roles,
+			communityRoles: user.communityRoles, // yamisskey独自
 			memo: user.memo,
 		});
 	};
@@ -124,6 +129,7 @@ describe('ユーザー', () => {
 			autoSensitive: user.autoSensitive,
 			carefulBot: user.carefulBot,
 			autoAcceptFollowed: user.autoAcceptFollowed,
+			autoRejectFollowRequest: user.autoRejectFollowRequest, // yamisskey独自
 			noCrawle: user.noCrawle,
 			preventAiLearning: user.preventAiLearning,
 			isExplorable: user.isExplorable,
@@ -131,6 +137,7 @@ describe('ユーザー', () => {
 			twoFactorBackupCodesStock: user.twoFactorBackupCodesStock,
 			hideOnlineStatus: user.hideOnlineStatus,
 			activeStatusVisibility: user.activeStatusVisibility,
+			hideSearchResult: user.hideSearchResult, // yamisskey独自
 			hasUnreadSpecifiedNotes: user.hasUnreadSpecifiedNotes,
 			hasUnreadMentions: user.hasUnreadMentions,
 			hasUnreadAnnouncement: user.hasUnreadAnnouncement,

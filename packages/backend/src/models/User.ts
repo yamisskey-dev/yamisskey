@@ -32,7 +32,7 @@ export class MiUser {
 	public lastActiveDate: Date | null;
 
 	@Column('boolean', {
-		default: true, // false から true に変更
+		default: process.env.NODE_ENV === 'test' ? false : true, // yamisskey: false from true for test environment
 	})
 	public hideOnlineStatus: boolean;
 
