@@ -76,6 +76,12 @@ async function createAdmin(host: Host): Promise<Misskey.entities.SignupResponse 
 			policies: {
 				/** TODO: @see https://github.com/misskey-dev/misskey/issues/14169 */
 				rateLimitFactor: 0 as never,
+				// yamisskey: Allow public and federated notes for federation tests
+				canPublicNote: true,
+				canFederateNote: true,
+				// yamisskey: Enable global and local timelines for federation tests
+				gtlAvailable: true,
+				ltlAvailable: true,
 			},
 		}, res.token);
 		await client.request('admin/update-meta', {
