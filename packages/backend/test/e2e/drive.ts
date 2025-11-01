@@ -28,7 +28,9 @@ describe('Drive', () => {
 	});
 
 	test('添付ノート一覧を取得できる', async () => {
-		const ids = (await Promise.all([uploadFile(alice), uploadFile(alice), uploadFile(alice)])).map(elm => elm.body!.id);
+		const files = await Promise.all([uploadFile(alice), uploadFile(alice), uploadFile(alice)]);
+		files.forEach(file => assert.ok(file.body));
+		const ids = files.map(elm => elm.body!.id);
 
 		const note0 = await post(alice, { fileIds: [ids[0]] });
 		const note1 = await post(alice, { fileIds: [ids[0], ids[1]] });
@@ -48,6 +50,7 @@ describe('Drive', () => {
 
 	test('添付ノート一覧は他の人から見えない', async () => {
 		const file = await uploadFile(alice);
+		assert.ok(file.body);
 
 		await post(alice, { fileIds: [file.body!.id] });
 

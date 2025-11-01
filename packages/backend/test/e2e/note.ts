@@ -44,6 +44,7 @@ describe('Note', () => {
 
 	test('ファイルを添付できる', async () => {
 		const file = await uploadFile(alice);
+		assert.ok(file.body);
 
 		const res = await api('notes/create', {
 			fileIds: [file.body!.id],
@@ -56,6 +57,7 @@ describe('Note', () => {
 
 	test('他人のファイルで怒られる', async () => {
 		const file = await uploadFile(bob);
+		assert.ok(file.body);
 
 		const res = await api('notes/create', {
 			text: 'test',
@@ -345,6 +347,7 @@ describe('Note', () => {
 	describe('添付ファイル情報', () => {
 		test('ファイルを添付した場合、投稿成功時にファイル情報入りのレスポンスが帰ってくる', async () => {
 			const file = await uploadFile(alice);
+			assert.ok(file.body);
 			const res = await api('notes/create', {
 				fileIds: [file.body!.id],
 			}, alice);
@@ -358,6 +361,7 @@ describe('Note', () => {
 
 		test('ファイルを添付した場合、タイムラインでファイル情報入りのレスポンスが帰ってくる', async () => {
 			const file = await uploadFile(alice);
+			assert.ok(file.body);
 			const createdNote = await api('notes/create', {
 				fileIds: [file.body!.id],
 			}, alice);
@@ -379,6 +383,7 @@ describe('Note', () => {
 
 		test('ファイルが添付されたノートをリノートした場合、タイムラインでファイル情報入りのレスポンスが帰ってくる', async () => {
 			const file = await uploadFile(alice);
+			assert.ok(file.body);
 			const createdNote = await api('notes/create', {
 				fileIds: [file.body!.id],
 			}, alice);
@@ -406,6 +411,7 @@ describe('Note', () => {
 
 		test('ファイルが添付されたノートに返信した場合、タイムラインでファイル情報入りのレスポンスが帰ってくる', async () => {
 			const file = await uploadFile(alice);
+			assert.ok(file.body);
 			const createdNote = await api('notes/create', {
 				fileIds: [file.body!.id],
 			}, alice);
@@ -434,6 +440,7 @@ describe('Note', () => {
 
 		test('ファイルが添付されたノートへの返信をリノートした場合、タイムラインでファイル情報入りのレスポンスが帰ってくる', async () => {
 			const file = await uploadFile(alice);
+			assert.ok(file.body);
 			const createdNote = await api('notes/create', {
 				fileIds: [file.body!.id],
 			}, alice);
@@ -468,6 +475,7 @@ describe('Note', () => {
 
 		test('NSFWが強制されている場合変更できない', async () => {
 			const file = await uploadFile(alice);
+			assert.ok(file.body);
 
 			const res = await api('admin/roles/create', {
 				name: 'test',
@@ -503,6 +511,7 @@ describe('Note', () => {
 			assert.strictEqual(file.body!.isSensitive, false);
 
 			const nsfwfile = await uploadFile(alice);
+			assert.ok(nsfwfile.body);
 
 			assert.strictEqual(nsfwfile.status, 200);
 			assert.strictEqual(nsfwfile.body!.isSensitive, true);

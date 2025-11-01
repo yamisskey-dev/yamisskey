@@ -309,6 +309,8 @@ describe('Timelines', () => {
 					uploadFile(bob),
 					uploadFile(carol),
 				]);
+				assert.ok(bobFile.body);
+				assert.ok(carolFile.body);
 				const bobNote = await post(bob, { fileIds: [bobFile.body!.id] });
 				const carolNote = await post(carol, { fileIds: [carolFile.body!.id] });
 
@@ -485,6 +487,8 @@ describe('Timelines', () => {
 					uploadFile(bob),
 					uploadFile(carol),
 				]);
+				assert.ok(bobFile.body);
+				assert.ok(carolFile.body);
 				const bobNote1 = await post(bob, { text: 'hi' });
 				const bobNote2 = await post(bob, { fileIds: [bobFile.body!.id] });
 				const carolNote1 = await post(carol, { text: 'hi' });
@@ -1001,6 +1005,7 @@ describe('Timelines', () => {
 				const [alice, bob] = await Promise.all([signup(), signup()]);
 
 				const file = await uploadFile(bob);
+				assert.ok(file.body);
 				const bobNote1 = await post(bob, { text: 'hi' });
 				const bobNote2 = await post(bob, { fileIds: [file.body!.id] });
 
@@ -1258,6 +1263,7 @@ describe('Timelines', () => {
 				const [alice, bob] = await Promise.all([signup(), signup()]);
 
 				const file = await uploadFile(bob);
+				assert.ok(file.body);
 				const bobNote1 = await post(bob, { text: 'hi' });
 				const bobNote2 = await post(bob, { fileIds: [file.body!.id] });
 
@@ -1767,6 +1773,7 @@ describe('Timelines', () => {
 				const [alice, bob] = await Promise.all([signup(), signup()]);
 
 				const file = await uploadFile(bob);
+				assert.ok(file.body);
 				const bobNote1 = await post(bob, { text: 'hi' });
 				const bobNote2 = await post(bob, { fileIds: [file.body!.id] });
 

@@ -19,6 +19,8 @@ describe('users/notes', () => {
 		alice = await signup({ username: 'alice' });
 		const jpg = await uploadFile(alice, { path: '192.jpg' });
 		const png = await uploadFile(alice, { path: '192.png' });
+		assert.ok(jpg.body);
+		assert.ok(png.body);
 		jpgNote = await post(alice, {
 			fileIds: [jpg.body!.id],
 		});
