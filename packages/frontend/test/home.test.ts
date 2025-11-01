@@ -32,12 +32,13 @@ describe('XHome', () => {
 			uri: 'https://example.com/@user',
 			url: 'https://example.com/@user/profile',
 			roles: [],
+			communityRoles: [],
 			createdAt: '1970-01-01T00:00:00.000Z',
 			fields: [],
 			pinnedNotes: [],
 			avatarUrl: 'https://example.com',
 			avatarDecorations: [],
-		});
+		} as any);
 
 		const anchor = home.container.querySelector<HTMLAnchorElement>('a[href^="https://example.com/"]');
 		assert.exists(anchor, 'anchor to the remote exists');
@@ -52,12 +53,13 @@ describe('XHome', () => {
 			uri: 'https://example.com/@user',
 			url: null,
 			roles: [],
+			communityRoles: [],
 			createdAt: '1970-01-01T00:00:00.000Z',
 			fields: [],
 			pinnedNotes: [],
 			avatarUrl: 'https://example.com',
 			avatarDecorations: [],
-		});
+		} as any);
 
 		const anchor = home.container.querySelector<HTMLAnchorElement>('a[href^="https://example.com/"]');
 		assert.exists(anchor, 'anchor to the remote exists');

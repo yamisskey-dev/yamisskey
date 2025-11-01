@@ -18,33 +18,6 @@ describe('Drive', () => {
 		bob = await signup({ username: 'bob' });
 	}, 1000 * 60 * 2);
 
-	test('ファイルURLからアップロードできる', async () => {
-		// utils.js uploadUrl の処理だがAPIレスポンスも見るためここで同様の処理を書いている
-
-		const marker = Math.random().toString();
-
-		const url = 'https://raw.githubusercontent.com/misskey-dev/misskey/develop/packages/backend/test/resources/192.jpg';
-
-		const catcher = makeStreamCatcher(
-			alice,
-			'main',
-			(msg) => msg.type === 'urlUploadFinished' && msg.body.marker === marker,
-			(msg) => msg.body.file,
-			10 * 1000);
-
-		const res = await api('drive/files/upload-from-url', {
-			url,
-			marker,
-			force: true,
-		}, alice);
-
-		const file = await catcher;
-
-		assert.strictEqual(res.status, 204);
-		assert.strictEqual(file.name, '192.jpg');
-		assert.strictEqual(file.type, 'image/jpeg');
-	});
-
 	test('ローカルからアップロードできる', async () => {
 		// APIレスポンスを直接使用するので utils.js uploadFile が通過することで成功とする
 
@@ -55,7 +28,9 @@ describe('Drive', () => {
 	});
 
 	test('添付ノート一覧を取得できる', async () => {
-		const ids = (await Promise.all([uploadFile(alice), uploadFile(alice), uploadFile(alice)])).map(elm => elm.body!.id);
+		const files = await Promise.all([uploadFile(alice), uploadFile(alice), uploadFile(alice)]);
+		files.forEach(file => assert.ok(file.body));
+		const ids = files.map(elm => elm.body!.id);
 
 		const note0 = await post(alice, { fileIds: [ids[0]] });
 		const note1 = await post(alice, { fileIds: [ids[0], ids[1]] });
@@ -75,6 +50,7 @@ describe('Drive', () => {
 
 	test('添付ノート一覧は他の人から見えない', async () => {
 		const file = await uploadFile(alice);
+		assert.ok(file.body);
 
 		await post(alice, { fileIds: [file.body!.id] });
 

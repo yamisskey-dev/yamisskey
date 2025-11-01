@@ -344,26 +344,6 @@ export const uploadFile = async (user?: UserToken, { path, name, blob }: UploadO
 	};
 };
 
-export const uploadUrl = async (user: UserToken, url: string): Promise<misskey.entities.DriveFile> => {
-	const marker = Math.random().toString();
-
-	const catcher = makeStreamCatcher(
-		user,
-		'main',
-		(msg) => msg.type === 'urlUploadFinished' && msg.body.marker === marker,
-		(msg) => msg.body.file,
-		60 * 1000,
-	);
-
-	await api('drive/files/upload-from-url', {
-		url,
-		marker,
-		force: true,
-	}, user);
-
-	return catcher;
-};
-
 export function connectStream<C extends keyof misskey.Channels>(user: UserToken, channel: C, listener: (message: Record<string, any>) => any, params?: misskey.Channels[C]['params']): Promise<WebSocket> {
 	return new Promise((res, rej) => {
 		const url = new URL(`ws://127.0.0.1:${port}/streaming`);

@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: hitalin and yamisskey-project
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
 export class AddDeleteAtToNoteDraft1760325765000 {
     name = 'AddDeleteAtToNoteDraft1760325765000'
 

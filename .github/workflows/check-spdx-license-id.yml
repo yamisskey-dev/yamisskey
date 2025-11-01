@@ -36,6 +36,8 @@ jobs:
             local file="$1"
             if ! (
               grep -q "SPDX-FileCopyrightText: syuilo and misskey-project" "$file" ||
+              grep -q "SPDX-FileCopyrightText: hitalin and yamisskey-project" "$file" ||
+              grep -q "SPDX-FileCopyrightText: lqvp" "$file" ||
               grep -q "SPDX-License-Identifier: AGPL-3.0-only" "$file"
             ); then
               echo "Missing: $file"

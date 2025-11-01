@@ -10,7 +10,7 @@ import * as assert from 'assert';
 import { setTimeout } from 'node:timers/promises';
 import { Redis } from 'ioredis';
 import { SignupResponse, Note, UserList } from 'misskey-js/entities.js';
-import { api, post, randomString, sendEnvUpdateRequest, signup, uploadUrl } from '../utils.js';
+import { api, post, randomString, sendEnvUpdateRequest, signup, uploadFile } from '../utils.js';
 import { loadConfig } from '@/config.js';
 
 function genHost() {
@@ -306,11 +306,13 @@ describe('Timelines', () => {
 				await api('following/create', { userId: bob.id }, alice);
 				await setTimeout(250);
 				const [bobFile, carolFile] = await Promise.all([
-					uploadUrl(bob, 'https://raw.githubusercontent.com/misskey-dev/assets/main/public/icon.png'),
-					uploadUrl(carol, 'https://raw.githubusercontent.com/misskey-dev/assets/main/public/icon.png'),
+					uploadFile(bob),
+					uploadFile(carol),
 				]);
-				const bobNote = await post(bob, { fileIds: [bobFile.id] });
-				const carolNote = await post(carol, { fileIds: [carolFile.id] });
+				assert.ok(bobFile.body);
+				assert.ok(carolFile.body);
+				const bobNote = await post(bob, { fileIds: [bobFile.body!.id] });
+				const carolNote = await post(carol, { fileIds: [carolFile.body!.id] });
 
 				await waitForPushToTl();
 
@@ -482,13 +484,15 @@ describe('Timelines', () => {
 				await api('following/create', { userId: bob.id }, alice);
 				await setTimeout(250);
 				const [bobFile, carolFile] = await Promise.all([
-					uploadUrl(bob, 'https://raw.githubusercontent.com/misskey-dev/assets/main/public/icon.png'),
-					uploadUrl(carol, 'https://raw.githubusercontent.com/misskey-dev/assets/main/public/icon.png'),
+					uploadFile(bob),
+					uploadFile(carol),
 				]);
+				assert.ok(bobFile.body);
+				assert.ok(carolFile.body);
 				const bobNote1 = await post(bob, { text: 'hi' });
-				const bobNote2 = await post(bob, { fileIds: [bobFile.id] });
+				const bobNote2 = await post(bob, { fileIds: [bobFile.body!.id] });
 				const carolNote1 = await post(carol, { text: 'hi' });
-				const carolNote2 = await post(carol, { fileIds: [carolFile.id] });
+				const carolNote2 = await post(carol, { fileIds: [carolFile.body!.id] });
 
 				await waitForPushToTl();
 
@@ -1000,9 +1004,10 @@ describe('Timelines', () => {
 			test('[withFiles: true] ファイル付きノートのみ含まれる', async () => {
 				const [alice, bob] = await Promise.all([signup(), signup()]);
 
-				const file = await uploadUrl(bob, 'https://raw.githubusercontent.com/misskey-dev/assets/main/public/icon.png');
+				const file = await uploadFile(bob);
+				assert.ok(file.body);
 				const bobNote1 = await post(bob, { text: 'hi' });
-				const bobNote2 = await post(bob, { fileIds: [file.id] });
+				const bobNote2 = await post(bob, { fileIds: [file.body!.id] });
 
 				await waitForPushToTl();
 
@@ -1257,9 +1262,10 @@ describe('Timelines', () => {
 			test('[withFiles: true] ファイル付きノートのみ含まれる', async () => {
 				const [alice, bob] = await Promise.all([signup(), signup()]);
 
-				const file = await uploadUrl(bob, 'https://raw.githubusercontent.com/misskey-dev/assets/main/public/icon.png');
+				const file = await uploadFile(bob);
+				assert.ok(file.body);
 				const bobNote1 = await post(bob, { text: 'hi' });
-				const bobNote2 = await post(bob, { fileIds: [file.id] });
+				const bobNote2 = await post(bob, { fileIds: [file.body!.id] });
 
 				await waitForPushToTl();
 
@@ -1563,9 +1569,9 @@ describe('Timelines', () => {
 
 				const list = await api('users/lists/create', { name: 'list' }, alice).then(res => res.body);
 				await api('users/lists/push', { listId: list.id, userId: bob.id }, alice);
-				const file = await uploadUrl(bob, 'https://raw.githubusercontent.com/misskey-dev/assets/main/public/icon.png');
+				const file = await uploadFile(bob);
 				const bobNote1 = await post(bob, { text: 'hi' });
-				const bobNote2 = await post(bob, { fileIds: [file.id] });
+				const bobNote2 = await post(bob, { fileIds: [file.body!.id] });
 
 				await waitForPushToTl();
 
@@ -1766,9 +1772,10 @@ describe('Timelines', () => {
 			test('[withFiles: true] ファイル付きノートのみ含まれる', async () => {
 				const [alice, bob] = await Promise.all([signup(), signup()]);
 
-				const file = await uploadUrl(bob, 'https://raw.githubusercontent.com/misskey-dev/assets/main/public/icon.png');
+				const file = await uploadFile(bob);
+				assert.ok(file.body);
 				const bobNote1 = await post(bob, { text: 'hi' });
-				const bobNote2 = await post(bob, { fileIds: [file.id] });
+				const bobNote2 = await post(bob, { fileIds: [file.body!.id] });
 
 				await waitForPushToTl();
 
