@@ -274,23 +274,25 @@ const isEditingMemo = ref(false);
 const moderationNote = ref(props.user.moderationNote ?? '');
 const editModerationNote = ref(false);
 
-let listenbrainzdata = false;
-if (props.user.listenbrainz) {
-	try {
-		const response = await window.fetch(`https://api.listenbrainz.org/1/user/${props.user.listenbrainz}/playing-now`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		});
-		const data = await response.json();
-		if (data.payload.listens && data.payload.listens.length !== 0) {
-			listenbrainzdata = true;
+const listenbrainzdata = ref(false);
+onMounted(async () => {
+	if (props.user.listenbrainz) {
+		try {
+			const response = await window.fetch(`https://api.listenbrainz.org/1/user/${props.user.listenbrainz}/playing-now`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			});
+			const data = await response.json();
+			if (data.payload.listens && data.payload.listens.length !== 0) {
+				listenbrainzdata.value = true;
+			}
+		} catch (err) {
+			listenbrainzdata.value = false;
 		}
-	} catch (err) {
-		listenbrainzdata = false;
 	}
-}
+});
 
 watch(moderationNote, async () => {
 	await misskeyApi('admin/update-user-note', { userId: props.user.id, text: moderationNote.value });
@@ -339,8 +341,8 @@ async function updateMemo() {
 	isEditingMemo.value = false;
 }
 
-watch([props.user], () => {
-	memoDraft.value = props.user.memo;
+watch(() => props.user.memo, (newMemo) => {
+	memoDraft.value = newMemo;
 });
 
 async function reload() {

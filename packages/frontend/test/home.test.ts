@@ -10,18 +10,12 @@ import * as Misskey from 'misskey-js';
 import { directives } from '@/directives/index.js';
 import { components } from '@/components/index.js';
 import XHome from '@/pages/user/home.vue';
-import { Suspense, h } from 'vue';
 import 'intersection-observer';
 
 describe('XHome', () => {
 	const renderHome = (user: Partial<Misskey.entities.UserDetailed>): RenderResult => {
-		return render({
-			setup() {
-				return () => h(Suspense, null, {
-					default: () => h(XHome, { user: user as Misskey.entities.UserDetailed, disableNotes: true }),
-				});
-			},
-		}, {
+		return render(XHome, {
+			props: { user: user as Misskey.entities.UserDetailed, disableNotes: true },
 			global: { directives, components },
 		});
 	};
@@ -38,12 +32,13 @@ describe('XHome', () => {
 			uri: 'https://example.com/@user',
 			url: 'https://example.com/@user/profile',
 			roles: [],
+			communityRoles: [],
 			createdAt: '1970-01-01T00:00:00.000Z',
 			fields: [],
 			pinnedNotes: [],
 			avatarUrl: 'https://example.com',
 			avatarDecorations: [],
-		});
+		} as any);
 
 		const anchor = home.container.querySelector<HTMLAnchorElement>('a[href^="https://example.com/"]');
 		assert.exists(anchor, 'anchor to the remote exists');
@@ -58,12 +53,13 @@ describe('XHome', () => {
 			uri: 'https://example.com/@user',
 			url: null,
 			roles: [],
+			communityRoles: [],
 			createdAt: '1970-01-01T00:00:00.000Z',
 			fields: [],
 			pinnedNotes: [],
 			avatarUrl: 'https://example.com',
 			avatarDecorations: [],
-		});
+		} as any);
 
 		const anchor = home.container.querySelector<HTMLAnchorElement>('a[href^="https://example.com/"]');
 		assert.exists(anchor, 'anchor to the remote exists');
