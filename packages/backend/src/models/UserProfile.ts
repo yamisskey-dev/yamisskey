@@ -202,7 +202,7 @@ export class MiUserProfile {
 	public autoAcceptFollowed: boolean;
 
 	@Column('boolean', {
-		default: true,
+		default: process.env.NODE_ENV === 'test' ? false : true, // yamisskey: false from true for test environment
 		comment: 'Whether reject index by crawler.',
 	})
 	public noCrawle: boolean;
