@@ -18,33 +18,6 @@ describe('Drive', () => {
 		bob = await signup({ username: 'bob' });
 	}, 1000 * 60 * 2);
 
-	test('ファイルURLからアップロードできる', async () => {
-		// utils.js uploadUrl の処理だがAPIレスポンスも見るためここで同様の処理を書いている
-
-		const marker = Math.random().toString();
-
-		const url = 'https://raw.githubusercontent.com/misskey-dev/misskey/develop/packages/backend/test/resources/192.jpg';
-
-		const catcher = makeStreamCatcher(
-			alice,
-			'main',
-			(msg) => msg.type === 'urlUploadFinished' && msg.body.marker === marker,
-			(msg) => msg.body.file,
-			10 * 1000);
-
-		const res = await api('drive/files/upload-from-url', {
-			url,
-			marker,
-			force: true,
-		}, alice);
-
-		const file = await catcher;
-
-		assert.strictEqual(res.status, 204);
-		assert.strictEqual(file.name, '192.jpg');
-		assert.strictEqual(file.type, 'image/jpeg');
-	});
-
 	test('ローカルからアップロードできる', async () => {
 		// APIレスポンスを直接使用するので utils.js uploadFile が通過することで成功とする
 

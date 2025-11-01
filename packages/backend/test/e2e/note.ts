@@ -11,7 +11,7 @@ import * as assert from 'assert';
 import type * as misskey from 'misskey-js';
 import { MiNote } from '@/models/Note.js';
 import { MAX_NOTE_TEXT_LENGTH } from '@/const.js';
-import { api, castAsError, initTestDb, post, role, signup, uploadFile, uploadUrl } from '../utils.js';
+import { api, castAsError, initTestDb, post, role, signup, uploadFile } from '../utils.js';
 
 describe('Note', () => {
 	let Notes: Repository<MiNote>;
@@ -43,23 +43,23 @@ describe('Note', () => {
 	});
 
 	test('ファイルを添付できる', async () => {
-		const file = await uploadUrl(alice, 'https://raw.githubusercontent.com/misskey-dev/misskey/develop/packages/backend/test/resources/192.jpg');
+		const file = await uploadFile(alice);
 
 		const res = await api('notes/create', {
-			fileIds: [file.id],
+			fileIds: [file.body!.id],
 		}, alice);
 
 		assert.strictEqual(res.status, 200);
 		assert.strictEqual(typeof res.body === 'object' && !Array.isArray(res.body), true);
-		assert.deepStrictEqual(res.body.createdNote.fileIds, [file.id]);
+		assert.deepStrictEqual(res.body.createdNote.fileIds, [file.body!.id]);
 	}, 1000 * 10);
 
 	test('他人のファイルで怒られる', async () => {
-		const file = await uploadUrl(bob, 'https://raw.githubusercontent.com/misskey-dev/misskey/develop/packages/backend/test/resources/192.jpg');
+		const file = await uploadFile(bob);
 
 		const res = await api('notes/create', {
 			text: 'test',
-			fileIds: [file.id],
+			fileIds: [file.body!.id],
 		}, alice);
 
 		assert.strictEqual(res.status, 400);
