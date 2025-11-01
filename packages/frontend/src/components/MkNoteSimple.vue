@@ -71,18 +71,13 @@ async function deleteScheduleNote() {
 async function editScheduleNote() {
 	if (!props.note) return;
 
-	await os.apiWithDialog('notes/drafts/delete', { draftId: props.note.id })
-		.then(() => {
-			isDeleted.value = true;
-		});
-
-	await os.post({
+	await os.apiWithDialog('notes/drafts/delete', { draftId: props.note.id });
+	os.post({
 		initialNote: props.note,
 		renote: props.note.renote,
 		reply: props.note.reply,
 		channel: props.note.channel,
 	});
-	emit('editScheduleNote');
 }
 </script>
 

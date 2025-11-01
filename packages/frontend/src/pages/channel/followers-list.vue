@@ -7,7 +7,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div>
 	<MkPagination v-slot="{items}" :paginator="followersPaginator" withControl>
 		<div :class="$style.users">
-			<MkUserInfo v-for="user in items.map(x => x.follower).filter(x => x != null)" :key="user!.id" :user="user!"/>
+			<MkUserInfo v-for="user in items.map(x => x.follower).filter((x): x is NonNullable<typeof x> => x != null)" :key="user.id" :user="user"/>
 		</div>
 	</MkPagination>
 </div>
