@@ -102,11 +102,11 @@ const { widgetProps, configure } = useWidgetPropsManager(name,
 	emit,
 );
 
-const activeUsers = ref([]);
-const prevUserIds = ref(new Set());
-const connection = ref(null);
+const activeUsers = ref<any[]>([]);
+const prevUserIds = ref(new Set<string>());
+const connection = ref<any>(null);
 const isLoggedIn = computed(() => $i != null);
-const userMutings = ref(new Set()); // ミュートしているユーザーのIDを保持 (表示フィルタリング用に残す)
+const userMutings = ref(new Set<string>()); // ミュートしているユーザーのIDを保持 (表示フィルタリング用に残す)
 
 // ミュート情報を取得する関数を強化
 async function fetchMutings() {

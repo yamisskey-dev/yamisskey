@@ -200,6 +200,48 @@ export const packedUserLiteSchema = {
 				},
 			},
 		},
+		communityRoles: {
+			type: 'array',
+			nullable: false, optional: true,
+			items: {
+				type: 'object',
+				nullable: false, optional: false,
+				properties: {
+					id: {
+						type: 'string',
+						nullable: false, optional: false,
+					},
+					name: {
+						type: 'string',
+						nullable: false, optional: false,
+					},
+					color: {
+						type: 'string',
+						nullable: true, optional: false,
+					},
+					iconUrl: {
+						type: 'string',
+						nullable: true, optional: false,
+					},
+					description: {
+						type: 'string',
+						nullable: false, optional: false,
+					},
+					isModerator: {
+						type: 'boolean',
+						nullable: false, optional: false,
+					},
+					isAdministrator: {
+						type: 'boolean',
+						nullable: false, optional: false,
+					},
+					displayOrder: {
+						type: 'number',
+						nullable: false, optional: false,
+					},
+				},
+			},
+		},
 	},
 } as const;
 
@@ -524,6 +566,10 @@ export const packedMeDetailedOnlySchema = {
 			nullable: false, optional: false,
 		},
 		autoAcceptFollowed: {
+			type: 'boolean',
+			nullable: false, optional: false,
+		},
+		autoRejectFollowRequest: {
 			type: 'boolean',
 			nullable: false, optional: false,
 		},

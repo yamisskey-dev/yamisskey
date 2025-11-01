@@ -54,6 +54,7 @@ const emit = defineEmits<{
 }>();
 
 async function deleteScheduleNote() {
+	if (!props.note) return;
 	const { canceled } = await os.confirm({
 		type: 'warning',
 		text: i18n.ts.deleteConfirm,
@@ -61,25 +62,22 @@ async function deleteScheduleNote() {
 		cancelText: i18n.ts.cancel,
 	});
 	if (canceled) return;
-	await os.apiWithDialog('notes/schedule/delete', { noteId: props.note.id })
+	await os.apiWithDialog('notes/drafts/delete', { draftId: props.note.id })
 		.then(() => {
 			isDeleted.value = true;
 		});
 }
 
 async function editScheduleNote() {
-	await os.apiWithDialog('notes/schedule/delete', { noteId: props.note.id })
-		.then(() => {
-			isDeleted.value = true;
-		});
+	if (!props.note) return;
 
-	await os.post({
+	await os.apiWithDialog('notes/drafts/delete', { draftId: props.note.id });
+	os.post({
 		initialNote: props.note,
 		renote: props.note.renote,
 		reply: props.note.reply,
 		channel: props.note.channel,
 	});
-	emit('editScheduleNote');
 }
 </script>
 

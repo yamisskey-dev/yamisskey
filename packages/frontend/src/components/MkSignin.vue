@@ -120,6 +120,7 @@ function onPasskeyLogin(): void {
 			.then((res) => {
 				passkeyContext.value = res.context ?? '';
 				credentialRequest.value = parseRequestOptionsFromJSON({
+					// @ts-expect-error - Type mismatch between @simplewebauthn/types and @github/webauthn-json
 					publicKey: res.option,
 				});
 
@@ -135,6 +136,7 @@ function onPasskeyDone(credential: AuthenticationPublicKeyCredential): void {
 
 	if (doingPasskeyFromInputPage.value) {
 		misskeyApi('signin-with-passkey', {
+			// @ts-expect-error Type mismatch between @simplewebauthn/types and @github/webauthn-json
 			credential: credential.toJSON(),
 			context: passkeyContext.value,
 		}).then((res) => {
@@ -149,6 +151,7 @@ function onPasskeyDone(credential: AuthenticationPublicKeyCredential): void {
 		tryLogin({
 			username: userInfo.value.username,
 			password: password.value,
+			// @ts-expect-error Type mismatch between @simplewebauthn/types and @github/webauthn-json
 			credential: credential.toJSON(),
 		});
 	}
@@ -253,6 +256,7 @@ async function tryLogin(req: Partial<Misskey.entities.SigninFlowRequest>): Promi
 				case 'passkey': {
 					if (webAuthnSupported()) {
 						credentialRequest.value = parseRequestOptionsFromJSON({
+							// @ts-expect-error - Type mismatch between @simplewebauthn/types and @github/webauthn-json
 							publicKey: res.authRequest,
 						});
 						page.value = 'passkey';

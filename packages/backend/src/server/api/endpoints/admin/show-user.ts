@@ -116,6 +116,14 @@ export const meta = {
 					test: { optional: true, ...notificationRecieveConfig },
 				},
 			},
+			approved: {
+				type: 'boolean',
+				optional: false, nullable: false,
+			},
+			rejected: {
+				type: 'boolean',
+				optional: false, nullable: false,
+			},
 			isModerator: {
 				type: 'boolean',
 				optional: false, nullable: false,
