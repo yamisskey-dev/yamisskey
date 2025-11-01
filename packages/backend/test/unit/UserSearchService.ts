@@ -99,7 +99,11 @@ describe('UserSearchService', () => {
 						})),
 					},
 					{
-						provide: RoleService, useFactory: jest.fn(() => ({})),
+						provide: RoleService, useFactory: jest.fn(() => ({
+							getUserPolicies: jest.fn(() => Promise.resolve({
+								canSearchUsers: true,
+							})),
+						})),
 					},
 					IdService,
 				],
