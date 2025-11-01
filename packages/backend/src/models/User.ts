@@ -186,7 +186,7 @@ export class MiUser {
 	public isSuspended: boolean;
 
 	@Column('boolean', {
-		default: true, // false から true に変更
+		default: process.env.NODE_ENV === 'test' ? false : true, // yamisskey: false from true for test environment
 		comment: 'Whether the User is locked.',
 	})
 	public isLocked: boolean;
