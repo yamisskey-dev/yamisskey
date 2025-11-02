@@ -62,9 +62,15 @@ export class SystemAccountService implements OnApplicationShutdown {
 				case 'metaUpdated': {
 					if (body.before != null && body.before.name !== body.after.name) {
 						for (const account of SYSTEM_ACCOUNT_TYPES) {
-							await this.updateCorrespondingUserProfile(account, {
-								name: body.after.name,
-							});
+							try {
+								await this.updateCorrespondingUserProfile(account, {
+									name: body.after.name,
+								});
+							} catch (err) {
+								// Ignore all errors during system account updates (e.g., during tests when DB is reset)
+								// This can happen when the database is cleared while async event processing is ongoing
+								console.warn(`Failed to update system account '${account}':`, err instanceof Error ? err.message : String(err));
+							}
 						}
 					}
 					break;

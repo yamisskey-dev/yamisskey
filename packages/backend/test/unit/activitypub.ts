@@ -191,7 +191,7 @@ describe('ActivityPub', () => {
 			const note = await noteService.createNote(post.id, undefined, resolver, true);
 
 			assert.deepStrictEqual(note?.uri, post.id);
-			assert.deepStrictEqual(note.visibility, 'public');
+			assert.deepStrictEqual(note.visibility, 'public'); // In test env, canPublicNote is enabled
 			assert.deepStrictEqual(note.text, post.content);
 		});
 	});

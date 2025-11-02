@@ -44,10 +44,12 @@ describe('Timeline', () => {
 	) {
 		let note: Misskey.entities.Note | undefined;
 		const text = noteParams.text ?? crypto.randomUUID();
+		// yamisskey: Default to 'public' visibility for federation tests
+		const visibility = noteParams.visibility ?? 'public';
 		const streamingFired = await isFired(
 			'b.test', bob, timelineChannel,
 			async () => {
-				note = (await alice.client.request('notes/create', { text, ...noteParams })).createdNote;
+				note = (await alice.client.request('notes/create', { text, visibility, ...noteParams })).createdNote;
 			},
 			'note', msg => msg.text === text,
 			channelParams,
@@ -114,10 +116,10 @@ describe('Timeline', () => {
 			});
 
 			/**
-			 * FIXME: can receive this
-			 * @see https://github.com/misskey-dev/misskey/issues/14083
+			 * yamisskey: This test now passes correctly (privacy fix)
+			 * Original issue: @see https://github.com/misskey-dev/misskey/issues/14083
 			 */
-			test.failing('Don\'t receive remote followee\'s invisible and mentioned specified-only Note', async () => {
+			test('Don\'t receive remote followee\'s invisible and mentioned specified-only Note', async () => {
 				await postAndCheckReception(homeTimeline, false, { text: `@${bob.username}@b.test Hello`, visibility: 'specified' });
 			});
 

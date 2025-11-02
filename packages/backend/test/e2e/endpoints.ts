@@ -639,6 +639,7 @@ describe('Endpoints', () => {
 			test(`透明な${type}ファイルを作成できる`, async () => {
 				const path = `with-alpha.${type}`;
 				const res = await uploadFile(alice, { path });
+				assert.ok(res.body);
 
 				assert.strictEqual(res.status, 200);
 				assert.strictEqual(res.body!.name, path);
@@ -651,6 +652,7 @@ describe('Endpoints', () => {
 			test(`透明じゃない${type}ファイルを作成できる`, async () => {
 				const path = `without-alpha.${type}`;
 				const res = await uploadFile(alice, { path });
+				assert.ok(res.body);
 				assert.strictEqual(res.status, 200);
 				assert.strictEqual(res.body!.name, path);
 				assert.strictEqual(res.body!.type, mediaType);

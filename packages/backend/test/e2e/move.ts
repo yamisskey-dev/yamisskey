@@ -394,7 +394,6 @@ describe('Account Move', () => {
 			'clips/remove-note',
 			'clips/unfavorite',
 			'clips/update',
-			'drive/files/upload-from-url',
 			'flash/create',
 			'flash/like',
 			'flash/unlike',

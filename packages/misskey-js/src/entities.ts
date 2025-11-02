@@ -290,6 +290,7 @@ export type SignupPendingRequest = {
 export type SignupPendingResponse = {
 	id: User['id'],
 	i: string,
+	pendingApproval?: boolean,
 };
 
 export type SigninFlowRequest = {
@@ -301,6 +302,7 @@ export type SigninFlowRequest = {
 	'g-recaptcha-response'?: string | null;
 	'turnstile-response'?: string | null;
 	'm-captcha-response'?: string | null;
+	'testcaptcha-response'?: string | null;
 };
 
 export type SigninFlowResponse = {
@@ -324,6 +326,7 @@ export type SigninWithPasskeyRequest = {
 export type SigninWithPasskeyInitResponse = {
 	option: PublicKeyCredentialRequestOptionsJSON;
 	context: string;
+	signinResponse?: SigninFlowResponse & { finished: true };
 };
 
 export type SigninWithPasskeyResponse = {

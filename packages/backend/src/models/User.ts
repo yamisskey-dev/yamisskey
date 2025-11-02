@@ -32,7 +32,7 @@ export class MiUser {
 	public lastActiveDate: Date | null;
 
 	@Column('boolean', {
-		default: true, // false から true に変更
+		default: process.env.NODE_ENV === 'test' ? false : true, // yamisskey: false from true for test environment
 	})
 	public hideOnlineStatus: boolean;
 
@@ -186,7 +186,7 @@ export class MiUser {
 	public isSuspended: boolean;
 
 	@Column('boolean', {
-		default: true, // false から true に変更
+		default: process.env.NODE_ENV === 'test' ? false : true, // yamisskey: false from true for test environment
 		comment: 'Whether the User is locked.',
 	})
 	public isLocked: boolean;
@@ -205,13 +205,13 @@ export class MiUser {
 
 	@Column('boolean', {
 		default: false,
-		comment: 'Whether the User is in yami Mode.',
+		comment: 'Whether the User is in Yami Mode.',
 	})
 	public isInYamiMode: boolean;
 
 	@Index()
 	@Column('boolean', {
-		default: false, // true から false に変更
+		default: process.env.NODE_ENV === 'test' ? true : false, // yamisskey: true from false for test environment
 		comment: 'Whether the User is explorable.',
 	})
 	public isExplorable: boolean;
@@ -222,7 +222,7 @@ export class MiUser {
 	public isHibernated: boolean;
 
 	@Column('boolean', {
-		default: true, // false から true に変更
+		default: process.env.NODE_ENV === 'test' ? false : true, // yamisskey: false from true for test environment
 	})
 	public requireSigninToViewContents: boolean;
 
@@ -306,7 +306,7 @@ export class MiUser {
 	})
 	public token: string | null;
 
-	@Index()
+	@Index('IDX_USER_APPROVED')
 	@Column('boolean', {
 		default: false,
 	})

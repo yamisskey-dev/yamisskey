@@ -23,7 +23,7 @@ describe('Emoji', () => {
 
 	test('Custom emoji are delivered with Note delivery', async () => {
 		const emoji = await addCustomEmoji('a.test');
-		await alice.client.request('notes/create', { text: `I love :${emoji.name}:` });
+		await alice.client.request('notes/create', { text: `I love :${emoji.name}:`, visibility: 'public' });
 		await sleep();
 
 		const notes = await bob.client.request('notes/timeline', {});
@@ -37,7 +37,7 @@ describe('Emoji', () => {
 
 	test('Custom emoji are delivered with Reaction delivery', async () => {
 		const emoji = await addCustomEmoji('a.test');
-		const note = (await alice.client.request('notes/create', { text: 'a' })).createdNote;
+		const note = (await alice.client.request('notes/create', { text: 'a', visibility: 'public' })).createdNote;
 		await sleep();
 
 		await alice.client.request('notes/reactions/create', { noteId: note.id, reaction: `:${emoji.name}:` });
@@ -61,7 +61,7 @@ describe('Emoji', () => {
 
 	test('Local-only custom emoji aren\'t delivered with Note delivery', async () => {
 		const emoji = await addCustomEmoji('a.test', { localOnly: true });
-		await alice.client.request('notes/create', { text: `I love :${emoji.name}:` });
+		await alice.client.request('notes/create', { text: `I love :${emoji.name}:`, visibility: 'public' });
 		await sleep();
 
 		const notes = await bob.client.request('notes/timeline', {});
@@ -74,7 +74,7 @@ describe('Emoji', () => {
 
 	test('Local-only custom emoji aren\'t delivered with Reaction delivery', async () => {
 		const emoji = await addCustomEmoji('a.test', { localOnly: true });
-		const note = (await alice.client.request('notes/create', { text: 'a' })).createdNote;
+		const note = (await alice.client.request('notes/create', { text: 'a', visibility: 'public' })).createdNote;
 		await sleep();
 
 		await alice.client.request('notes/reactions/create', { noteId: note.id, reaction: `:${emoji.name}:` });

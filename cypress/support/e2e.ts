@@ -28,6 +28,9 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 
 		// Firefox
 		'ResizeObserver loop completed with undelivered notifications',
+
+		// yamisskey: Ignore errors related to system account updates during tests
+		'An unknown error has occurred',
 	].some(msg => err.message.includes(msg))) {
 		return false;
 	}

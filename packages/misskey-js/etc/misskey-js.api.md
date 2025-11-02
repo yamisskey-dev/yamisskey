@@ -3290,7 +3290,7 @@ type Notification_2 = components['schemas']['Notification'];
 type NotificationsCreateRequest = operations['notifications___create']['requestBody']['content']['application/json'];
 
 // @public (undocumented)
-export const notificationTypes: readonly ["note", "follow", "unfollow", "mention", "reply", "renote", "quote", "reaction", "pollEnded", "blocked", "unblocked", "scheduledNotePosted", "scheduledNotePostFailed", "receiveFollowRequest", "followRequestAccepted", "app", "roleAssigned", "chatRoomInvitationReceived", "achievementEarned", "exportCompleted", "test", "login", "createToken"];
+export const notificationTypes: readonly ["note", "follow", "unfollow", "mention", "reply", "renote", "quote", "reaction", "pollEnded", "blocked", "unblocked", "scheduledNotePosted", "scheduledNotePostFailed", "receiveFollowRequest", "followRequestAccepted", "groupInvited", "app", "roleAssigned", "chatRoomInvitationReceived", "achievementEarned", "exportCompleted", "test", "login", "createToken"];
 
 // @public (undocumented)
 export function nyaize(text: string): string;
@@ -3579,6 +3579,7 @@ type SigninFlowRequest = {
     'g-recaptcha-response'?: string | null;
     'turnstile-response'?: string | null;
     'm-captcha-response'?: string | null;
+    'testcaptcha-response'?: string | null;
 };
 
 // @public (undocumented)
@@ -3599,6 +3600,9 @@ type SigninFlowResponse = {
 type SigninWithPasskeyInitResponse = {
     option: PublicKeyCredentialRequestOptionsJSON_2;
     context: string;
+    signinResponse?: SigninFlowResponse & {
+        finished: true;
+    };
 };
 
 // @public (undocumented)
@@ -3623,6 +3627,7 @@ type SignupPendingRequest = {
 type SignupPendingResponse = {
     id: User['id'];
     i: string;
+    pendingApproval?: boolean;
 };
 
 // @public (undocumented)

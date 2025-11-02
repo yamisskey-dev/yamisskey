@@ -12,6 +12,7 @@ import { IdService } from '@/core/IdService.js';
 import { GlobalModule } from '@/GlobalModule.js';
 import { DI } from '@/di-symbols.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
+import { RoleService } from '@/core/RoleService.js';
 
 describe('UserSearchService', () => {
 	let app: TestingModule;
@@ -95,6 +96,13 @@ describe('UserSearchService', () => {
 						provide: UserEntityService, useFactory: jest.fn(() => ({
 							// とりあえずIDが返れば確認が出来るので
 							packMany: (value: any) => value,
+						})),
+					},
+					{
+						provide: RoleService, useFactory: jest.fn(() => ({
+							getUserPolicies: jest.fn(() => Promise.resolve({
+								canSearchUsers: true,
+							})),
 						})),
 					},
 					IdService,

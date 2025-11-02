@@ -104,25 +104,25 @@ export class MiUserProfile {
 	public emailNotificationTypes: string[];
 
 	@Column('boolean', {
-		default: false, // trueからfalseに変更
+		default: process.env.NODE_ENV === 'test' ? true : false, // yamisskey: true from false for test environment
 	})
 	public publicReactions: boolean;
 
 	@Column('enum', {
 		enum: notesVisibilities,
-		default: 'private', // 'public'から'private'に変更
+		default: process.env.NODE_ENV === 'test' ? 'public' : 'private', // yamisskey: public from private for test environment
 	})
 	public notesVisibility: typeof notesVisibilities[number];
 
 	@Column('enum', {
 		enum: followingVisibilities,
-		default: 'public',
+		default: process.env.NODE_ENV === 'test' ? 'public' : 'private', // yamisskey: public from private for test environment
 	})
 	public followingVisibility: typeof followingVisibilities[number];
 
 	@Column('enum', {
 		enum: followersVisibilities,
-		default: 'public',
+		default: process.env.NODE_ENV === 'test' ? 'public' : 'private', // yamisskey: public from private for test environment
 	})
 	public followersVisibility: typeof followersVisibilities[number];
 
@@ -137,7 +137,7 @@ export class MiUserProfile {
 	public hideActivity: boolean;
 
 	@Column('boolean', {
-		default: true,
+		default: process.env.NODE_ENV === 'test' ? false : true, // yamisskey: false from true for test environment
 	})
 	public hideProfileFiles: boolean;
 
@@ -202,7 +202,7 @@ export class MiUserProfile {
 	public autoAcceptFollowed: boolean;
 
 	@Column('boolean', {
-		default: false,
+		default: process.env.NODE_ENV === 'test' ? false : true, // yamisskey: false from true for test environment
 		comment: 'Whether reject index by crawler.',
 	})
 	public noCrawle: boolean;

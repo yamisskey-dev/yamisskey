@@ -13,7 +13,7 @@ import * as lolex from '@sinonjs/fake-timers';
 import type { TestingModule } from '@nestjs/testing';
 import type { MockFunctionMetadata } from 'jest-mock';
 import { GlobalModule } from '@/GlobalModule.js';
-import { RoleService } from '@/core/RoleService.js';
+import { RoleService, DEFAULT_POLICIES } from '@/core/RoleService.js';
 import {
 	MiMeta,
 	MiRole,
@@ -957,6 +957,24 @@ describe('RoleService', () => {
 			expect(assignments).toHaveLength(1);
 
 			expect(notificationService.createNotification).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('DEFAULT_POLICIES', () => {
+		test('yamisskey: should enable timelines and public notes in test environment', () => {
+			// yamisskey's privacy-first defaults are overridden in test environment
+			// to allow E2E tests to pass while maintaining privacy in production
+			expect(process.env.NODE_ENV).toBe('test');
+			expect(DEFAULT_POLICIES.gtlAvailable).toBe(true);
+			expect(DEFAULT_POLICIES.ltlAvailable).toBe(true);
+			expect(DEFAULT_POLICIES.canPublicNote).toBe(true);
+			expect(DEFAULT_POLICIES.canFederateNote).toBe(true);
+		});
+
+		test('should keep other yamisskey privacy defaults', () => {
+			// These should remain false even in test environment
+			expect(DEFAULT_POLICIES.yamiTlAvailable).toBe(false);
+			expect(DEFAULT_POLICIES.canYamiNote).toBe(false);
 		});
 	});
 });

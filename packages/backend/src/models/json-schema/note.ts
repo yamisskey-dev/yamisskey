@@ -279,5 +279,9 @@ export const packedNoteSchema = {
 			type: 'string',
 			optional: true, nullable: true,
 		},
+		isSchedule: {
+			type: 'boolean',
+			optional: true, nullable: false,
+		},
 	},
 } as const;

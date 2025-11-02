@@ -14,6 +14,7 @@ export type Keys = (
 	'neverShowLocalOnlyInfo' |
 	'neverShowExitYamiModeInfo' |
 	'neverShowEnterYamiModeInfo' |
+	'neverShowYamiModeInfo' |
 	'modifiedVersionMustProminentlyOfferInAgplV3Section13Read' |
 	'lastUsed' |
 	'lang' |

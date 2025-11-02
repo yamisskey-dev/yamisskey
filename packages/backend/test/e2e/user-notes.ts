@@ -6,7 +6,7 @@
 process.env.NODE_ENV = 'test';
 
 import * as assert from 'assert';
-import { api, post, signup, uploadUrl } from '../utils.js';
+import { api, post, signup, uploadFile } from '../utils.js';
 import type * as misskey from 'misskey-js';
 
 describe('users/notes', () => {
@@ -17,16 +17,18 @@ describe('users/notes', () => {
 
 	beforeAll(async () => {
 		alice = await signup({ username: 'alice' });
-		const jpg = await uploadUrl(alice, 'https://raw.githubusercontent.com/misskey-dev/misskey/develop/packages/backend/test/resources/192.jpg');
-		const png = await uploadUrl(alice, 'https://raw.githubusercontent.com/misskey-dev/misskey/develop/packages/backend/test/resources/192.png');
+		const jpg = await uploadFile(alice, { path: '192.jpg' });
+		const png = await uploadFile(alice, { path: '192.png' });
+		assert.ok(jpg.body);
+		assert.ok(png.body);
 		jpgNote = await post(alice, {
-			fileIds: [jpg.id],
+			fileIds: [jpg.body!.id],
 		});
 		pngNote = await post(alice, {
-			fileIds: [png.id],
+			fileIds: [png.body!.id],
 		});
 		jpgPngNote = await post(alice, {
-			fileIds: [jpg.id, png.id],
+			fileIds: [jpg.body!.id, png.body!.id],
 		});
 	}, 1000 * 60 * 2);
 
