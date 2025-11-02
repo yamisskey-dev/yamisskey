@@ -1,5 +1,31 @@
 # DIFFRENCE
 
+## 2025.10.2-yami-1.9.28
+
+### Fix
+- **本番環境起動失敗の緊急修正**: マイグレーションエラーによるDockerイメージ起動失敗を修正
+  - タグ付けされたDockerイメージで本番環境を起動した際、マイグレーション `FixSchemaSync1761962604922` が失敗する問題を修正
+  - エラー内容: `column "reason" of relation "user_pending" contains null values`
+  - `user_pending` テーブルの `reason` カラムにNOT NULL制約を適用する前に、既存のNULL値を空文字列に更新する処理を追加
+  - 既存のデータベースに対しても安全にマイグレーションが実行できるように改善
+
+### Technical Details
+- **修正ファイル**
+  - `packages/backend/migration/1761962604922-fix-schema-sync.js`
+    - NOT NULL制約適用前に `UPDATE "user_pending" SET "reason" = '' WHERE "reason" IS NULL` を実行
+    - `user_pending` テーブルは通常小規模（保留中の登録のみ）のため、シンプルなUPDATE文で対応
+    - 将来のメンテナ向けにコメントを追加して修正の意図を明確化
+
+- **影響範囲**
+  - 新規インストール: 影響なし（NULL値が存在しないため）
+  - 既存環境からのアップグレード: この修正により正常にマイグレーションが完了
+
+- **エラー詳細**
+  ```
+  ERROR: 23502: column "reason" of relation "user_pending" contains null values
+  Migration "FixSchemaSync1761962604922" failed
+  ```
+
 ## 2025.10.2-yami-1.9.27
 
 ### テスト環境の改善・CI完全通過達成
