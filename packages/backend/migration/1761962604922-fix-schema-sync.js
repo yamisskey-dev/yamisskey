@@ -18,6 +18,7 @@
         await queryRunner.query(`ALTER TABLE "reversi_game" DROP COLUMN "federationId"`);
         await queryRunner.query(`ALTER TABLE "reversi_game" ADD "federationId" character varying(36)`);
         await queryRunner.query(`COMMENT ON COLUMN "role"."isCommunity" IS 'Whether this role was created by community users (not admins)'`);
+        await queryRunner.query(`UPDATE "user_pending" SET "reason" = '' WHERE "reason" IS NULL`);
         await queryRunner.query(`ALTER TABLE "user_pending" ALTER COLUMN "reason" SET NOT NULL`);
     }
     async down(queryRunner) {
