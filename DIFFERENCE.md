@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## Unreleased
+## 2025.10.2-yami-1.9.27
 
 ### テスト環境の改善・CI完全通過達成
 
