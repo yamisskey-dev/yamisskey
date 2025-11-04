@@ -20,7 +20,10 @@
 Misskey本体からの変更点については[DIFFERENCE.md](DIFFERENCE.md)をご覧ください。
 
 ## 🛠️ 開発に参加するには
-開発参加を希望される方は[開発ガイド](https://hub.yami.ski/guides/contributing/)を参照してください。
+
+yamisskey の開発に参加したい方は、まずプロジェクト管理者にご連絡ください。
+
+開発チームメンバー向けの技術的な開発手順については、[開発ガイド](DEVELOPMENT.md)を参照してください。
 
 ## ⚖️ ライセンス
 YamisskeyはMisskeyと同様にAGPL-3.0ライセンスで提供されています。
