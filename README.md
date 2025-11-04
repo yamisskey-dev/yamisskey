@@ -11,19 +11,23 @@
 </div>
   
 ## 🤔 これは何？
-プライバシー保護と心理的安全性を重視した[Misskey](https://github.com/misskey-dev/misskey)フォークです。
+
+プライバシー保護と心理的安全性を重視した [Misskey](https://github.com/misskey-dev/misskey) フォークです。
 
 ## ✨ 本家との違い
-改変された機能については[特徴一覧](https://hub.yami.ski/reference/feature/#%E6%94%B9%E5%A4%89)をご覧ください。
 
-## 📋 フォークの変更履歴
-Misskey本体からの変更点については[DIFFERENCE.md](DIFFERENCE.md)をご覧ください。
+Yamisskey の独自機能については [FEATURES.md](FEATURES.md) を参照してください。
 
-## 🛠️ 開発に参加するには
+## 📋 変更履歴
 
-yamisskey の開発に参加したい方は、まずプロジェクト管理者にご連絡ください。
+Misskey 本体からの変更点については [DIFFERENCE.md](DIFFERENCE.md) を参照してください。
 
-開発チームメンバー向けの技術的な開発手順については、[開発ガイド](DEVELOPMENT.md)を参照してください。
+## 🛠️ 開発に参加する
+
+開発への参加を希望される方は、まずプロジェクト管理者にご連絡ください。
+
+開発チームメンバー向けの技術的な開発手順については [DEVELOPMENT.md](DEVELOPMENT.md) を参照してください。
 
 ## ⚖️ ライセンス
-YamisskeyはMisskeyと同様にAGPL-3.0ライセンスで提供されています。
+
+Yamisskey は Misskey と同様に AGPL-3.0 ライセンスで提供されています。
