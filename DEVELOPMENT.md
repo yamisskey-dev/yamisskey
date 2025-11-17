@@ -11,103 +11,69 @@
 
 [Misskey](https://github.com/misskey-dev/misskey) フォーク「[yamisskey](https://github.com/yamisskey-dev/yamisskey/)」の開発手順を説明します。基本的な開発手順は[フォーク元の開発ガイド](https://github.com/misskey-dev/misskey/blob/develop/CONTRIBUTING.md#development)を参照してください。
 
-### 3ブランチによる開発フロー
+## ブランチとバージョン
 
-開発の流れ: **muyami** → **nayami** → **master**
+yamisskey は 3ブランチで開発を進めます：
 
-- **muyami**: 開発環境（ローカル）
-- **nayami**: テスト環境（[なやみすきー](https://na.yami.ski/)）
-- **master**: 本番環境（[やみすきー](https://yami.ski/)）
+| ブランチ | 環境 | バージョン形式 | 用途 |
+|---------|------|---------------|------|
+| **muyami** | 開発（ローカル） | `2025.1.0-muyami-1.4.3` | 新機能開発・実験的機能 |
+| **nayami** | テスト（[なやみすきー](https://na.yami.ski/)） | `2025.1.0-nayami-1.4.3` | 本番前検証（push時にDockerイメージ自動ビルド） |
+| **master** | 本番（[やみすきー](https://yami.ski/)） | `2025.1.0-yami-1.4.3` | 安定運用版（リリース時にDockerイメージ自動ビルド） |
 
-## ブランチ構成
+**開発の流れ**: muyami → nayami → master
 
-### muyami ブランチ（開発環境）
+## ディレクトリ構造
 
-- ローカルでの新機能開発と実験的機能の実装
-- バージョン形式: `2025.1.0-muyami-1.4.3`
+3つのブランチすべてを `~/.ghq/` 配下の並列型ディレクトリで管理します：
 
-### nayami ブランチ（テスト環境）
+```
+~/.ghq/github.com/yamisskey-dev/
+├── yamisskey/        # master（本番）- メインworktree
+├── yamisskey-nayami/ # nayami（テスト）- リンクされたworktree
+└── yamisskey-muyami/ # muyami（開発）- リンクされたworktree
+```
 
-- [なやみすきー](https://na.yami.ski/)での本番前検証
-- バージョン形式: `2025.1.0-nayami-1.4.3`
-- push時にDockerイメージ自動ビルド
-
-### master ブランチ（本番環境）
-
-- [やみすきー](https://yami.ski/)の安定運用版
-- バージョン形式: `2025.1.0-yami-1.4.3`
-- GitHubリリース時にDockerイメージ自動ビルド
+**ツールの役割**:
+- **[ghq](https://github.com/x-motemen/ghq)**: リポジトリの初回クローン（`ghq get`で場所を自動決定）
+- **[gwq](https://github.com/d-kuro/gwq)**: worktreeの追加・削除・切り替え
 
 ## セットアップ
 
-### 必要環境
-
-- Node.js
-- pnpm（worktreeとの併用でディスク容量を節約）
-- Git（バージョン 2.15 以降）
-- Go（ghq/gwq のインストール用）
-
-### ghqとgwqのインストール
+### 1. ツールのインストール
 
 ```bash
-# ghqのインストール
+# 必要環境: Node.js, pnpm, Git 2.15+, Go
 go install github.com/x-motemen/ghq@latest
-
-# gwqのインストール
 go install github.com/d-kuro/gwq/cmd/gwq@latest
 ```
 
-### 推奨開発環境
+**推奨**: VSCode 1.103+ (`git.detectWorktrees: true`), Docker, Dev Container
 
-- Visual Studio Code（バージョン 1.103 以降、`git.detectWorktrees: true` で GUI 管理可能）
-- Docker
-- Dev Container（Claude Code が設定済み）
-
-### リポジトリ準備
-
-#### ghqを使ったリポジトリ管理（閲覧用）
-
-[ghq](https://github.com/x-motemen/ghq)は閲覧用として、Misskey本家や他フォークを管理します。
+### 2. リポジトリとworktreeの構築
 
 ```bash
-# yamisskey（参照用）
-ghq get https://github.com/yamisskey-dev/yamisskey.git
+# リポジトリ取得（masterブランチ）
+ghq get yamisskey-dev/yamisskey
 
-# Misskey本家（アップストリーム参照用）
-ghq get https://github.com/misskey-dev/misskey.git
-
-# 他フォーク（コード参照用）
-ghq get https://github.com/kokonect-link/cherrypick.git
-```
-
-### git worktree構築（開発用）
-
-#### gwqを使ったworktree管理
-
-開発作業はすべて[gwq](https://github.com/d-kuro/gwq)で管理するworktreeで行います。ghqのリポジトリは閲覧専用として残します。
-
-```bash
-# ghqのリポジトリに移動（これがmasterブランチ）
+# リモート設定
 cd $(ghq root)/github.com/yamisskey-dev/yamisskey
-
-# リモート追加
 git remote add upstream https://github.com/misskey-dev/misskey.git
 git fetch --all --prune --tags
 
-# gwqで開発用worktreeを作成（masterはghqのリポジトリを使用）
-gwq add nayami
-gwq add muyami
+# 開発用worktreeを作成
+gwq add nayami  # → ~/.ghq/github.com/yamisskey-dev/yamisskey-nayami/
+gwq add muyami  # → ~/.ghq/github.com/yamisskey-dev/yamisskey-muyami/
+
+# 確認
 gwq list
 ```
 
-#### pnpmとworktreeの相性
-
-pnpmはハードリンクで`node_modules`を共有するため、worktreeを複数作成しても容量はほぼ1つ分で済みます。npmやyarnでは各worktreeで完全に複製されるため、容量が倍増します。
-
-#### 各 worktree での初期設定
+### 3. 依存関係のインストール
 
 ```bash
-cd $(gwq get master)
+# 各worktreeで初期化
+cd $(ghq root)/github.com/yamisskey-dev/yamisskey
 pnpm install && pnpm build && pnpm build-misskey-js-with-types
 
 cd $(gwq get nayami)
@@ -117,230 +83,216 @@ cd $(gwq get muyami)
 pnpm install && pnpm build && pnpm build-misskey-js-with-types
 ```
 
-#### Tips
-
-- `gwq list` で開発用 worktree の一覧を確認
-- `gwq get <ブランチ名>` で worktree のパスを取得
-- ghq は閲覧用、gwq は開発用として分離
-- VSCode では「ソース管理」→「Worktrees」から GUI 操作も可能
-- Dev Container で権限エラーが出る場合：`sudo chown -R $(whoami) /workspaces/yamisskey.worktrees`
+> **Tips**: pnpmはハードリンクで`node_modules`を共有するため、worktreeを複数作成しても容量はほぼ1つ分で済みます。
 
 ## 開発フロー
 
-### 1. 新機能開発（muyami ブランチ）
+### 日常的な開発作業
 
 ```bash
-cd $(gwq get muyami)
-git pull origin muyami
+# VSCodeで開発環境を開く
+code $(gwq get muyami)
+# Dev Container で「Dev Containerで再度開く」を選択
+
+# トピックブランチを作成
 git checkout -b feat/新機能名
-```
 
-### 2. 開発作業
-
-```bash
-# ...コーディング作業...
+# 開発・テスト・コミット
 pnpm dev
-pnpm build
-pnpm migrate
 git add .
-git commit -m "feat: 機能の説明"
-```
+git commit -m "feat: 新機能の実装"
 
-### 3. muyami ブランチへのマージ
-
-```bash
+# muyamiにマージしてプッシュ
 git checkout muyami
 git merge feat/新機能名
 git push origin muyami
 ```
 
-### 4. テスト環境への反映（nayami ブランチ）
+### テスト環境への反映
 
 ```bash
 cd $(gwq get nayami)
 git pull origin nayami
 git merge muyami
 # package.jsonのバージョン更新（muyami → nayami）
-pnpm build
-git push origin nayami
+git push origin nayami  # Dockerイメージが自動ビルドされる
 ```
 
-### 5. 本番環境への反映（master ブランチ）
+[なやみすきー](https://na.yami.ski/)で動作確認後、本番への反映を進めます。
 
-```bash
-cd $(gwq get master)
-git pull origin master
-git merge nayami
-# package.jsonのバージョン更新（nayami → yami）
-pnpm build
-git push origin master
-```
-
-## Claude Code を使った並列開発
-
-複数の機能を並行開発する場合、機能ごとに worktree を作成します。pnpm のハードリンク共有により、worktree を増やしても容量はほぼ増えません。
+### 本番環境への反映
 
 ```bash
 cd $(ghq root)/github.com/yamisskey-dev/yamisskey
+git pull origin master
+git merge nayami
+# package.jsonのバージョン更新（nayami → yami）
+git push origin master
+```
 
-# 機能ごとのworktreeを作成
+**リリース手順**:
+1. `DIFFERENCE.md` の Unreleased 項目に変更点を記載
+2. `package.json` の version をインクリメント
+3. GitHub で [Release Manager Dispatch](https://github.com/yamisskey-dev/yamisskey/actions/workflows/release-with-dispatch.yml) を実行
+4. 自動生成された PR で `package.json` のバージョンを yami 形式に修正
+5. PR をマージすると GitHub Release と Docker イメージが自動生成
+
+## VSCode/Dev Container の使い分け
+
+```bash
+# 日常開発
+code $(gwq get muyami)
+
+# テスト確認
+code $(gwq get nayami)
+
+# リリース作業
+code $(ghq root)/github.com/yamisskey-dev/yamisskey
+
+# 他のOSS参照
+code $(ghq root)/github.com/misskey-dev/misskey
+code $(ghq root)/github.com/kokonect-link/cherrypick
+```
+
+**Dev Container**: 各worktreeで独立した環境（データベースも分離）を起動可能。VSCodeの「ソース管理」→「Worktrees」からGUI操作も可能。
+
+## 高度な使い方
+
+### 並列開発（Claude Code等）
+
+複数の機能を同時開発する場合、機能ごとにworktreeを作成します：
+
+```bash
+# ブランチとworktreeを作成
+cd $(ghq root)/github.com/yamisskey-dev/yamisskey
+git branch feat/feature-a origin/muyami
+git branch feat/feature-b origin/muyami
 gwq add feat/feature-a
 gwq add feat/feature-b
 
-# 各worktreeで初期化
-cd $(gwq get feat/feature-a)
-pnpm install && pnpm build
+# 各worktreeで初期化して開発
+cd $(gwq get feat/feature-a) && pnpm install && pnpm build
+cd $(gwq get feat/feature-b) && pnpm install && pnpm build
+code $(gwq get feat/feature-a) &
+code $(gwq get feat/feature-b) &
 
-cd $(gwq get feat/feature-b)
-pnpm install && pnpm build
-
-# 各worktreeでVSCodeを開く
-code $(gwq get feat/feature-a)
-code $(gwq get feat/feature-b)
-
-# 開発完了後、muyamiにマージ
+# 開発完了後、muyamiにマージして削除
 cd $(gwq get muyami)
 git merge feat/feature-a
 git merge feat/feature-b
 git push origin muyami
-
-# 不要なworktreeを削除
 gwq remove feat/feature-a
 gwq remove feat/feature-b
 ```
 
-**Tips**: VSCode の GUI を使う場合は「ソース管理」→「Worktrees」から worktree を作成し、「Open Worktree in New Window」で各ウィンドウを開けます。同一ファイルを複数 worktree で編集する場合は、マージ時のコンフリクトに注意してください。
-
-## 他フォークから機能を cherry-pick
+### 他フォークからcherry-pick
 
 ```bash
-# ghqで管理している他フォークのコミットログを確認（閲覧用）
+# 他フォークを参照
 cd $(ghq root)/github.com/kokonect-link/cherrypick
 git log --oneline -20
 
-# yamisskey muyami worktreeに移動（開発用）
+# yamisskey muyamiに移動
 cd $(gwq get muyami)
-
-# 他フォークをリモートに追加（初回のみ）
 git remote add cherrypick $(ghq root)/github.com/kokonect-link/cherrypick
 git fetch cherrypick
-
-# 特定のコミットをcherry-pick
-git cherry-pick コミットID
-
-# コンフリクトがある場合
-git add .
-git cherry-pick --continue
+git cherry-pick <コミットID>
 ```
 
-## アップストリームからの変更取り込み
+### アップストリームからの変更取り込み
 
-### 準備：バックアップ作成
+#### 1. バックアップ作成
 
 ```bash
+# 各ブランチでバージョン名のバックアップを作成
 cd $(gwq get muyami)
-git branch backup/$(date +%Y%m%d) muyami
+VERSION=$(node -p "require('./package.json').version")
+git branch backup/$VERSION muyami
 
 cd $(gwq get nayami)
-git branch backup/$(date +%Y%m%d) nayami
+VERSION=$(node -p "require('./package.json').version")
+git branch backup/$VERSION nayami
 
-cd $(gwq get master)
-git branch backup/$(date +%Y%m%d) master
+cd $(ghq root)/github.com/yamisskey-dev/yamisskey
+VERSION=$(node -p "require('./package.json').version")
+git branch backup/$VERSION master
 ```
 
-### マージプロセス
+例: `backup/2025.1.0-muyami-1.4.3`
 
-#### 1. 開発ブランチ（muyami）への変更取り込み
+#### 2. マージ
 
 ```bash
+# muyamiに取り込み
 cd $(gwq get muyami)
 git fetch upstream --tags --prune
 git merge --no-ff --no-edit -S <tag-name>
-
 # コンフリクト解決後
 git add -A && git commit -m "upstream: resolve conflicts for <tag-name>"
+
+# nayami → master へ順次反映
 ```
-
-#### 2. テスト環境（nayami）への反映
-
-```bash
-cd $(gwq get nayami)
-git merge muyami
-pnpm build
-git push origin nayami
-```
-
-#### 3. 本番環境（master）への反映
-
-1. `DIFFERENCE.md` の Unreleased 項目に変更点を記載
-2. `package.json` の version をインクリメント
-3. GitHub で [Release Manager Dispatch](https://github.com/yamisskey-dev/yamisskey/actions/workflows/release-with-dispatch.yml) を実行
-4. 自動生成された PR で `package.json` のバージョンを正しい yami 形式に修正
-5. PR をマージすると、GitHub Release と Docker イメージが自動生成
 
 ## トラブルシューティング
 
-### git worktree 関連の問題
+### worktreeの削除と再作成
 
 ```bash
-# worktree の削除と再作成
 gwq remove muyami          # 削除
 gwq remove --force muyami  # 強制削除
-gwq add muyami             # 再作成（ghq のリポジトリから）
-gwq list                   # 状態確認
-
-# worktree のクリーンアップ
-git worktree prune
+gwq add muyami             # 再作成
+cd $(ghq root)/github.com/yamisskey-dev/yamisskey
+git worktree prune         # クリーンアップ
 ```
 
-### マージ失敗時の対応
+### マージ失敗時
 
 ```bash
-git merge --abort                        # マージ中断
-git checkout backup/[現在のバージョン]  # バックアップから復帰
+# 中断
+git merge --abort
+
+# バックアップから復元
+cd $(gwq get muyami)
+git branch --list 'backup/*'
+git reset --hard backup/2025.1.0-muyami-1.4.3
+git push --force origin muyami  # 注意: チーム開発では確認を取ること
 ```
 
-### ghq 関連の問題（閲覧用リポジトリ）
+### メインリポジトリの再取得
 
 ```bash
-ghq root                                     # ルートディレクトリ確認
-rm -rf $(ghq root)/github.com/yamisskey-dev/yamisskey  # リポジトリ削除
-ghq get https://github.com/yamisskey-dev/yamisskey.git # 再取得
+rm -rf $(ghq root)/github.com/yamisskey-dev/yamisskey
+ghq get yamisskey-dev/yamisskey
+cd $(ghq root)/github.com/yamisskey-dev/yamisskey
+gwq add nayami
+gwq add muyami
 ```
 
-## ブランチ保護と開発ルール
+### 権限エラー
 
-### master ブランチの保護設定
+```bash
+sudo chown -R $(whoami) ~/.ghq/github.com/yamisskey-dev/
+```
 
-- **ブランチ削除の禁止**：誤った削除を防止
-- 本番環境の安定性と品質を確保
+## 開発ルール
 
-### 開発ルール
-
-- muyami ブランチでの開発は必ずトピックブランチから行う
-- nayami ブランチへのマージは十分なテスト後に行う
-- 開発フロー：muyami（開発）→ nayami（テスト）→ master（本番）を徹底
+- muyami での開発は必ずトピックブランチから行う
+- nayami へのマージは十分なテスト後に実施
+- 開発フロー（muyami → nayami → master）を徹底
+- 重要な変更前は必ずバックアップを作成
+- プライバシー・セキュリティ機能は特に慎重にテスト
 
 ## CI/CD と AI 活用
 
-### GitHub Actions の役割
+### GitHub Actions
 
-- コードの品質保証（リント、型チェック）
-- 自動テスト実行によるバグの早期発見
-- ビルドエラーの検出
+- コード品質保証（リント、型チェック）
+- 自動テスト実行とビルドエラー検出
 - 本番環境への安全なデプロイ
 
 ### AI 活用
 
-- **Claude Code**：Dev Container に事前設定済み、コード生成・レビュー・リファクタリングに活用
-- **Pull Request レビュー**：Claude と Gemini による自動コードレビュー
-- 生成されたコードは必ず人間によるレビューを実施
-- セキュリティ・プライバシー関連機能では生成コードの適切性を必ず確認
-
-## 注意事項
-
-- 重要な変更前は必ずバックアップを作成
-- プライバシー機能に関する変更は特に慎重にテスト
-- パフォーマンスへの影響を必ず確認
-- セキュリティ関連の修正は優先して取り込み
-- 各ブランチの役割を尊重し、適切なフローで開発を進める
+- **Claude Code**: Dev Container に事前設定済み（コード生成・レビュー・リファクタリング）
+- **PR レビュー**: Claude と Gemini による自動コードレビュー
+- 生成コードは必ず人間がレビュー
+- セキュリティ・プライバシー関連は適切性を必ず確認
