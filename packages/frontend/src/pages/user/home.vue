@@ -139,19 +139,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</div>
 						<div class="status">
 							<MkA v-if="isNotesVisibilityForMe(user)" :to="userPage(user, 'notes')">
-								<!-- 以下を条件分岐に変更 -->
 								<b v-if="shouldHideNotesCount(user)">-</b>
 								<b v-else>{{ number(user.notesCount) }}</b>
 								<span>{{ i18n.ts.notes }}</span>
 							</MkA>
 							<MkA v-if="isFollowingVisibleForMe(user)" :to="userPage(user, 'following')">
-								<!-- 以下を条件分岐に変更 -->
 								<b v-if="shouldHideFollowingCount(user)">-</b>
 								<b v-else>{{ number(user.followingCount) }}</b>
 								<span>{{ i18n.ts.following }}</span>
 							</MkA>
 							<MkA v-if="isFollowersVisibleForMe(user)" :to="userPage(user, 'followers')">
-								<!-- 以下を条件分岐に変更 -->
 								<b v-if="shouldHideFollowersCount(user)">-</b>
 								<b v-else>{{ number(user.followersCount) }}</b>
 								<span>{{ i18n.ts.followers }}</span>

@@ -14,7 +14,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<header :class="$style.header">
 		<div :class="$style.headerLeft">
 			<button v-if="!fixed" :class="$style.cancel" class="_button" @click="cancel"><i class="ti ti-x"></i></button>
-			<button v-click-anime v-tooltip="i18n.ts.account" :class="$style.account" class="_button" @click="openAccountMenu">
+			<button ref="accountMenuEl" v-click-anime v-tooltip="i18n.ts.account" :class="$style.account" class="_button" @click="openAccountMenu">
 				<img :class="$style.avatar" :src="(postAccount ?? $i).avatarUrl" style="border-radius: 100%;"/>
 			</button>
 		</div>
@@ -78,7 +78,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<span v-else><i class="ti ti-rocket-off"></i></span>
 			</button>
 			<button ref="otherSettingsButton" v-tooltip="i18n.ts.other" class="_button" :class="$style.headerRightItem" @click="showOtherSettings"><i class="ti ti-dots"></i></button>
-			<button v-click-anime class="_button" :class="$style.submit" :disabled="!canPost" data-cy-open-post-form-submit @click="post">
+			<button ref="submitButtonEl" v-click-anime class="_button" :class="$style.submit" :disabled="!canPost" data-cy-open-post-form-submit @click="post">
 				<div :class="$style.submitInner">
 					<template v-if="posted"></template>
 					<template v-else-if="posting"><MkEllipsis/></template>
@@ -102,6 +102,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button class="_buttonPrimary" style="padding: 4px; border-radius: 8px;" @click="addVisibleUser"><i class="ti ti-plus ti-fw"></i></button>
 		</div>
 	</div>
+	<MkInfo v-if="!store.r.tips.value.postForm" :class="$style.showHowToUse" closable @close="closeTip('postForm')">
+		<button class="_textButton" @click="showTour">{{ i18n.ts._postForm.showHowToUse }}</button>
+	</MkInfo>
 	<MkInfo v-if="scheduledAt != null" :class="$style.scheduledAt">
 		<I18n :src="i18n.ts.scheduleToPostOnX" tag="span">
 			<template #x>
@@ -131,8 +134,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<MkDeleteScheduleEditor v-if="scheduledNoteDelete" v-model="scheduledNoteDelete" @destroyed="scheduledNoteDelete = null"/>
 	<MkScheduleEditor v-if="scheduleNote" v-model="scheduleNote" :scheduledDelete="scheduledNoteDelete" @destroyed="scheduleNote = null"/>
 	<MkNotePreview v-if="showPreview" :class="$style.preview" :text="text" :files="files" :poll="poll ?? undefined" :useCw="useCw" :cw="cw" :user="postAccount ?? $i"/>
-	<!-- <div v-if="showingOptions" style="padding: 8px 16px;">
-	</div> -->
+	<div v-if="showingOptions" style="padding: 8px 16px;">
+	</div>
 	<footer :class="$style.footer">
 		<div :class="$style.footerLeft">
 			<template v-for="item in prefer.s.postFormActions">
@@ -206,6 +209,8 @@ import { isPrivateNoteInReplyChain } from '@/utility/private-note.js';
 import { globalEvents } from '@/events.js';
 import { checkDragDataType, getDragData } from '@/drag-and-drop.js';
 import { useUploader } from '@/composables/use-uploader.js';
+import { startTour } from '@/utility/tour.js';
+import { closeTip } from '@/tips.js';
 
 const $i = ensureSignin();
 
@@ -245,6 +250,9 @@ const cwInputEl = useTemplateRef('cwInputEl');
 const hashtagsInputEl = useTemplateRef('hashtagsInputEl');
 const visibilityButton = useTemplateRef('visibilityButton');
 const otherSettingsButton = useTemplateRef('otherSettingsButton');
+const accountMenuEl = useTemplateRef('accountMenuEl');
+const footerEl = useTemplateRef('footerEl');
+const submitButtonEl = useTemplateRef('submitButtonEl');
 
 const posting = ref(false);
 const posted = ref(false);
@@ -1699,6 +1707,45 @@ function cancelSchedule() {
 	scheduledAt.value = null;
 }
 
+function showTour() {
+	if (textareaEl.value == null ||
+		footerEl.value == null ||
+		accountMenuEl.value == null ||
+		visibilityButton.value == null ||
+		otherSettingsButton.value == null ||
+		submitButtonEl.value == null) {
+		return;
+	}
+
+	startTour([{
+		element: textareaEl.value,
+		title: i18n.ts._postForm._howToUse.content_title,
+		description: i18n.ts._postForm._howToUse.content_description,
+	}, {
+		element: footerEl.value,
+		title: i18n.ts._postForm._howToUse.toolbar_title,
+		description: i18n.ts._postForm._howToUse.toolbar_description,
+	}, {
+		element: accountMenuEl.value,
+		title: i18n.ts._postForm._howToUse.account_title,
+		description: i18n.ts._postForm._howToUse.account_description,
+	}, {
+		element: visibilityButton.value,
+		title: i18n.ts._postForm._howToUse.visibility_title,
+		description: i18n.ts._postForm._howToUse.visibility_description,
+	}, {
+		element: otherSettingsButton.value,
+		title: i18n.ts._postForm._howToUse.menu_title,
+		description: i18n.ts._postForm._howToUse.menu_description,
+	}, {
+		element: submitButtonEl.value,
+		title: i18n.ts._postForm._howToUse.submit_title,
+		description: i18n.ts._postForm._howToUse.submit_description,
+	}]).then(() => {
+		closeTip('postForm');
+	});
+}
+
 onMounted(() => {
 	if (props.autofocus) {
 		focus();
@@ -1859,9 +1906,11 @@ defineExpose({
 }
 
 .avatar {
+	display: block;
 	width: 28px;
 	height: 28px;
 	margin: auto;
+	object-fit: cover;
 }
 
 .headerRight {
@@ -2025,6 +2074,10 @@ html[data-color-scheme=light] .preview {
 }
 
 .scheduledAt {
+	margin: 0 20px 16px 20px;
+}
+
+.showHowToUse {
 	margin: 0 20px 16px 20px;
 }
 
