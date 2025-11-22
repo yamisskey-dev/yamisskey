@@ -55,13 +55,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkSwitch>
 		</SearchMarker>
 
-		<SearchMarker :keywords="['profile', 'channels', 'hide', 'visibility']">
-			<MkSwitch v-model="hideProfileChannels" @update:modelValue="save()">
-				<template #label><SearchLabel>{{ i18n.ts.hideProfileChannels }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-				<template #caption><SearchText>{{ i18n.ts.hideProfileChannelsDescription }}</SearchText></template>
-			</MkSwitch>
-		</SearchMarker>
-
 		<SearchMarker :keywords="['following', 'visibility']">
 			<MkSelect v-model="followingVisibility" :items="followingVisibilityDef" @update:modelValue="save()">
 				<template #label><SearchLabel>{{ i18n.ts.followingVisibility }}</SearchLabel></template>
@@ -316,7 +309,6 @@ const hideSearchResult = ref($i.hideSearchResult);
 const publicReactions = ref($i.publicReactions);
 const hideActivity = ref($i.hideActivity);
 const hideProfileFiles = ref($i.hideProfileFiles);
-const hideProfileChannels = ref($i.hideProfileChannels);
 const {
 	model: notesVisibility,
 	def: notesVisibilityDef,
@@ -574,7 +566,6 @@ function save() {
 		publicReactions: !!publicReactions.value,
 		hideActivity: !!hideActivity.value,
 		hideProfileFiles: !!hideProfileFiles.value,
-		hideProfileChannels: !!hideProfileChannels.value,
 		notesVisibility: notesVisibility.value,
 		followingVisibility: followingVisibility.value,
 		followersVisibility: followersVisibility.value,

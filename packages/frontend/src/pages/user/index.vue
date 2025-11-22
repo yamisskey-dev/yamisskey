@@ -14,7 +14,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<XReactions v-else-if="tab === 'reactions'" :user="user"/>
 		<XClips v-else-if="tab === 'clips'" :user="user"/>
 		<XLists v-else-if="tab === 'lists'" :user="user"/>
-		<XChannels v-else-if="tab === 'channels'" :user="user"/>
 		<XPages v-else-if="tab === 'pages'" :user="user"/>
 		<XFlashs v-else-if="tab === 'flashs'" :user="user"/>
 		<XGallery v-else-if="tab === 'gallery'" :user="user"/>
@@ -43,7 +42,6 @@ const XAchievements = defineAsyncComponent(() => import('./achievements.vue'));
 const XReactions = defineAsyncComponent(() => import('./reactions.vue'));
 const XClips = defineAsyncComponent(() => import('./clips.vue'));
 const XLists = defineAsyncComponent(() => import('./lists.vue'));
-const XChannels = defineAsyncComponent(() => import('./channels.vue'));
 const XPages = defineAsyncComponent(() => import('./pages.vue'));
 const XFlashs = defineAsyncComponent(() => import('./flashs.vue'));
 const XGallery = defineAsyncComponent(() => import('./gallery.vue'));
@@ -122,11 +120,7 @@ const headerTabs = computed(() => user.value ? [{
 	key: 'lists',
 	title: i18n.ts.lists,
 	icon: 'ti ti-list',
-}, ...(!user.value.hideProfileChannels || ($i && ($i.id === user.value.id || $i.isAdmin || $i.isModerator))) ? [{
-	key: 'channels',
-	title: i18n.ts.channel,
-	icon: 'ti ti-device-tv',
-}] : [], {
+}, {
 	key: 'pages',
 	title: i18n.ts.pages,
 	icon: 'ti ti-news',

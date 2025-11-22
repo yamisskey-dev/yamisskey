@@ -6772,14 +6772,6 @@ export interface Locale extends ILocale {
      */
     "hideProfileFilesDescription": string;
     /**
-     * プロフィールのチャンネルを非公開にする
-     */
-    "hideProfileChannels": string;
-    /**
-     * 自分のプロフィールのチャンネル一覧を見れないようにします。
-     */
-    "hideProfileChannelsDescription": string;
-    /**
      * 誰がリアクションをしたのかを非表示にする
      */
     "hideReactionUsers": string;

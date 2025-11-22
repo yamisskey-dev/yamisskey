@@ -9874,7 +9874,6 @@ export type components = {
             publicReactions: boolean;
             hideActivity: boolean;
             hideProfileFiles: boolean;
-            hideProfileChannels: boolean;
             /** @enum {string} */
             notesVisibility: 'public' | 'followers' | 'private';
             /** @enum {string} */

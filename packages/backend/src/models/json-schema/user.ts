@@ -413,10 +413,6 @@ export const packedUserDetailedNotMeOnlySchema = {
 			type: 'boolean',
 			nullable: false, optional: false,
 		},
-		hideProfileChannels: {
-			type: 'boolean',
-			nullable: false, optional: false,
-		},
 		notesVisibility: {
 			type: 'string',
 			nullable: false, optional: false,
