@@ -51,7 +51,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</button>
 				<button v-else class="_button" :class="[$style.headerRightItem, $style.visibility]" disabled>
 					<span><i class="ti ti-device-tv"></i></span>
-					<span :class="$style.headerRightButtonText">{{ targetChannel.name }}</span>
+					<span :class="$style.headerRightButtonText">{{ targetChannelName }}</span>
 				</button>
 			</template>
 			<!-- 連合設定ボタン -->
@@ -136,7 +136,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<MkNotePreview v-if="showPreview" :class="$style.preview" :text="text" :files="files" :poll="poll ?? undefined" :useCw="useCw" :cw="cw" :user="postAccount ?? $i"/>
 	<div v-if="showingOptions" style="padding: 8px 16px;">
 	</div>
-	<footer :class="$style.footer">
+	<footer ref="footerEl" :class="$style.footer">
 		<div :class="$style.footerLeft">
 			<template v-for="item in prefer.s.postFormActions">
 				<button
@@ -365,7 +365,7 @@ const scheduleNote = ref<{
 const justEndedComposition = ref(false);
 const renoteTargetNote: ShallowRef<PostFormProps['renote'] | null> = shallowRef(props.renote);
 const replyTargetNote: ShallowRef<PostFormProps['reply'] | null> = shallowRef(props.reply);
-const targetChannel = shallowRef(props.channel);
+const targetChannel = shallowRef<PostFormProps['channel']>(props.channel);
 
 const serverDraftId = ref<string | null>(null);
 const postFormActions = getPluginHandlers('post_form_action');
@@ -448,7 +448,7 @@ const maxCwTextLength = 100;
 const canPost = computed((): boolean => {
 	return !props.mock && !posting.value && !posted.value && !uploader.uploading.value && (uploader.items.value.length === 0 || uploader.readyForUpload.value) &&
 		(scheduledNoteDelete.value ? scheduledNoteDelete.value.isValid : true) &&
-		(scheduleNote.value ? scheduleNote.value.isValid : true) &&
+		(scheduleNote.value ? (scheduleNote.value.isValid ?? true) : true) &&
 		(!scheduleNote.value || !scheduledNoteDelete.value ||
 			!scheduleNote.value.scheduledAt || !scheduledNoteDelete.value.deleteAt ||
 			scheduledNoteDelete.value.deleteAt > scheduleNote.value.scheduledAt) &&
@@ -559,6 +559,11 @@ const displayVisibility = computed(() => {
 		return 'private';
 	}
 	return visibility.value;
+});
+
+// チャンネル名の取得
+const targetChannelName = computed(() => {
+	return targetChannel.value?.name ?? '';
 });
 
 // 連合ボタンの無効化条件
@@ -1353,7 +1358,7 @@ async function post(ev?: MouseEvent) {
 	if (notePostInterruptors.length > 0) {
 		for (const interruptor of notePostInterruptors) {
 			try {
-				postData = await interruptor.handler(deepClone(postData)) as typeof postData;
+				postData = await interruptor.handler(deepClone(postData) as any) as typeof postData;
 			} catch (err) {
 				console.error(err);
 			}
