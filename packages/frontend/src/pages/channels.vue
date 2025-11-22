@@ -45,9 +45,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkPagination>
 		</div>
 		<div v-else-if="tab === 'pinned'">
-			<div :class="$style.root">
+			<div v-if="pinnedChannels.length > 0" :class="$style.root">
 				<MkChannelPreview v-for="channel in pinnedChannels" :key="channel.id" :channel="channel"/>
 			</div>
+			<MkResult v-else type="empty"/>
 		</div>
 		<div v-else-if="tab === 'owned'" class="_gaps">
 			<MkButton link primary rounded to="/channels/new"><i class="ti ti-plus"></i> {{ i18n.ts.createNew }}</MkButton>
@@ -70,6 +71,7 @@ import MkInput from '@/components/MkInput.vue';
 import MkRadios from '@/components/MkRadios.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkFoldableSection from '@/components/MkFoldableSection.vue';
+import MkResult from '@/components/global/MkResult.vue';
 import { definePage } from '@/page.js';
 import { i18n } from '@/i18n.js';
 import { useRouter } from '@/router.js';
