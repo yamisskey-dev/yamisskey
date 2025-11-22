@@ -568,6 +568,7 @@ export class UserEntityService implements OnModuleInit {
 				publicReactions: this.isLocalUser(user) ? profile!.publicReactions : false, // https://github.com/misskey-dev/misskey/issues/12964
 				hideActivity: this.isLocalUser(user) ? profile!.hideActivity : false, //
 				hideProfileFiles: this.isLocalUser(user) ? profile!.hideProfileFiles : false,
+				hideProfileChannels: this.isLocalUser(user) ? profile!.hideProfileChannels : false,
 				notesVisibility: profile!.notesVisibility,
 				followersVisibility: profile!.followersVisibility,
 				followingVisibility: profile!.followingVisibility,

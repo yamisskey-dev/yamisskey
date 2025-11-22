@@ -141,6 +141,11 @@ export class MiUserProfile {
 	})
 	public hideProfileFiles: boolean;
 
+	@Column('boolean', {
+		default: process.env.NODE_ENV === 'test' ? false : true, // yamisskey: false from true for test environment
+	})
+	public hideProfileChannels: boolean;
+
 	@Column('varchar', {
 		length: 128, nullable: true,
 	})
