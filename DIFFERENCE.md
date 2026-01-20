@@ -1,5 +1,13 @@
 # DIFFRENCE
 
+## Unreleased
+
+### Fix
+- **LTLで「Botアカウントを除外」オプションが機能しない問題を修正** (#229)
+  - Fanoutタイムライン使用時に`noteFilter`が実装されていなかったため、`excludeBots`パラメータが適用されていなかった
+  - 他のタイムラインエンドポイント（timeline.ts, hybrid-timeline.ts, yami-timeline.ts）と同様の実装パターンを追加
+  - DBフォールバック使用時は正常に動作していた
+
 ## 2025.12.2-yami-1.9.32
 
 ### Fix
