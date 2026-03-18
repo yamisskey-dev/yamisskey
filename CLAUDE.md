@@ -32,18 +32,19 @@ Yamisskey is a privacy-focused and psychologically safe fork of [Misskey](https:
 ## Development Workflow
 
 ### Branch Structure
-- **`master`** (Production): Stable yamisskey with `-yami-` versioning (e.g., `2025.1.0-yami-1.4.3`)
-- **`nayami`** (Testing): Testing environment with `-nayami-` versioning 
-- **`muyami`** (Development): Active development with `-muyami-` versioning
+- **`develop`** (Development): Active development and upstream merge integration
+- **`staging`** (Testing): Pre-production testing environment
+- **`master`** (Production): Stable yamisskey deployed to production
 
 ### Release Flow
-Development flows: `muyami` → `nayami` → `master`
+Development flows: `develop` → `staging` → `master`
+
+- Upstream merges and feature development are done on `develop`
+- PRs from `develop` to `staging` for pre-production testing
+- PRs from `staging` to `master` for production release
 
 ### Version Management
-Each branch uses distinct version suffixes:
-- Production: `version-yami-x.x.x`
-- Testing: `version-nayami-x.x.x`  
-- Development: `version-muyami-x.x.x`
+All branches use the `-yami-` version suffix (e.g., `2026.3.1-yami-1.9.33`)
 
 ## Key Code Areas
 
