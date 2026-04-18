@@ -125,8 +125,7 @@ export class YamiTimelineChannel extends Channel {
 
 		if (this.isNoteMutedOrBlocked(note)) return;
 
-		const { shouldSkip } = await this.noteStreamingHidingService.processHiding(note, this.user?.id ?? null);
-		if (shouldSkip) return;
+		if (await this.shouldHideByStreamingHidingService(note)) return;
 
 		if (this.user && isRenotePacked(note) && !isQuotePacked(note)) {
 			if (note.renote && Object.keys(note.renote.reactions).length > 0) {
@@ -136,6 +135,15 @@ export class YamiTimelineChannel extends Channel {
 		}
 
 		this.send('note', note);
+	}
+
+	// NOTE: NoteStreamingHidingService の API (processHiding → filter) が
+	// upstream 2026.3.2 で刷新される。マージ時はこの1箇所だけ差し替えれば済むよう、
+	// 呼び出しを private helper に閉じ込めている。
+	@bindThis
+	private async shouldHideByStreamingHidingService(note: Packed<'Note'>): Promise<boolean> {
+		const { shouldSkip } = await this.noteStreamingHidingService.processHiding(note, this.user?.id ?? null);
+		return shouldSkip;
 	}
 
 	@bindThis
