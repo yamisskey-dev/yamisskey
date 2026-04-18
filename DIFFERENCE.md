@@ -2,11 +2,68 @@
 
 ## Unreleased
 
+## 2026.3.1-yami-1.9.34
+
 ### Fix
+- **やみタイムラインの可視性処理を本家 v2026.3.1 互換に (#259)**
+  - Streaming: `NoteStreamingHidingService` を導入。`makeNotesHiddenBefore` 時限消滅、引用リノート内容マスク、3 層リノート個別マスク、DM 宛先縮約が適用されるように
+  - Endpoint dbFallback: `generateBaseNoteFilteringQuery` / `generateMutedUserRenotesQueryForNotes` / `generateVisibilityQuery` を導入し、ミュート/ブロック/インスタンスミュート/可視性判定が正しく適用されるように
+- **やみタイムライン REST の DI 誤注入を修正**
+  - 孤児 `@Inject(DI.channelFollowingsRepository)` が残り `followingsRepository` に `ChannelFollowingsRepository` が誤注入されていた。dbFallback のフォロー中ユーザー絞り込みが常にゼロマッチになっていた
+- **やみタイムライン REST の `noteFilter` が follow 関係を考慮するように**
+  - visibility のみで `showYami*` を分岐しており、`showYamiFollowingNotes=true` + `showYamiNonFollowingPublicNotes=false` でフォロー中ユーザーの public やみノートが消える挙動を解消
+- **やみタイムライン REST の `allowPartial` パラメータを尊重**
+  - ハードコード `false` でクライアント指定が無視されていた
+- **`User.activeStatusVisibility` の entity/migration drift を修正**
+  - 1.9.32 でデフォルトを `mutualFollow` → `never` に変更した際、entity 側の更新が抜けていた。CI の migration check が検出したため entity を `never` に揃える
+- **投稿フォームのプライベートノート / DM ボタンが `localOnly` と連動しない問題を修正 (#258)**
+  - `MkPostForm` が `MkVisibilityPicker` に `localOnly` を渡しておらず、picker 側のデフォルト `false` で固定されていた
+  - 結果、プライベートノートボタンが常に disabled、DM ボタンは `localOnly=true` でも選択可能になっていた
+  - `localOnly` を picker に伝搬し、DM ボタンに `:disabled="localOnly"` を追加して連動させる
+
+### Refactor
+- **やみタイムライン Streaming を本家 home-timeline 構造に整列**
+  - `isNoteVisibleForMe()` 導入、reply/renote filter 整理、`try-catch` 撤去、処理順整列
+- **やみタイムライン REST dbFallback を `generateVisibilityQuery` 委譲で簡素化**
+  - 手書き可視性 OR 句削減 (+18/-57 行)、`localOnly` 3 重複を top-level AND に集約
+- **やみタイムライン REST: フォロー情報取得を `userFollowingsCache` に統一**
+  - hybrid-timeline と同一経路、`followingsRepository` 注入を削除
+
+### Perf
+- **やみタイムライン REST: やみモード OFF 時の無駄クエリを回避**
+  - fanout → dbFallback の 2 段無駄クエリを短絡
+
+## 2026.3.1-yami-1.9.33
+
+### Security (Critical)
+Misskey本家 v2026.3.0〜v2026.3.1 の緊急セキュリティ修正を取り込み。
+
+- WebSocketチャンネル認可バイパス
+- WebSocketノート可視性リーク（フォロワー限定・指名投稿がストリーミング経由で漏洩）
+- ノートストリームイベント可視性リーク（指名投稿のリアクション等が漏洩）
+- ActivityPub HTTP署名検証バイパス（CVE-2026-28432）
+- インポートファイルIDのIDOR（他ユーザーのドライブファイル読み取り可能）
+
+### Upstream
+Misskey本家 v2026.3.0〜v2026.3.1 のマージ（PR #254 by @lqvp）。
+
+主な変更:
+- ストリーミングチャンネルアーキテクチャの変更（ChannelsService廃止 → TRANSIENT scope + ModuleRef）
+- NoteStreamingHidingServiceによる3階層ノート可視性チェック
+- ビルドシステム変更（swc → esbuild）
+- vuedraggable廃止 → MkDraggableコンポーネントに移行
+- MkRadio → MkRadiosに統合
+- Node.js 22.21.1、fastify 5.8.1 等のアップデート
+- nodemailer v7 → v8
+
+### Fix
+- **YamiTimelineChannelを新アーキテクチャに移行** (#254)
+  - TRANSIENT scope対応、Connection.tsへのチャンネル登録
+- **RolesEditorFormulaのimport復元** (#254)
+  - 本家のvuedraggable削除時に誤って消えたimportを復元
+- **WidgetListenBrainzの重複onMounted削除** (#254)
 - **LTLで「Botアカウントを除外」オプションが機能しない問題を修正** (#229)
   - Fanoutタイムライン使用時に`noteFilter`が実装されていなかったため、`excludeBots`パラメータが適用されていなかった
-  - 他のタイムラインエンドポイント（timeline.ts, hybrid-timeline.ts, yami-timeline.ts）と同様の実装パターンを追加
-  - DBフォールバック使用時は正常に動作していた
 
 ## 2025.12.2-yami-1.9.32
 
