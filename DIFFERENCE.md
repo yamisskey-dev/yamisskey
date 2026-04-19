@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2026.3.2-yami-1.9.37
+
+### Fix
+- **浮上タイムラインの 500 エラーを修正**
+  - 1.9.36 で `generateBaseNoteFilteringQuery` を導入した際、この関数が内部で呼ぶ `generateSuspendedUserQueryForNote` が要求する `replyUser` / `renoteUser` エイリアスの LEFT JOIN を張り忘れており、`POST /api/notes/floater` が 500 を返していた
+  - `note.reply` / `note.renote` / `reply.user` / `renote.user` の LEFT JOIN を追加して解消 (local-timeline と同じチェーン)
+- **浮上タイムラインの dev ビルド console 警告を解消**
+  - 手書きの `formatFloaterMessage()` が `i18n.ts._floater[key]` を経由してプレースホルダ付き文字列を取得しており、dev モードの Proxy が `Missing locale parameters: date, user at userFirstPublicPost` を warn していた
+  - `i18n.tsx._floater.xxx({user, date, n})` の型付き API に各呼出を切り替えてヘルパーを削除
+
 ## 2026.3.2-yami-1.9.36
 
 ### Refactor
