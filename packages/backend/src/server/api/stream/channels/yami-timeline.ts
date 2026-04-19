@@ -125,7 +125,10 @@ export class YamiTimelineChannel extends Channel {
 
 		if (this.isNoteMutedOrBlocked(note)) return;
 
-		if (await this.shouldHideByStreamingHidingService(note)) return;
+		const filtered = await this.noteStreamingHidingService.filter(note, this.user?.id ?? null);
+		if (!filtered) return;
+		// eslint-disable-next-line no-param-reassign -- これ以降元の Note オブジェクトは見てはいけないので、いっそ再代入した方が安全
+		note = filtered;
 
 		if (this.user && isRenotePacked(note) && !isQuotePacked(note)) {
 			if (note.renote && Object.keys(note.renote.reactions).length > 0) {
@@ -135,15 +138,6 @@ export class YamiTimelineChannel extends Channel {
 		}
 
 		this.send('note', note);
-	}
-
-	// NOTE: NoteStreamingHidingService の API (processHiding → filter) が
-	// upstream 2026.3.2 で刷新される。マージ時はこの1箇所だけ差し替えれば済むよう、
-	// 呼び出しを private helper に閉じ込めている。
-	@bindThis
-	private async shouldHideByStreamingHidingService(note: Packed<'Note'>): Promise<boolean> {
-		const { shouldSkip } = await this.noteStreamingHidingService.processHiding(note, this.user?.id ?? null);
-		return shouldSkip;
 	}
 
 	@bindThis
