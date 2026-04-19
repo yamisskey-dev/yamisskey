@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2026.3.1-yami-1.9.35
+
 ### Misskey 2026.3.2への追従
 
 本家Misskey 2026.3.2をdevelopブランチにマージしました。詳細はCHANGELOG.mdを参照してください。
