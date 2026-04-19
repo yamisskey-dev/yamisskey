@@ -38381,6 +38381,8 @@ export interface operations {
                     anchorDate?: number;
                     /** @default 0 */
                     offset?: number;
+                    /** @default false */
+                    excludeBots?: boolean;
                 };
             };
         };
@@ -38391,7 +38393,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    'application/json': components['schemas']['Note'][];
+                    'application/json': {
+                        /** Format: misskey:id */
+                        id: string;
+                        notes: components['schemas']['Note'][];
+                        /** Format: misskey:id */
+                        last: string | null;
+                        isFirstPublicPost: boolean;
+                        isFollowing: boolean;
+                    }[];
                 };
             };
             /** @description Client error */

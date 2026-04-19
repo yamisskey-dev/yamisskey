@@ -2,6 +2,27 @@
 
 ## 2026.3.2-yami-1.9.35
 
+## 2026.3.2-yami-1.9.36
+
+### Refactor
+- **浮上タイムラインを本家 LTL と同等のフィルタ機構に整合 (#283)**
+  - `meta.res` を実レスポンス形状 (`{id, notes, last, isFirstPublicPost, isFollowing}[]`) に修正。従来は `Note[]` と宣言しており frontend での `any` キャスト残存の原因になっていた
+  - CTE に `isSuspended = FALSE` フィルタを追加 (suspended ユーザーが浮上してしまう不具合を修正)
+  - `generateBaseNoteFilteringQuery` を導入し、muted/blocked/blockedHost の手動呼出を一元化 (renote 変種含む)
+  - `ChannelMutingService` を DI してミュート済みチャンネルの renote を除外
+  - `paramDef` に `excludeBots` (default: false) を追加し本家 LTL とパラメータ整合
+- **浮上タイムラインの follow 判定を `userFollowingsCache` に寄せて JOIN を撤去 (#283)**
+  - `local_active_users` の `LEFT JOIN "following"` と `user_last_posts` の `EXISTS` サブクエリを撤去し、`ANY($1::varchar[])` で判定する形に置き換え
+  - やみタイムラインと同方針 (257b5e0a36 相当)。高フォローユーザー向けに JOIN と per-user EXISTS を削減
+- **浮上タイムライン frontend の型安全性を回復し副作用注入を整理 (#283)**
+  - `FloaterItem` を `Misskey.entities.NotesFloaterResponse[number]` から派生させ、`note as any` / `[key: string]: any` / `isValidFloaterItem` 型ガードを撤去
+  - API 応答オブジェクトへの `_cachedInfo` / `_sortedNotes` 直接注入を廃止し、コンポーネントスコープの `Map<string, {info, sortedNotes}>` に置換
+  - `ensureDate` と過剰な try/catch を削除 (`createdAt` は string ISO 前提)
+  - `isSameDay` を `timeline-date-separate.ts` の `isSeparatorNeeded` に統合
+  - 約 -211 行の削減
+
+## 2026.3.2-yami-1.9.35
+
 ### Misskey 2026.3.2への追従
 
 本家Misskey 2026.3.2をdevelopブランチにマージしました。詳細はCHANGELOG.mdを参照してください。
