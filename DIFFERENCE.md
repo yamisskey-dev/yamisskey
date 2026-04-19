@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## Unreleased
+## 2026.3.2-yami-1.9.35
 
 ### Refactor
 - **浮上タイムラインを本家 LTL と同等のフィルタ機構に整合 (#283)**
