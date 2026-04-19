@@ -177,19 +177,6 @@ function getCompareNote(note: FloaterNote, index: number, item: FloaterItem): Fl
 
 // ----- i18n / ユーザー名 -----
 
-function formatFloaterMessage(messageKey: string, params: Record<string, string>): string {
-	const messageTemplate = (i18n.ts._floater as Record<string, string | undefined>)[messageKey];
-	if (!messageTemplate) {
-		console.warn(`Missing floater message: ${messageKey}`);
-		return messageKey;
-	}
-	let message = messageTemplate;
-	for (const [key, value] of Object.entries(params)) {
-		message = message.replaceAll(`{${key}}`, value);
-	}
-	return message;
-}
-
 function formatUserName(user: FloaterNote['user']): string {
 	return (user.name ?? user.username).replace(/:([\w-]+):/g, '').trim();
 }
@@ -239,7 +226,7 @@ function getCombinedFloaterInfo(item: FloaterItem, noteIndex = 0, nextNote?: Flo
 
 	// 初浮上
 	if (item.isFirstPublicPost && isOldestNote(currentNote, item)) {
-		const result = formatFloaterMessage('userFirstPublicPost', {
+		const result = i18n.tsx._floater.userFirstPublicPost({
 			user: formatUserName(currentNote.user),
 			date: getDisplayDateString(currentNote.createdAt),
 		});
@@ -263,7 +250,7 @@ function getCombinedFloaterInfo(item: FloaterItem, noteIndex = 0, nextNote?: Flo
 
 	const compareNote = nextNote ?? getCompareNote(currentNote, noteIndex, item);
 	if (!compareNote) {
-		return formatFloaterMessage('userRarelyAppeared', {
+		return i18n.tsx._floater.userRarelyAppeared({
 			user: formatUserName(currentNote.user),
 			date: getDisplayDateString(currentDate),
 		});
@@ -278,10 +265,10 @@ function getCombinedFloaterInfo(item: FloaterItem, noteIndex = 0, nextNote?: Flo
 	const diffDays = getNoteDaysDifference(currentNote, compareNote);
 	if (diffDays === 0) return getDateText(currentDate);
 
-	const result = formatFloaterMessage('userAfterNDays', {
+	const result = i18n.tsx._floater.userAfterNDays({
 		user: formatUserName(currentNote.user),
 		date: getDisplayDateString(currentDate),
-		n: diffDays.toString(),
+		n: diffDays,
 	});
 	if (isNewestNote(currentNote, item)) cache.info = result;
 	return result;
@@ -289,7 +276,7 @@ function getCombinedFloaterInfo(item: FloaterItem, noteIndex = 0, nextNote?: Flo
 
 function getDateInfo(note: FloaterNote, index: number, item: FloaterItem): string {
 	if (item.isFirstPublicPost && isOldestNote(note, item)) {
-		return formatFloaterMessage('userFirstPublicPost', {
+		return i18n.tsx._floater.userFirstPublicPost({
 			user: formatUserName(note.user),
 			date: getDisplayDateString(note.createdAt),
 		});
@@ -299,10 +286,10 @@ function getDateInfo(note: FloaterNote, index: number, item: FloaterItem): strin
 		const compareNote = getCompareNote(note, index, item);
 		const diffDays = getNoteDaysDifference(note, compareNote);
 		if (diffDays > 0) {
-			return formatFloaterMessage('userAfterNDays', {
+			return i18n.tsx._floater.userAfterNDays({
 				user: formatUserName(note.user),
 				date: getDisplayDateString(note.createdAt),
-				n: diffDays.toString(),
+				n: diffDays,
 			});
 		}
 	}
