@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2026.3.2-yami-1.9.36
+
 ### Refactor
 - **浮上タイムラインを本家 LTL と同等のフィルタ機構に整合 (#283)**
   - `meta.res` を実レスポンス形状 (`{id, notes, last, isFirstPublicPost, isFollowing}[]`) に修正。従来は `Note[]` と宣言しており frontend での `any` キャスト残存の原因になっていた
