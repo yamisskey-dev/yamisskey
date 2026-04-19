@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## 2026.3.1-yami-1.9.34
+## Unreleased
 
 ### Misskey 2026.3.2への追従
 
