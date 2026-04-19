@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Misskey 2026.3.2への追従
+
+本家Misskey 2026.3.2をdevelopブランチにマージしました。詳細はCHANGELOG.mdを参照してください。
+
+## 2026.3.1-yami-1.9.34
+
 ### Fix
 - **やみタイムラインの可視性処理を本家 v2026.3.1 互換に (#259)**
   - Streaming: `NoteStreamingHidingService` を導入。`makeNotesHiddenBefore` 時限消滅、引用リノート内容マスク、3 層リノート個別マスク、DM 宛先縮約が適用されるように
