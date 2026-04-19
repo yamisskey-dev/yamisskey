@@ -195,7 +195,14 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 		return await Promise.all(updatedUsers.map(async (row: { user: string; last: string | null; is_following: boolean; is_first_public_post: boolean }) => {
 			const userId = row.user;
-			const query = this.notesRepository.createQueryBuilder('note').innerJoinAndSelect('note.user', 'user');
+			// generateBaseNoteFilteringQuery が replyUser/renoteUser エイリアスを要求するため
+			// local-timeline と同じ LEFT JOIN チェーンを張る
+			const query = this.notesRepository.createQueryBuilder('note')
+				.innerJoinAndSelect('note.user', 'user')
+				.leftJoinAndSelect('note.reply', 'reply')
+				.leftJoinAndSelect('note.renote', 'renote')
+				.leftJoinAndSelect('reply.user', 'replyUser')
+				.leftJoinAndSelect('renote.user', 'renoteUser');
 
 			// 標準の可視性クエリ
 			this.queryService.generateVisibilityQuery(query, me);
