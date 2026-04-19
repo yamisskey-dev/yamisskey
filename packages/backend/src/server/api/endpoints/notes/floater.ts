@@ -163,14 +163,14 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
                         ORDER BY "id" DESC
                         LIMIT 1
                     ) AS last_post_id,
-                    -- 初浮上: anchor 以前に当該ユーザーのノートが 1 つも存在しないこと
-                    -- (リプライ/リノート/home/followers/specified も "過去の活動" と見なす。
-                    --  visibility=public かつ renoteId/replyId IS NULL に限ると、
-                    --  リプライや home のみ投稿してきた既存ユーザーが誤って初浮上判定されてしまう)
+                    -- 初浮上かどうかを判定する部分を追加
                     NOT EXISTS (
                         SELECT 1 FROM "note"
                         WHERE "userId" = lau."userId"
                             AND "id" < $2
+                            AND "visibility" IN ('public')
+                            AND "renoteId" IS NULL
+                            AND "replyId" IS NULL
                             AND ("isNoteInYamiMode" = FALSE OR $5 = TRUE)
                     ) AS is_first_public_post,
                     -- フォロー状態 (userFollowingsCache から受け取った配列で判定)
