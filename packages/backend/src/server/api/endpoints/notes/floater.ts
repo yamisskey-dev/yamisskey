@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { DataSource } from 'typeorm';
+import { Brackets, DataSource } from 'typeorm';
 import { Inject, Injectable } from '@nestjs/common';
 import type { NotesRepository } from '@/models/_.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { QueryService } from '@/core/QueryService.js';
 import ActiveUsersChart from '@/core/chart/charts/active-users.js';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
+import { ChannelMutingService } from '@/core/ChannelMutingService.js';
 import { DI } from '@/di-symbols.js';
 import { IdService } from '@/core/IdService.js';
 import { MiLocalUser } from '@/models/User.js';
@@ -26,7 +27,21 @@ export const meta = {
 		items: {
 			type: 'object',
 			optional: false, nullable: false,
-			ref: 'Note',
+			properties: {
+				id: { type: 'string', optional: false, nullable: false, format: 'misskey:id' },
+				notes: {
+					type: 'array',
+					optional: false, nullable: false,
+					items: {
+						type: 'object',
+						optional: false, nullable: false,
+						ref: 'Note',
+					},
+				},
+				last: { type: 'string', optional: false, nullable: true, format: 'misskey:id' },
+				isFirstPublicPost: { type: 'boolean', optional: false, nullable: false },
+				isFollowing: { type: 'boolean', optional: false, nullable: false },
+			},
 		},
 	},
 } as const;
@@ -41,6 +56,7 @@ export const paramDef = {
 		anchorId: { type: 'string', format: 'misskey:id' },
 		anchorDate: { type: 'integer' },
 		offset: { type: 'integer', minimum: 0, default: 0 },
+		excludeBots: { type: 'boolean', default: false },
 	},
 	required: [],
 } as const;
@@ -58,16 +74,23 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private activeUsersChart: ActiveUsersChart,
 		private idService: IdService,
 		private queryService: QueryService,
+		private channelMutingService: ChannelMutingService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			const anchorId = ps.anchorId ?? this.idService.gen(ps.anchorDate);
+
+			const mutedChannelIds = await this.channelMutingService
+				.list({ requestUserId: me.id }, { idOnly: true })
+				.then(xs => xs.map(x => x.id));
 
 			const updates = await this.getFromDb({
 				anchorId,
 				offset: ps.offset,
 				limit: ps.limit,
-				noteLimit: ps.noteLimit, // 追加
-				maxNoteLimit: ps.maxNoteLimit, // 追加
+				noteLimit: ps.noteLimit,
+				maxNoteLimit: ps.maxNoteLimit,
+				excludeBots: ps.excludeBots,
+				mutedChannelIds,
 			}, me);
 
 			process.nextTick(() => {
@@ -86,8 +109,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		anchorId: string | null;
 		offset: number;
 		limit: number;
-		noteLimit?: number; // 追加
-		maxNoteLimit?: number; // 追加
+		noteLimit?: number;
+		maxNoteLimit?: number;
+		excludeBots: boolean;
+		mutedChannelIds: string[];
 	}, me: MiLocalUser) {
 		// フォローしているユーザーと、フォローしていないローカルユーザーのパブリック投稿、両方を含むクエリ
 		const updatedUsers = await this.db.query(`
@@ -100,6 +125,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
                 WHERE
                     -- ローカルユーザーのみ
                     u."host" IS NULL
+                    -- suspended ユーザーを除外
+                    AND u."isSuspended" = FALSE
+                    -- excludeBots=TRUE のとき bot を除外
+                    AND (u."isBot" = FALSE OR $6 = FALSE)
                     -- anchorId以降に投稿がある
                     AND n."id" > $2
                     -- パブリック投稿
@@ -157,7 +186,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
                 last_post_id ASC NULLS FIRST
             OFFSET $3
             LIMIT $4
-        `, [me.id, ps.anchorId, ps.offset, ps.limit, me.isInYamiMode]);
+        `, [me.id, ps.anchorId, ps.offset, ps.limit, me.isInYamiMode, ps.excludeBots]);
 
 		return await Promise.all(updatedUsers.map(async (row: { user: string; last: string | null; is_following: boolean; is_first_public_post: boolean }) => {
 			const userId = row.user;
@@ -165,6 +194,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			// 標準の可視性クエリ
 			this.queryService.generateVisibilityQuery(query, me);
+			// ミュート/ブロック/suspended/blockedHost の共通フィルタ (renote 変種も含む)
+			this.queryService.generateBaseNoteFilteringQuery(query, me);
+			// 被ミュートユーザーによる自分のノート renote の除外
+			this.queryService.generateMutedUserRenotesQueryForNotes(query, me);
 
 			// フォローしていないユーザーの場合は明示的にパブリック投稿のみに制限
 			if (!row.is_following && userId !== me.id) {
@@ -172,13 +205,22 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			}
 
 			// やみモード投稿のフィルタリング
-			if (!(me.isInYamiMode)) {
+			if (!me.isInYamiMode) {
 				query.andWhere('note.isNoteInYamiMode = FALSE');
 			}
 
-			this.queryService.generateMutedUserQueryForNotes(query, me);
-			this.queryService.generateBlockedUserQueryForNotes(query, me);
-			this.queryService.generateMutedUserRenotesQueryForNotes(query, me);
+			// ミュート済みチャンネルの renote を除外
+			if (ps.mutedChannelIds.length > 0) {
+				query.andWhere(new Brackets(qb => {
+					qb.where('note.renoteChannelId IS NULL')
+						.orWhere('note.renoteChannelId NOT IN (:...mutedChannelIds)', { mutedChannelIds: ps.mutedChannelIds });
+				}));
+			}
+
+			// bot 除外 (excludeBots=TRUE のとき)
+			if (ps.excludeBots) {
+				query.andWhere('user.isBot = FALSE');
+			}
 
 			query.andWhere('note.renoteId IS NULL');
 			query.andWhere('note.replyId IS NULL');
