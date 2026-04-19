@@ -11,6 +11,7 @@ import { QueryService } from '@/core/QueryService.js';
 import ActiveUsersChart from '@/core/chart/charts/active-users.js';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { ChannelMutingService } from '@/core/ChannelMutingService.js';
+import { CacheService } from '@/core/CacheService.js';
 import { DI } from '@/di-symbols.js';
 import { IdService } from '@/core/IdService.js';
 import { MiLocalUser } from '@/models/User.js';
@@ -75,13 +76,18 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private idService: IdService,
 		private queryService: QueryService,
 		private channelMutingService: ChannelMutingService,
+		private cacheService: CacheService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			const anchorId = ps.anchorId ?? this.idService.gen(ps.anchorDate);
 
-			const mutedChannelIds = await this.channelMutingService
-				.list({ requestUserId: me.id }, { idOnly: true })
-				.then(xs => xs.map(x => x.id));
+			const [mutedChannelIds, followings] = await Promise.all([
+				this.channelMutingService
+					.list({ requestUserId: me.id }, { idOnly: true })
+					.then(xs => xs.map(x => x.id)),
+				this.cacheService.userFollowingsCache.fetch(me.id),
+			]);
+			const followeeIds = Object.keys(followings);
 
 			const updates = await this.getFromDb({
 				anchorId,
@@ -91,6 +97,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				maxNoteLimit: ps.maxNoteLimit,
 				excludeBots: ps.excludeBots,
 				mutedChannelIds,
+				followeeIds,
 			}, me);
 
 			process.nextTick(() => {
@@ -113,14 +120,15 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		maxNoteLimit?: number;
 		excludeBots: boolean;
 		mutedChannelIds: string[];
+		followeeIds: string[];
 	}, me: MiLocalUser) {
 		// フォローしているユーザーと、フォローしていないローカルユーザーのパブリック投稿、両方を含むクエリ
+		// $1=followeeIds, $2=anchorId, $3=offset, $4=limit, $5=isInYamiMode, $6=excludeBots
 		const updatedUsers = await this.db.query(`
             WITH local_active_users AS (
-                -- フォローしているユーザーと最近投稿したローカルユーザーを取得
+                -- 最近投稿したローカルユーザーを取得
                 SELECT DISTINCT u.id AS "userId"
                 FROM "user" u
-                LEFT JOIN "following" f ON u.id = f."followeeId" AND f."followerId" = $1
                 JOIN "note" n ON u.id = n."userId"
                 WHERE
                     -- ローカルユーザーのみ
@@ -165,11 +173,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
                             AND "replyId" IS NULL
                             AND ("isNoteInYamiMode" = FALSE OR $5 = TRUE)
                     ) AS is_first_public_post,
-                    -- フォロー状態
-                    EXISTS (
-                        SELECT 1 FROM "following"
-                        WHERE "followerId" = $1 AND "followeeId" = lau."userId"
-                    ) AS is_following
+                    -- フォロー状態 (userFollowingsCache から受け取った配列で判定)
+                    (lau."userId" = ANY($1::varchar[])) AS is_following
                 FROM local_active_users lau
             )
             -- フォロー状態順 + 最後の投稿古い順 + オフセット + リミット
@@ -186,7 +191,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
                 last_post_id ASC NULLS FIRST
             OFFSET $3
             LIMIT $4
-        `, [me.id, ps.anchorId, ps.offset, ps.limit, me.isInYamiMode, ps.excludeBots]);
+        `, [ps.followeeIds, ps.anchorId, ps.offset, ps.limit, me.isInYamiMode, ps.excludeBots]);
 
 		return await Promise.all(updatedUsers.map(async (row: { user: string; last: string | null; is_following: boolean; is_first_public_post: boolean }) => {
 			const userId = row.user;
