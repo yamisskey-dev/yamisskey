@@ -1,5 +1,16 @@
 # DIFFRENCE
 
+## Unreleased
+
+## 2026.3.2-yami-1.9.38
+
+### Fix
+- **Service Worker の空通知がクローズされず積み上がる問題を修正 (#291, #292)**
+  - `createEmptyNotification` で `showNotification` 時に `tag: 'read_notification'` を設定しているが、1秒後のクローズ呼び出しで別タグ `'user_visible_auto_notification'` が指定されており、空通知が閉じられず通知ドロワーに残り続けていた
+  - iOS Safari PWA や一部 Android 環境では同タグ置換が不完全なため、`readAllNotifications` push などを契機に `yami.ski / Misskey v...` という空通知が複数並ぶ現象が発生していた
+  - 本家 `misskey-dev/misskey` PR #7667 の原設計（`'read_notification'` と `'user_visible_auto_notification'` の両方をクローズ対象とする）に戻す形で修正。`'user_visible_auto_notification'` は Chromium が silent push フォールバック時に内部付与するタグで、Misskey 側が set しているものではない
+  - 本家 PR #10570 で `'read_notification'` が配列から欠落したリグレッションの修正。upstream にも別途還元予定
+
 ## 2026.3.2-yami-1.9.37
 
 ### Fix
