@@ -364,7 +364,9 @@ export async function createEmptyNotification(): Promise<void> {
 	return new Promise<void>(res => {
 		setTimeout(async () => {
 			try {
-				await closeNotificationsByTags(['read_notification']);
+				// 'user_visible_auto_notification' は Chromium が silent push フォールバック時に
+				// 自動付与するタグ（Misskey 側では set していない）。同時に掃除する。
+				await closeNotificationsByTags(['read_notification', 'user_visible_auto_notification']);
 			} finally {
 				res();
 			}
