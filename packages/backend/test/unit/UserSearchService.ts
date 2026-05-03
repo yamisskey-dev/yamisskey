@@ -99,8 +99,8 @@ describe('UserSearchService', () => {
 						})),
 					},
 					{
-						provide: RoleService, useFactory: jest.fn(() => ({
-							getUserPolicies: jest.fn(() => Promise.resolve({
+						provide: RoleService, useFactory: vi.fn(() => ({
+							getUserPolicies: vi.fn(() => Promise.resolve({
 								canSearchUsers: true,
 							})),
 						})),
