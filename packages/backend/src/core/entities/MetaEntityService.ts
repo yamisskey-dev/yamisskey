@@ -135,7 +135,7 @@ export class MetaEntityService {
 			sentryForFrontend: this.config.sentryForFrontend ?? null,
 			mediaProxy: this.config.mediaProxy,
 			enableUrlPreview: instance.urlPreviewEnabled,
-			noteSearchableScope: (this.config.meilisearch == null || this.config.meilisearch.scope !== 'local') ? 'global' : 'local',
+			noteSearchableScope: (this.config.fulltextSearch?.provider === 'meilisearch' && this.config.meilisearch?.scope === 'local') ? 'local' : 'global',
 			reversiVersion: NodeinfoServerService.reversiVersion,
 			maxFileSize: this.config.maxFileSize,
 			federation: this.meta.federation,
