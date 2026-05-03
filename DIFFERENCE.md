@@ -1,6 +1,28 @@
 # DIFFRENCE
 
-## Unreleased
+## 2026.5.0-yami-1.9.38
+
+### Misskey 2026.5.0への追従 (#297)
+
+本家Misskey 2026.5.0をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
+
+#### Upstream の主な変更
+- ロール editor を `<XPolicyEditor>` / `<XFolder>` 共通コンポーネントに分離 (`roles.policy-editor.vue` 新規)
+- jest → vitest 完全移行 (test-federation, test/e2e, test/unit)
+- backend ビルドが rolldown 採用 (`rolldown.config.ts`)
+- `noteSearchableScope` の判定が `fulltextSearch.provider` 設定対応に変更
+- `RelayService.isRelayActor` 公開メソッド追加 (ApInboxService 経由でリレー判定)
+- Avatar decorations に category サポート追加 (新規 migration)
+- API doc が静的アセット (api-doc.html/png) → tsx 動的生成 (api-doc.tsx) に
+
+#### Yamisskey 側の追従対応
+- yami 独自 12 ポリシーを upstream の `<XFolder>` 構造へ移植
+  (yamiTlAvailable, canYamiNote, canFederateNote, canImportNotes,
+  canUseQuoteNotification, canUseUnFollowNotification,
+  canUseBlockedNotification, canUseUnBlockedNotification,
+  canFollow, canFollowed, canViewCharts, canEditCommunityRoles)
+- 設定画面のインスタンスティッカー表示条件を本家準拠に巻き戻し
+  (連合無効時は非表示。リモート交流非前提の設計思想に整合)
 
 ## 2026.3.2-yami-1.9.38
 
