@@ -5168,6 +5168,14 @@ export type paths = {
         trace?: never;
     };
     '/following/list': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
         /**
          * following/list
          * @description List of following users
@@ -5175,6 +5183,11 @@ export type paths = {
          *     **Credential required**: *Yes* / **Permission**: *read:following*
          */
         post: operations['following___list'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
     '/following/requests/accept': {
         parameters: {
@@ -30131,6 +30144,12 @@ export interface operations {
         };
     };
     following___list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         requestBody: {
             content: {
                 'application/json': {
