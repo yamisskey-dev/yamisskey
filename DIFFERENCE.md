@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+### Misskey 2026.5.2への追従
+
+本家Misskey 2026.5.2をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
+
+#### Upstream の主な変更
+- 絵文字データの参照を submodule (`fluent-emojis`) から自前ライブラリ `@misskey-dev/emoji-assets` / `@misskey-dev/emoji-data` (17.0.3) に変更 (#17381)、`fluent-emojis` submodule を削除
+- Unicode 17.0 収録の絵文字の処理・表示に対応、Fluent Emoji を更新 (Unicode 15+ 相当に対応)
+- 投稿通知を設定したユーザーをリストで閲覧できるように (`settings/notifications.vue`)
+- config に `threadPoolSize` オプション追加、RSA 署名処理のオフロード
+- テーマのプレビュー/エディター/インストール周りの各種修正、リスト編集のユーザー検索修正、デッキの編集ウィンドウのリンク修正、チャンネル作成ロールポリシーのヘッダー表示修正
+- 依存関係の更新
+
+#### Yamisskey 側の追従対応
+- `settings/notifications.vue`: yami の `groupInvited` を含む非設定通知タイプ定義と、upstream の投稿通知ユーザー一覧機能 (`showNotifyMenu` / `notifyUserPaginator`) を両立
+- `fluent-emojis` submodule 削除と `@misskey-dev/emoji-*` 17.0.3 への移行を取り込み (`.gitmodules` は upstream に合わせ空ファイル化)
+- version を `2026.5.2-yami-1.9.38` に更新、CLAUDE.md は yami 版を維持
+
 ## 2026.5.1-yami-1.9.38
 
 ### Misskey 2026.5.1への追従
