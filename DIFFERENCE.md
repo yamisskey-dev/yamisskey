@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## Unreleased
+## 2026.5.2-yami-1.9.38
 
 ### Misskey 2026.5.2への追従
 
