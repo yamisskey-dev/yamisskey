@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Misskey 2026.5.4への追従
+
+本家Misskey 2026.5.4をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
+
+#### Upstream の主な変更
+- セキュリティに関する修正（ActivityPub の JSON-LD 処理、Inbox 処理、チャットルーム情報の閲覧権限チェック追加、お知らせ周り）
+- Fix: クライアントのビルドに失敗することがある問題を修正（`theme.ts` / locale-inliner）
+- 依存関係の更新
+
+#### Yamisskey 側の追従対応
+- version を `2026.5.4-yami-1.9.38` に更新（コンフリクトは version のみ、`chat/rooms/show.ts` の権限チェック追加は meta/paramDef 不変で autogen 影響なし）
+
+## 2026.5.3-yami-1.9.38
+
 ### Misskey 2026.5.3への追従
 
 本家Misskey 2026.5.3をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
