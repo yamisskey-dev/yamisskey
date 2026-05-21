@@ -1,5 +1,18 @@
 # DIFFRENCE
 
+## 2026.5.3-yami-1.9.38
+
+### Misskey 2026.5.3への追従
+
+本家Misskey 2026.5.3をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
+
+#### Upstream の主な変更
+- Fix: Docker で起動に失敗する問題を修正
+- about ページの表記調整、依存関係の更新
+
+#### Yamisskey 側の追従対応
+- version を `2026.5.3-yami-1.9.38` に更新（コンフリクトは version のみ、backend 変更なしで autogen 影響なし）
+
 ## 2026.5.2-yami-1.9.38
 
 ### Misskey 2026.5.2への追従
