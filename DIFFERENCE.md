@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## 2026.5.2-yami-1.9.38
+## Unreleased
 
 ### Misskey 2026.5.3への追従
 
@@ -12,6 +12,8 @@
 
 #### Yamisskey 側の追従対応
 - version を `2026.5.3-yami-1.9.38` に更新（コンフリクトは version のみ、backend 変更なしで autogen 影響なし）
+
+## 2026.5.2-yami-1.9.38
 
 ### Misskey 2026.5.2への追従
 
