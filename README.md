@@ -28,13 +28,3 @@ Yamisskey は [Misskey](https://github.com/misskey-dev/misskey) と同様に [AG
 ## 💝 謝意
 
 [Misskey](https://github.com/misskey-dev/misskey) プロジェクトへ敬意を表します。Yamisskey はオルタナティブな選択肢として開発されています。
-
----
-
-<div align="center">
-	
-Support us with a ⭐ !
-
-[![Star History Chart](https://api.star-history.com/svg?repos=yamisskey-dev/yamisskey&type=Date)](https://star-history.com/#yamisskey-dev/yamisskey&Date)
-
-</div>
