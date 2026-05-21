@@ -56,7 +56,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<MkResult v-else type="empty"/>
 		</div>
 		<div v-else-if="tab === 'owned'" class="_gaps">
-			<MkButton type="routerLink" primary rounded to="/channels/new"><i class="ti ti-plus"></i> {{ i18n.ts.createNew }}</MkButton>
+			<MkButton v-if="$i?.policies.canCreateChannel" type="routerLink" primary rounded to="/channels/new"><i class="ti ti-plus"></i> {{ i18n.ts.createNew }}</MkButton>
 			<MkPagination v-slot="{items}" :paginator="ownedPaginator">
 				<div :class="$style.root">
 					<MkChannelPreview v-for="channel in items" :key="channel.id" :channel="channel"/>
@@ -82,6 +82,7 @@ import { i18n } from '@/i18n.js';
 import { useRouter } from '@/router.js';
 import { Paginator } from '@/utility/paginator.js';
 import { prefer } from '@/preferences.js';
+import { $i } from '@/i.js';
 
 const router = useRouter();
 

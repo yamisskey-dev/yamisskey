@@ -2,6 +2,23 @@
 
 ## 2026.5.0-yami-1.9.38
 
+### Misskey 2026.5.1への追従
+
+本家Misskey 2026.5.1をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
+
+#### Upstream の主な変更
+- チャンネル作成の可否をロールポリシーで制御できるように (`canCreateChannel` policy 追加、`channels/create` で `requiredRolePolicy`)
+- ノート詳細表示に公開範囲アイコンを追加 (`MkNoteDetailed.vue`)
+- ULID 使用時に通知が約10秒遅延する問題を修正
+- 公開範囲がフォロワーの投稿が通知されない問題を修正
+- URLプレビューが動作しない問題を修正
+
+#### Yamisskey 側の追従対応
+- `canCreateChannel` を yami 独自ポリシー群と共存する形で `rolePolicies` / `RoleService` / `role.ts` に統合 (生成物 `misskey-js.api.md` も再生成で整合確認)
+- `channels.vue`: yami の pinned タブと upstream の `canCreateChannel` ガードを両立
+- `MkNoteDetailed.vue`: yami の時限消滅表示と upstream の公開範囲アイコンを両立
+- misskey-js publish workflow (`on-release-created.yml`) の削除を維持
+
 ### Misskey 2026.5.0への追従 (#297)
 
 本家Misskey 2026.5.0をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
