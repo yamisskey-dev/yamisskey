@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## 2026.5.0-yami-1.9.38
+## 2026.5.1-yami-1.9.38
 
 ### Misskey 2026.5.1への追従
 
@@ -18,6 +18,8 @@
 - `channels.vue`: yami の pinned タブと upstream の `canCreateChannel` ガードを両立
 - `MkNoteDetailed.vue`: yami の時限消滅表示と upstream の公開範囲アイコンを両立
 - misskey-js publish workflow (`on-release-created.yml`) の削除を維持
+
+## 2026.5.0-yami-1.9.38
 
 ### Misskey 2026.5.0への追従 (#297)
 
