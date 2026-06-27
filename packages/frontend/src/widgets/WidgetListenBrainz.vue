@@ -14,6 +14,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 	<div :class="$style.root">
 		<MkLoading v-if="fetching"/>
+		<MkResult v-else-if="!widgetProps.userId" type="error" :class="$style.result"/>
 		<MkResult v-else-if="!playingNow" type="empty" :text="i18n.ts.noListeningMusic" :class="$style.result"/>
 		<div v-else class="_gaps_s" style="display: flex; flex-direction: column; justify-content: center; align-items: center">
 			<MkMfm :text="formattedNote"/>
@@ -123,7 +124,10 @@ const formattedNote = computed(() => {
 
 const fetchPlayingNow = async () => {
 	fetching.value = true;
-	if (!widgetProps.userId) return;
+	if (!widgetProps.userId) {
+		fetching.value = false;
+		return;
+	}
 
 	const url = `https://api.listenbrainz.org/1/user/${widgetProps.userId}/playing-now`;
 	const response = await window.fetch(url);

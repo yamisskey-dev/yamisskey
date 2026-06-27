@@ -2775,7 +2775,6 @@ _widgets:
   birthdayFollowings: "もうすぐ誕生日のユーザー"
   listenBrainz: "listenBrainz"
   chat: "ダイレクトメッセージ"
-  jitsiMeet: "Jitsi Meet"
 
 _widgetOptions:
   showHeader: "ヘッダーを表示"
