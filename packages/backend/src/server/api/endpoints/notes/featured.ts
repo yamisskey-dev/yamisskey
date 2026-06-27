@@ -16,7 +16,7 @@ import { QueryService } from '@/core/QueryService.js';
 export const meta = {
 	tags: ['notes'],
 
-	kind: 'read:notes',
+	kind: 'read:account',
 
 	requireCredential: true,
 	allowGet: true,

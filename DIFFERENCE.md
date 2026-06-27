@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### バグ修正
-- `notes/featured` / `users` エンドポイントから `secure: true` を削除。API トークンを使うサードパーティクライアント（公式 Misskey アプリ含む）が `ACCESS_DENIED` で弾かれていた問題を修正（#315）。`requireCredential: true` は維持しており、ログインは引き続き必要。
+- `notes/featured` / `users` エンドポイントから `secure: true` を削除。API トークンを使うサードパーティクライアント（公式 Misskey アプリ含む）が `ACCESS_DENIED` で弾かれていた問題を修正（#315）。`requireCredential: true` は維持しており、ログインは引き続き必要。あわせて、`secure` 下でのみ許容されていた無効な `kind`（`read:notes` / `read:users`）を有効な `read:account` に修正（`roles/list` と同じ扱い）。
 
 ### Misskey 2026.6.0への追従
 
