@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### バグ修正
+- `notes/featured` / `users` エンドポイントから `secure: true` を削除。API トークンを使うサードパーティクライアント（公式 Misskey アプリ含む）が `ACCESS_DENIED` で弾かれていた問題を修正（#315）。`requireCredential: true` は維持しており、ログインは引き続き必要。
+
 ### Misskey 2026.6.0への追従
 
 本家Misskey 2026.6.0をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。

@@ -21,7 +21,6 @@ export const meta = {
 	requireCredential: true,
 	allowGet: true,
 	cacheSec: 3600,
-	secure: true,
 
 	res: {
 		type: 'array',

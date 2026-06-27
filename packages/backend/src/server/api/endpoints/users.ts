@@ -17,8 +17,6 @@ export const meta = {
 
 	requireCredential: true,
 
-	secure: true,
-
 	res: {
 		type: 'array',
 		optional: false, nullable: false,
