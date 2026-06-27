@@ -86,6 +86,9 @@ export const PREF_DEF = definePreferences({
 		}, {
 			name: 'activeUsers',
 			id: genId(), place: 'right', data: {},
+		}, {
+			name: 'listenBrainz',
+			id: genId(), place: 'right', data: {},
 		}] as {
 			name: string;
 			id: string;
