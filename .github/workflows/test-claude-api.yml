@@ -27,8 +27,7 @@ jobs:
         run: |
           echo "Testing Claude API with new key..."
           echo "API Key available: ${ANTHROPIC_API_KEY:+YES}"
-          echo "API Key prefix: ${ANTHROPIC_API_KEY:0:20}..."
-          
+
           # シンプルなテストメッセージ
           TEST_PROMPT="${TEST_MESSAGE:-Hello Claude, please respond with a simple greeting in Japanese.}"
           
@@ -38,7 +37,7 @@ jobs:
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
             -d "{
-              \"model\": \"claude-3-5-sonnet-20241022\",
+              \"model\": \"claude-opus-4-8\",
               \"max_tokens\": 100,
               \"messages\": [
                 {
