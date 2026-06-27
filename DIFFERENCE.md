@@ -10,6 +10,7 @@
 
 ### バグ修正
 - ListenBrainz ウィジェットで ListenBrainz ID が未設定のとき無限にローディング表示になる問題を修正。ID 未設定時は読み込みを止め、エラー表示（設定アイコンから ID を指定可能）にフォールバックするようにした。
+- `notes/featured` / `users` エンドポイントから `secure: true` を削除。API トークンを使うサードパーティクライアント（公式 Misskey アプリ含む）が `ACCESS_DENIED` で弾かれていた問題を修正（#315）。`requireCredential: true` は維持しており、ログインは引き続き必要。あわせて、`secure` 下でのみ許容されていた無効な `kind`（`read:notes` / `read:users`）を有効な `read:account` に修正（`roles/list` と同じ扱い）。
 
 ### Misskey 2026.6.0への追従
 
