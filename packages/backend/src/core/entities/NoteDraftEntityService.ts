@@ -186,7 +186,9 @@ export class NoteDraftEntityService implements OnModuleInit {
 	private findNoteDraftOrFail(id: string): Promise<MiNoteDraft> {
 		return this.noteDraftsRepository.findOneOrFail({
 			where: { id },
-			relations: ['user'],
+			relations: {
+				user: true,
+			},
 		});
 	}
 }

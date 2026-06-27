@@ -4,35 +4,34 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
-import { In, Brackets } from 'typeorm';
-import { DI } from '@/di-symbols.js';
-import { type Config, FulltextSearchProvider } from '@/config.js';
-import { bindThis } from '@/decorators.js';
-import { MiNote } from '@/models/Note.js';
-import type { NotesRepository } from '@/models/_.js';
-import { MiUser } from '@/models/_.js';
-import { sqlLikeEscape } from '@/misc/sql-like-escape.js';
-import { isUserRelated } from '@/misc/is-user-related.js';
+import { Brackets, In } from 'typeorm';
+import type { Config, FulltextSearchProvider } from '@/config.js';
 import { CacheService } from '@/core/CacheService.js';
-import { QueryService } from '@/core/QueryService.js';
 import { IdService } from '@/core/IdService.js';
 import { LoggerService } from '@/core/LoggerService.js';
+import { QueryService } from '@/core/QueryService.js';
+import { bindThis } from '@/decorators.js';
+import { DI } from '@/di-symbols.js';
+import { isUserRelated } from '@/misc/is-user-related.js';
+import { sqlLikeEscape } from '@/misc/sql-like-escape.js';
+import type { MiUser, NotesRepository } from '@/models/_.js';
+import type { MiNote } from '@/models/Note.js';
 import type { Index, Meilisearch } from 'meilisearch';
 
 type K = string;
 type V = string | number | boolean;
 type Q =
-	{ op: '=', k: K, v: V } |
-	{ op: '!=', k: K, v: V } |
-	{ op: '>', k: K, v: number } |
-	{ op: '<', k: K, v: number } |
-	{ op: '>=', k: K, v: number } |
-	{ op: '<=', k: K, v: number } |
-	{ op: 'is null', k: K } |
-	{ op: 'is not null', k: K } |
-	{ op: 'and', qs: Q[] } |
-	{ op: 'or', qs: Q[] } |
-	{ op: 'not', q: Q };
+	| { op: '='; k: K; v: V }
+	| { op: '!='; k: K; v: V }
+	| { op: '>'; k: K; v: number }
+	| { op: '<'; k: K; v: number }
+	| { op: '>='; k: K; v: number }
+	| { op: '<='; k: K; v: number }
+	| { op: 'is null'; k: K }
+	| { op: 'is not null'; k: K }
+	| { op: 'and'; qs: Q[] }
+	| { op: 'or'; qs: Q[] }
+	| { op: 'not'; q: Q };
 
 export type SearchOpts = {
 	userId?: MiNote['userId'] | null;
@@ -40,6 +39,8 @@ export type SearchOpts = {
 	host?: string | null;
 	excludeYamiMode?: boolean;
 	meId?: string;
+	rangeStartAt?: number | null;
+	rangeEndAt?: number | null;
 };
 
 export type SearchPagination = {
@@ -61,24 +62,41 @@ function compileValue(value: V): string {
 
 function compileQuery(q: Q): string {
 	switch (q.op) {
-		case '=': return `(${q.k} = ${compileValue(q.v)})`;
-		case '!=': return `(${q.k} != ${compileValue(q.v)})`;
-		case '>': return `(${q.k} > ${compileValue(q.v)})`;
-		case '<': return `(${q.k} < ${compileValue(q.v)})`;
-		case '>=': return `(${q.k} >= ${compileValue(q.v)})`;
-		case '<=': return `(${q.k} <= ${compileValue(q.v)})`;
-		case 'and': return q.qs.length === 0 ? '' : `(${ q.qs.map(_q => compileQuery(_q)).join(' AND ') })`;
-		case 'or': return q.qs.length === 0 ? '' : `(${ q.qs.map(_q => compileQuery(_q)).join(' OR ') })`;
-		case 'is null': return `(${q.k} IS NULL)`;
-		case 'is not null': return `(${q.k} IS NOT NULL)`;
-		case 'not': return `(NOT ${compileQuery(q.q)})`;
-		default: throw new Error('unrecognized query operator');
+		case '=':
+			return `(${q.k} = ${compileValue(q.v)})`;
+		case '!=':
+			return `(${q.k} != ${compileValue(q.v)})`;
+		case '>':
+			return `(${q.k} > ${compileValue(q.v)})`;
+		case '<':
+			return `(${q.k} < ${compileValue(q.v)})`;
+		case '>=':
+			return `(${q.k} >= ${compileValue(q.v)})`;
+		case '<=':
+			return `(${q.k} <= ${compileValue(q.v)})`;
+		case 'and':
+			return q.qs.length === 0
+				? ''
+				: `(${q.qs.map((_q) => compileQuery(_q)).join(' AND ')})`;
+		case 'or':
+			return q.qs.length === 0
+				? ''
+				: `(${q.qs.map((_q) => compileQuery(_q)).join(' OR ')})`;
+		case 'is null':
+			return `(${q.k} IS NULL)`;
+		case 'is not null':
+			return `(${q.k} IS NOT NULL)`;
+		case 'not':
+			return `(NOT ${compileQuery(q.q)})`;
+		default:
+			throw new Error('unrecognized query operator');
 	}
 }
 
 @Injectable()
 export class SearchService {
-	private readonly meilisearchIndexScope: 'local' | 'global' | string[] = 'local';
+	private readonly meilisearchIndexScope: 'local' | 'global' | string[] =
+		'local';
 	private readonly meilisearchNoteIndex: Index | null = null;
 	private readonly provider: FulltextSearchProvider;
 
@@ -152,18 +170,23 @@ export class SearchService {
 			}
 		}
 
-		await this.meilisearchNoteIndex?.addDocuments([{
-			id: note.id,
-			createdAt: this.idService.parse(note.id).date.getTime(),
-			userId: note.userId,
-			userHost: note.userHost,
-			channelId: note.channelId,
-			cw: note.cw,
-			text: note.text,
-			tags: note.tags,
-		}], {
-			primaryKey: 'id',
-		});
+		await this.meilisearchNoteIndex?.addDocuments(
+			[
+				{
+					id: note.id,
+					createdAt: this.idService.parse(note.id).date.getTime(),
+					userId: note.userId,
+					userHost: note.userHost,
+					channelId: note.channelId,
+					cw: note.cw,
+					text: note.text,
+					tags: note.tags,
+				},
+			],
+			{
+				primaryKey: 'id',
+			},
+		);
 	}
 
 	@bindThis
@@ -205,26 +228,36 @@ export class SearchService {
 		opts: SearchOpts,
 		pagination: SearchPagination,
 	): Promise<MiNote[]> {
-		const query = this.queryService.makePaginationQuery(this.notesRepository.createQueryBuilder('note'), pagination.sinceId, pagination.untilId);
+		const query = this.queryService.makePaginationQuery(
+			this.notesRepository.createQueryBuilder('note'),
+			pagination.sinceId,
+			pagination.untilId,
+		);
 
 		if (opts.userId) {
 			query.andWhere('note.userId = :userId', { userId: opts.userId });
 		} else if (opts.channelId) {
-			query.andWhere('note.channelId = :channelId', { channelId: opts.channelId });
+			query.andWhere('note.channelId = :channelId', {
+				channelId: opts.channelId,
+			});
 		}
 
 		// 修正: 自分自身の検索の場合は hideNoteSearchResult を無視する
 		if (me?.id) {
-			query
-				.innerJoinAndSelect('note.user', 'user')
-				.andWhere(new Brackets(qb => {
+			query.innerJoinAndSelect('note.user', 'user').andWhere(
+				new Brackets((qb) => {
 					// 自分のノートは常に表示
 					qb.where('note.userId = :meId', { meId: me.id });
 					// それ以外のユーザーのノートは hideNoteSearchResult が false のもののみ
 					qb.orWhere('user.hideNoteSearchResult = FALSE');
-				}));
+				}),
+			);
 		} else {
-			query.innerJoinAndSelect('note.user', 'user', 'user.hideNoteSearchResult = FALSE');
+			query.innerJoinAndSelect(
+				'note.user',
+				'user',
+				'user.hideNoteSearchResult = FALSE',
+			);
 		}
 
 		query
@@ -236,7 +269,9 @@ export class SearchService {
 		if (this.config.fulltextSearch?.provider === 'sqlPgroonga') {
 			query.andWhere('note.text &@~ :q', { q });
 		} else {
-			query.andWhere('LOWER(note.text) LIKE :q', { q: `%${ sqlLikeEscape(q.toLowerCase()) }%` });
+			query.andWhere('LOWER(note.text) LIKE :q', {
+				q: `%${sqlLikeEscape(q.toLowerCase())}%`,
+			});
 		}
 
 		if (opts.host) {
@@ -249,13 +284,25 @@ export class SearchService {
 
 		// やみモードフィルタリング
 		if (opts.excludeYamiMode) {
-			query.andWhere(new Brackets(qb => {
-				qb.where('note.isNoteInYamiMode = FALSE');
-				// 自分の投稿のみは表示
-				if (opts.meId) {
-					qb.orWhere('note.userId = :meId', { meId: opts.meId });
-				}
-			}));
+			query.andWhere(
+				new Brackets((qb) => {
+					qb.where('note.isNoteInYamiMode = FALSE');
+					// 自分の投稿のみは表示
+					if (opts.meId) {
+						qb.orWhere('note.userId = :meId', { meId: opts.meId });
+					}
+				}),
+			);
+		}
+
+		if (opts.rangeStartAt != null) {
+			const date = this.idService.gen(opts.rangeStartAt - 1);
+			query.andWhere('note.id > :rangeStartAt', { rangeStartAt: date });
+		}
+
+		if (opts.rangeEndAt != null) {
+			const date = this.idService.gen(opts.rangeEndAt + 1);
+			query.andWhere('note.id < :rangeEndAt', { rangeEndAt: date });
 		}
 
 		this.queryService.generateVisibilityQuery(query, me);
@@ -284,10 +331,20 @@ export class SearchService {
 			k: 'createdAt',
 			v: this.idService.parse(pagination.untilId).date.getTime(),
 		});
+		if (opts.rangeEndAt) filter.qs.push({
+			op: '<=',
+			k: 'createdAt',
+			v: opts.rangeEndAt,
+		});
 		if (pagination.sinceId) filter.qs.push({
 			op: '>',
 			k: 'createdAt',
 			v: this.idService.parse(pagination.sinceId).date.getTime(),
+		});
+		if (opts.rangeStartAt) filter.qs.push({
+			op: '>=',
+			k: 'createdAt',
+			v: opts.rangeStartAt,
 		});
 		if (opts.userId) filter.qs.push({ op: '=', k: 'userId', v: opts.userId });
 		if (opts.channelId) filter.qs.push({ op: '=', k: 'channelId', v: opts.channelId });
@@ -318,28 +375,32 @@ export class SearchService {
 			? await Promise.all([
 				this.cacheService.userMutingsCache.fetch(me.id),
 				this.cacheService.userBlockedCache.fetch(me.id),
-				this.notesRepository.createQueryBuilder('note')
+				this.notesRepository
+					.createQueryBuilder('note')
 					.select('user.id')
 					.innerJoin('note.user', 'user')
 					.where('user.hideNoteSearchResult = TRUE')
 					.getRawMany()
-					.then(users => new Set(users.map(u => u.id))),
+					.then((users) => new Set(users.map((u) => u.id))),
 			])
 			: [new Set<string>(), new Set<string>(), new Set<string>()];
 
-		const query = this.notesRepository.createQueryBuilder('note')
+		const query = this.notesRepository
+			.createQueryBuilder('note')
 			.innerJoinAndSelect('note.user', 'user')
 			.leftJoinAndSelect('note.reply', 'reply')
 			.leftJoinAndSelect('note.renote', 'renote')
 			.leftJoinAndSelect('reply.user', 'replyUser')
 			.leftJoinAndSelect('renote.user', 'renoteUser');
 
-		query.where('note.id IN (:...noteIds)', { noteIds: res.hits.map(x => x.id) });
+		query.where('note.id IN (:...noteIds)', {
+			noteIds: res.hits.map((x) => x.id),
+		});
 
 		this.queryService.generateBlockedHostQueryForNote(query);
 		this.queryService.generateSuspendedUserQueryForNote(query);
 
-		const notes = (await query.getMany()).filter(note => {
+		const notes = (await query.getMany()).filter((note) => {
 			if (me && isUserRelated(note, userIdsWhoBlockingMe)) return false;
 			if (me && isUserRelated(note, userIdsWhoMeMuting)) return false;
 
@@ -352,6 +413,6 @@ export class SearchService {
 			return true;
 		});
 
-		return notes.sort((a, b) => a.id > b.id ? -1 : 1);
+		return notes.sort((a, b) => (a.id > b.id ? -1 : 1));
 	}
 }

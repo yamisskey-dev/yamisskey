@@ -129,7 +129,7 @@ export class FanoutTimelineService {
 	}
 
 	@bindThis
-	public removeFromTimeline(tl: FanoutTimelineName, noteId: string, pipeline: Redis.ChainableCommander) {
-		pipeline.lrem(`list:${tl}`, 0, noteId);
+	public remove(name: FanoutTimelineName, id: string) {
+		return this.redisForTimelines.lrem('list:' + name, 1, id);
 	}
 }

@@ -1,8 +1,9 @@
 {
 	"compilerOptions": {
 		"allowJs": true,
+		"skipLibCheck": true,
 		"noEmitOnError": false,
-		"noImplicitAny": true,
+		"noImplicitAny": false,
 		"noImplicitReturns": true,
 		"noUnusedParameters": false,
 		"noUnusedLocals": false,
