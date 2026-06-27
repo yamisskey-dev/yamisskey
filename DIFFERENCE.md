@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### 機能削除
+- Jitsi Meet ウィジェットを廃止（#314）。通話は Element Call 等で代替できるため、メンテナンス性向上を目的に削除。`WidgetJitsiMeet.vue` / `utility/jitsi-api.ts` を削除し、ウィジェット登録・デッキのデフォルト配置から除外。
+
+### 変更
+- デッキの既定ウィジェット配置に ListenBrainz を追加（通知・オンラインユーザー・アクティブユーザー・ListenBrainz）。
+
+### バグ修正
+- ListenBrainz ウィジェットで ListenBrainz ID が未設定のとき無限にローディング表示になる問題を修正。ID 未設定時は読み込みを止め、エラー表示（設定アイコンから ID を指定可能）にフォールバックするようにした。
+
 ### Misskey 2026.6.0への追従
 
 本家Misskey 2026.6.0をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
