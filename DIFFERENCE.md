@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## Unreleased
+## 2026.6.0-yami-1.9.39
 
 ### 機能削除
 - Jitsi Meet ウィジェットを廃止（#314）。通話は Element Call 等で代替できるため、メンテナンス性向上を目的に削除。`WidgetJitsiMeet.vue` / `utility/jitsi-api.ts` を削除し、ウィジェット登録・デッキのデフォルト配置から除外。
