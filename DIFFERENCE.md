@@ -8,6 +8,9 @@
 ### 変更
 - デッキの既定ウィジェット配置に ListenBrainz を追加（通知・オンラインユーザー・アクティブユーザー・ListenBrainz）。
 
+### バグ修正
+- ListenBrainz ウィジェットで ListenBrainz ID が未設定のとき無限にローディング表示になる問題を修正。ID 未設定時は読み込みを止め、エラー表示（設定アイコンから ID を指定可能）にフォールバックするようにした。
+
 ### Misskey 2026.6.0への追従
 
 本家Misskey 2026.6.0をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
