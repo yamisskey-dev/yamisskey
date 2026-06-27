@@ -7567,8 +7567,7 @@ export type paths = {
          * notes/featured
          * @description No description provided.
          *
-         *     **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
-         *     **Credential required**: *Yes* / **Permission**: *read:notes*
+         *     **Credential required**: *Yes* / **Permission**: *read:account*
          */
         post: operations['notes___featured'];
         delete?: never;
@@ -9116,8 +9115,7 @@ export type paths = {
          * users
          * @description No description provided.
          *
-         *     **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
-         *     **Credential required**: *Yes* / **Permission**: *read:users*
+         *     **Credential required**: *Yes* / **Permission**: *read:account*
          */
         post: operations['users'];
         delete?: never;
