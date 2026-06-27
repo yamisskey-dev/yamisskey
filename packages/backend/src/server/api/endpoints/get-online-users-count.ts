@@ -159,7 +159,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				where: {
 					muterId: me.id,
 				},
-				select: ['muteeId'],
+				select: { muteeId: true },
 			}).then(mutings => mutings.map(m => m.muteeId));
 
 			// 最近アクティブなすべてのユーザーを取得
@@ -167,7 +167,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				where: {
 					lastActiveDate: MoreThan(new Date(Date.now() - USER_ONLINE_THRESHOLD)),
 				},
-				select: ['id', 'activeStatusVisibility'],
+				select: { id: true, activeStatusVisibility: true },
 			});
 
 			// 表示すべきユーザーIDのリストを作成

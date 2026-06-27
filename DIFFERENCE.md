@@ -1,5 +1,31 @@
 # DIFFRENCE
 
+## Unreleased
+
+### Misskey 2026.6.0への追従
+
+本家Misskey 2026.6.0をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
+
+#### Upstream の主な変更
+- Feat: ジョブキュー管理画面からキューの一時停止/再開、アンテナのタイムラインからノート個別削除、ノート検索での投稿日時の期間指定
+- Server: リモートノートクリーニングジョブのパフォーマンス改善、ActivityPub 画像添付への width/height 付与、不正な Inbox アクティビティ・リモートメンション数制限・引用時の公開範囲などの修正、起動/終了失敗を logger 経由で報告
+- Client: ユーザーページのファイルタブ・ドライブページでのスクロール位置保持、絵文字メニューからパレットへの直接追加、各種 UI / 実績表示の修正
+- Fix: コンパネからの root ユーザーパスワードリセット時にエラーが通知されない問題、`@tensorflow/tfjs-node` external 化に伴う起動エラーなどを修正
+- 依存関係の更新
+
+#### Yamisskey 側の追従対応
+- version を `2026.6.0-yami-1.9.38` に更新
+- `FanoutTimelineService`: upstream の新規 `remove()`（アンテナのノート個別削除で使用）を取り込み。yami の未使用 `removeFromTimeline()` デッドコードを整理削除
+- `NoteCreateService` / `ReversiService` / `notes/search.ts`: upstream の TypeORM `select` オブジェクト記法・relations 記法への変更に追従しつつ、yami 独自のタイムライン配信ロジック（浮上TL・チャンネル投稿の early-return 構造）と Reversi の `federationId` を保持
+- `admin-user.vue`: upstream の `os.apiWithDialog` 化（root パスワードリセットのエラー通知修正に対応）に追従しつつ、yami の null 安全性 (`user.value!`) を維持
+- `MkPostForm.vue`: upstream の投稿フォーム変更に追従。yami 独自フィールド(`scheduledDelete`/`scheduleNote`/`isNoteInYamiMode`)を含む `postData` と plugin handler の型不一致を `@ts-expect-error` で抑制
+- 開発ハーネス: upstream が `.claude/skills`・`.claude/commands`・`.claude/docs` を `.agents/skills` + `.claude/skills/working-on-*` 体系へ再編したのに追従
+
+##### 6.0 の toolchain (TypeScript/tsgo) バンプ対応
+- TypeORM の `select: [...]` 配列記法が廃止されたため、`NoteCreateService` / `get-online-users-count.ts` の該当箇所をオブジェクト記法 (`select: { x: true }`) に変換
+- `frontend-builder/utils.ts`: `assertType` の assert 節がパラメータ名 (`_node`) を参照していなかった潜在バグを修正（tsgo の厳格化で顕在化）
+- `frontend-embed/tsconfig.json`: `skipLibCheck: true`（frontend と同様、dom/webworker lib 定義競合を回避）と `noImplicitAny: false` を追加。vue-tsc バンプ(10.52→10.57)で顕在化した upstream embed ソースの implicit-any（`_res` 無注釈・配列の文字列添字・`slots[x.arg]`・`cachedTags` 無注釈）を一括抑制。embed 固有の型負債であり upstream のロジックを blind に書き換えない方針
+
 ## 2026.5.4-yami-1.9.38
 
 ### Misskey 2026.5.4への追従
