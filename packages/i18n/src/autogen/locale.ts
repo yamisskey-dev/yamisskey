@@ -10564,10 +10564,6 @@ export interface Locale extends ILocale {
          * ダイレクトメッセージ
          */
         "chat": string;
-        /**
-         * Jitsi Meet
-         */
-        "jitsiMeet": string;
     };
     "_widgetOptions": {
         /**

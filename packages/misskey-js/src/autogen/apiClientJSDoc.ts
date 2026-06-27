@@ -3807,8 +3807,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
-     * **Credential required**: *Yes* / **Permission**: *read:notes*
+     * **Credential required**: *Yes* / **Permission**: *read:account*
      */
     request<E extends 'notes/featured', P extends Endpoints[E]['req']>(
       endpoint: E,
@@ -4586,8 +4585,7 @@ declare module '../api.js' {
     /**
      * No description provided.
      * 
-     * **Internal Endpoint**: This endpoint is an API for the misskey mainframe and is not intended for use by third parties.
-     * **Credential required**: *Yes* / **Permission**: *read:users*
+     * **Credential required**: *Yes* / **Permission**: *read:account*
      */
     request<E extends 'users', P extends Endpoints[E]['req']>(
       endpoint: E,

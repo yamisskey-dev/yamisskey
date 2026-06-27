@@ -13,11 +13,9 @@ import { DI } from '@/di-symbols.js';
 export const meta = {
 	tags: ['users'],
 
-	kind: 'read:users',
+	kind: 'read:account',
 
 	requireCredential: true,
-
-	secure: true,
 
 	res: {
 		type: 'array',
