@@ -1,12 +1,12 @@
 ## 🖥 Frontend Diagnostics Report
 
-| Metric | @ Base | @ Head | Δ | MAD |
+| Metric | @&nbsp;Base | @&nbsp;Head | Δ | MAD |
 | --- | ---: | ---: | ---: | ---: |
-| **Encoded network** | 1 MB <br> ± 10 KB | 1.1 MB <br> ± 11 KB | $\color{orange}{\text{+83 KB}}$<br>$\color{orange}{\text{+8\\%}}$ | 15 KB |
-| **Decoded body** | 3.5 MB <br> ± 34 KB | 3.7 MB <br> ± 37 KB | $\color{orange}{\text{+277 KB}}$<br>$\color{orange}{\text{+8\\%}}$ | 50 KB |
-| **Same-origin encoded** | 1 MB <br> ± 10 KB | 1.1 MB <br> ± 11 KB | $\color{orange}{\text{+82 KB}}$<br>$\color{orange}{\text{+8\\%}}$ | 15 KB |
-| **Script encoded** | 918 KB <br> ± 9 KB | 991 KB <br> ± 9.7 KB | $\color{orange}{\text{+73 KB}}$<br>$\color{orange}{\text{+8\\%}}$ | 13 KB |
-| **Page-attributed memory** | 92 MB <br> ± 900 KB | 99 MB <br> ± 972 KB | $\color{orange}{\text{+7.3 MB}}$<br>$\color{orange}{\text{+8\\%}}$ | 1.3 MB |
+| **Encoded network** | 1 MB <br> ± 10 KB | 1.1 MB <br> ± 11 KB | $\color{orange}{\text{+83 KB}}$<br>$\color{orange}{\text{+8\\%}}$ | 15 KB |
+| **Decoded body** | 3.5 MB <br> ± 34 KB | 3.7 MB <br> ± 37 KB | $\color{orange}{\text{+277 KB}}$<br>$\color{orange}{\text{+8\\%}}$ | 50 KB |
+| **Same-origin encoded** | 1 MB <br> ± 10 KB | 1.1 MB <br> ± 11 KB | $\color{orange}{\text{+82 KB}}$<br>$\color{orange}{\text{+8\\%}}$ | 15 KB |
+| **Script encoded** | 918 KB <br> ± 9 KB | 991 KB <br> ± 9.7 KB | $\color{orange}{\text{+73 KB}}$<br>$\color{orange}{\text{+8\\%}}$ | 13 KB |
+| **Page-attributed memory** | 92 MB <br> ± 900 KB | 99 MB <br> ± 972 KB | $\color{orange}{\text{+7.3 MB}}$<br>$\color{orange}{\text{+8\\%}}$ | 1.3 MB |
 
 <small><i>Only metrics showing significant changes are displayed.</i></small>
 
@@ -67,9 +67,9 @@
 <details>
 <summary>V8 heap snapshot statistics</summary>
 
-| Metric | @ Base | @ Head | Δ | MAD |
+| Metric | @&nbsp;Base | @&nbsp;Head | Δ | MAD |
 | --- | ---: | ---: | ---: | ---: |
-| $\color{gray}{\rule{8pt}{8pt}}$ **Total** | 1 MB <br> ± 10 KB | 1.1 MB <br> ± 11 KB | $\text{+82 KB}$<br>$\text{+8\\%}$ | 15 KB |
+| $\color{gray}{\rule{8pt}{8pt}}$ **Total** | 1 MB <br> ± 10 KB | 1.1 MB <br> ± 11 KB | $\text{+82 KB}$<br>$\text{+8\\%}$ | 15 KB |
 | | | | | |
 | $\color{orange}{\rule{8pt}{8pt}}$ **Code** | 2 MB | 2.2 MB | $\color{orange}{\text{+163 KB}}$ | 29 KB |
 | $\color{red}{\rule{8pt}{8pt}}$ **Strings** | 3.1 MB | 3.3 MB | $\color{orange}{\text{+245 KB}}$ | 44 KB |

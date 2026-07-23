@@ -1,20 +1,20 @@
 ## ⚙️ Backend Diagnostics Report
 
 ### Memory: After GC
-| Metric | @ Base | @ Head | Δ | MAD |
+| Metric | @&nbsp;Base | @&nbsp;Head | Δ | MAD |
 | --- | ---: | ---: | ---: | ---: |
-| **HeapUsed** | 152 MB <br> ± 1 MB | 168 MB <br> ± 1 MB | $\color{orange}{\text{+16 MB}}$<br>$\color{orange}{\text{+10.5\\%}}$ | 1.4 MB |
-| **PSS** | 202 MB <br> ± 1 MB | 218 MB <br> ± 1 MB | $\color{orange}{\text{+16 MB}}$<br>$\color{orange}{\text{+7.9\\%}}$ | 1.4 MB |
-| **USS** | 184 MB <br> ± 1 MB | 200 MB <br> ± 1 MB | $\color{orange}{\text{+16 MB}}$<br>$\color{orange}{\text{+8.7\\%}}$ | 1.4 MB |
+| **HeapUsed** | 152 MB <br> ± 1 MB | 168 MB <br> ± 1 MB | $\color{orange}{\text{+16 MB}}$<br>$\color{orange}{\text{+10.5\\%}}$ | 1.4 MB |
+| **PSS** | 202 MB <br> ± 1 MB | 218 MB <br> ± 1 MB | $\color{orange}{\text{+16 MB}}$<br>$\color{orange}{\text{+7.9\\%}}$ | 1.4 MB |
+| **USS** | 184 MB <br> ± 1 MB | 200 MB <br> ± 1 MB | $\color{orange}{\text{+16 MB}}$<br>$\color{orange}{\text{+8.7\\%}}$ | 1.4 MB |
 
 <small><i>Only metrics showing significant changes are displayed.</i></small>
 
 
 ### V8 Heap Snapshot Statistics
 
-| Metric | @ Base | @ Head | Δ | MAD |
+| Metric | @&nbsp;Base | @&nbsp;Head | Δ | MAD |
 | --- | ---: | ---: | ---: | ---: |
-| $\color{gray}{\rule{8pt}{8pt}}$ **Total** | 40 MB <br> ± 200 KB | 44 MB <br> ± 200 KB | $\color{orange}{\text{+3.2 MB}}$<br>$\color{orange}{\text{+7.9\\%}}$ | 283 KB |
+| $\color{gray}{\rule{8pt}{8pt}}$ **Total** | 40 MB <br> ± 200 KB | 44 MB <br> ± 200 KB | $\color{orange}{\text{+3.2 MB}}$<br>$\color{orange}{\text{+7.9\\%}}$ | 283 KB |
 | | | | | |
 | $\color{orange}{\rule{8pt}{8pt}}$ **Code** | 4.7 MB | 5.1 MB | $\color{orange}{\text{+376 KB}}$ | 33 KB |
 | $\color{red}{\rule{8pt}{8pt}}$ **Strings** | 4.4 MB | 4.8 MB | $\color{orange}{\text{+352 KB}}$ | 31 KB |
