@@ -2129,6 +2129,14 @@ export type paths = {
         trace?: never;
     };
     '/admin/unset-mfa': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
         /**
          * admin/unset-mfa
          * @description No description provided.
@@ -2136,6 +2144,11 @@ export type paths = {
          *     **Credential required**: *Yes* / **Permission**: *write:admin:unset-mfa*
          */
         post: operations['admin___unset-mfa'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
     '/admin/unset-user-avatar': {
         parameters: {
@@ -19413,6 +19426,12 @@ export interface operations {
         };
     };
     'admin___unset-mfa': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         requestBody: {
             content: {
                 'application/json': {
@@ -19427,6 +19446,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
+                content?: never;
             };
             /** @description Client error */
             400: {

@@ -1,5 +1,25 @@
 # DIFFRENCE
 
+## Unreleased
+
+### Misskey 2026.7.0への追従
+
+本家Misskey 2026.7.0をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
+
+#### Upstream の主な変更
+- Feat: コントロールパネルからの二要素認証解除、URLプレビューサムネイルの条件付き非表示、ログ基盤の刷新
+- Client: 画像ビューワー刷新・動画プレイヤー統合、アップロード前プレビュー、バックグラウンドタブでの定期更新停止、多数のメモリリーク/イベントリスナー解放修正
+- Server: センシティブメディア判定を外部サービス (sensitive-detector) に分離し nsfwjs/tfjs を廃止、Node.js 26.4.0 対応、URLプレビューの内部キャッシュ、fetch-rss の SSRF 対策・同時実行制限、フォロワー限定投稿へのリプライ公開範囲の修正などセキュリティ修正
+- テスト基盤を Cypress から Playwright に移行、TypeScript 7 (native) へ更新
+
+#### Yamisskey 側の追従対応
+- version を `2026.7.0-yami-1.9.39` に更新（本家追従のみのため yami suffix 据え置き）
+- MkNote/MkNoteDetailed のロジック統合 (upstream #17636 `use-note.ts`) に追従し、やみノートのリノート不可判定と `hideReactionUsers` を `use-note.ts` へ移植（両コンポーネントで共通化）、`hideReactionCount` は各コンポーネントに残置
+- fetch-rss: upstream の新実装にユーザーRSSプライバシーチェック（`requireSigninToViewContents` / `isExplorable`）を移植
+- サインアップ画面: `data-cy-*`→`data-testid` 移行に追従しつつ、承認制サインアップ・メール任意化・「他のサービスを探す」ボタンを維持
+- store.ts のレガシー設定領域と pref-migrate.ts を upstream 同様に削除（yami 独自設定は preferences/def.ts へ移行済みであることを確認）
+- 未使用依存の整理: frontend の素の `punycode`（実使用は `punycode.js`）を削除
+
 ## 2026.6.0-yami-1.9.39
 
 ### 機能削除

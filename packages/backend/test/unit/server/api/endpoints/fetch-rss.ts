@@ -7,6 +7,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { HttpRequestService } from '@/core/HttpRequestService.js';
 import FetchRssEndpoint, { meta } from '@/server/api/endpoints/fetch-rss.js';
 import { ApiError } from '@/server/api/error.js';
+import type { Config } from '@/config.js';
+import type { UsersRepository } from '@/models/_.js';
 import type { Mocked } from 'vitest';
 import type { Response } from 'node-fetch';
 
@@ -48,6 +50,7 @@ function response(url: string, text = RSS): Response {
 
 describe('fetch-rss endpoint', () => {
 	let httpRequestService: Mocked<HttpRequestService>;
+	let usersRepository: { findOneBy: ReturnType<typeof vi.fn> };
 	let endpoint: FetchRssEndpoint;
 
 	beforeEach(() => {
@@ -57,7 +60,9 @@ describe('fetch-rss endpoint', () => {
 		httpRequestService = {
 			send: vi.fn(),
 		} as unknown as Mocked<HttpRequestService>;
-		endpoint = new FetchRssEndpoint(httpRequestService);
+		const config = { host: 'misskey.local' } as Config;
+		usersRepository = { findOneBy: vi.fn() };
+		endpoint = new FetchRssEndpoint(httpRequestService, config, usersRepository as unknown as UsersRepository);
 	});
 
 	async function exec(url: string) {
@@ -188,5 +193,46 @@ describe('fetch-rss endpoint', () => {
 		expect(new ApiError(meta.errors.invalidUrl)).toMatchObject({ code: 'INVALID_URL', httpStatusCode: 400 });
 		expect(new ApiError(meta.errors.fetchRssFailed)).toMatchObject({ code: 'FETCH_RSS_FAILED', httpStatusCode: 422 });
 		expect(new ApiError(meta.errors.fetchRssUnavailable)).toMatchObject({ code: 'FETCH_RSS_UNAVAILABLE', httpStatusCode: 503 });
+	});
+
+	describe('user RSS privacy (yamisskey)', () => {
+		const userRssUrl = 'https://misskey.local/@alice.atom';
+
+		test('rejects when the user does not exist', async () => {
+			usersRepository.findOneBy.mockResolvedValue(null);
+
+			await expect(exec(userRssUrl)).rejects.toMatchObject({ code: 'NO_SUCH_USER' });
+			expect(httpRequestService.send).not.toHaveBeenCalled();
+		});
+
+		test('rejects when the user requires signin to view contents', async () => {
+			usersRepository.findOneBy.mockResolvedValue({ requireSigninToViewContents: true, isExplorable: true });
+
+			await expect(exec(userRssUrl)).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+			expect(httpRequestService.send).not.toHaveBeenCalled();
+		});
+
+		test('rejects when the user is not explorable', async () => {
+			usersRepository.findOneBy.mockResolvedValue({ requireSigninToViewContents: false, isExplorable: false });
+
+			await expect(exec(userRssUrl)).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+			expect(httpRequestService.send).not.toHaveBeenCalled();
+		});
+
+		test('fetches the feed when the user allows public access', async () => {
+			usersRepository.findOneBy.mockResolvedValue({ requireSigninToViewContents: false, isExplorable: true });
+			httpRequestService.send.mockResolvedValue(response(userRssUrl));
+
+			await expect(exec(userRssUrl)).resolves.toBeDefined();
+			expect(usersRepository.findOneBy).toHaveBeenCalledWith(expect.objectContaining({ username: 'alice' }));
+			expect(httpRequestService.send).toHaveBeenCalledTimes(1);
+		});
+
+		test('does not run the privacy check for external feeds', async () => {
+			httpRequestService.send.mockResolvedValue(response('https://example.com/feed.xml'));
+
+			await expect(exec('https://example.com/feed.xml')).resolves.toBeDefined();
+			expect(usersRepository.findOneBy).not.toHaveBeenCalled();
+		});
 	});
 });
