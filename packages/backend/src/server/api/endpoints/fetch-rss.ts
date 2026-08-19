@@ -275,8 +275,11 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			const url = this.normalizeUrl(ps.url);
 
 			// 自分のサーバーのユーザーRSSの場合はプライバシー設定を確認する
-			const myRssPattern = new RegExp(`^https?://${this.config.host}/@([^/]+)\\.(atom|rss|json)$`);
-			const match = url.match(myRssPattern);
+			// クエリ文字列付きでも迂回できないよう pathname で判定する
+			const parsedUrl = new URL(url);
+			const match = parsedUrl.host === this.config.host
+				? parsedUrl.pathname.match(/^\/@([^/]+)\.(atom|rss|json)$/)
+				: null;
 
 			if (match) {
 				const username = match[1];

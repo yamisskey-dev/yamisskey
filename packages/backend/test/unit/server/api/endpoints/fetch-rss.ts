@@ -228,6 +228,16 @@ describe('fetch-rss endpoint', () => {
 			expect(httpRequestService.send).toHaveBeenCalledTimes(1);
 		});
 
+		test.each([
+			'https://misskey.local/@alice.atom?foo=bar',
+			'https://misskey.local/@alice.rss?',
+		])('applies the privacy check even with a query string: %s', async (url) => {
+			usersRepository.findOneBy.mockResolvedValue({ requireSigninToViewContents: true, isExplorable: true });
+
+			await expect(exec(url)).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+			expect(httpRequestService.send).not.toHaveBeenCalled();
+		});
+
 		test('does not run the privacy check for external feeds', async () => {
 			httpRequestService.send.mockResolvedValue(response('https://example.com/feed.xml'));
 
