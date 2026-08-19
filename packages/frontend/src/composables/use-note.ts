@@ -157,7 +157,7 @@ export function useNote(
 	const showTicker = computed(() => (prefer.s.instanceTicker === 'always') || (prefer.s.instanceTicker === 'remote' && appearNote.user.instance));
 	const canRenote = computed(() => {
 		// 連合ありやみノートの場合はリノートできない
-		if ((appearNote as Misskey.entities.Note & { isNoteInYamiMode?: boolean }).isNoteInYamiMode && !appearNote.localOnly) {
+		if (appearNote.isNoteInYamiMode && !appearNote.localOnly) {
 			return false;
 		}
 
