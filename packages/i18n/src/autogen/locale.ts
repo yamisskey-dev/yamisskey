@@ -5812,7 +5812,7 @@ export interface Locale extends ILocale {
      */
     "mentalHealth": string;
     /**
-     * 数字に囚われない体験のための設定
+     * 評価や刺激から注意力を守り、心の余裕を保つための設定
      */
     "mentalHealthDescription": string;
     /**
