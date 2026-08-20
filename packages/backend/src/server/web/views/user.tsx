@@ -15,7 +15,10 @@ import { Layout } from '@/server/web/views/base.js';
  * - acct のみのタイトル / og:title（アカウントの存在は WebFinger / AP actor で公開済み）
  * - プロフィール追加情報の URL への rel=me リンク（AP actor の attachment として公開済みの情報。
  *   これが無いと他サーバーからの rel=me 検証バッジと OGP プレビューが機能しない）
- * いずれも既に連合へ公開されている情報のみで構成され、新規の露出はない。
+ *
+ * いずれも「連合有効かつ AP actor で既に公開されている情報」のみで構成され、新規の露出はない。
+ * 呼び出し側 (ClientServerService) がプロフィール本体・ローカル・連合有効の場合に限定しており、
+ * 本コンポーネント内の federationEnabled ガードはその二重防御。
  */
 export function UserMinimalPage(props: CommonProps<{
 	user: { id: string; username: string; host: string | null; uri: string | null };

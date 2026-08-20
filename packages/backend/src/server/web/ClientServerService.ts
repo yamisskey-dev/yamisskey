@@ -549,10 +549,22 @@ export class ClientServerService {
 						user: _user,
 					}),
 				}));
-			} else if (user != null && user.host == null) {
+			} else if (
+				user != null &&
+				user.host == null &&
+				request.params.sub == null &&
+				this.meta.federation !== 'none'
+			) {
 				// yamisskey: 匿名にプロフィール本文を見せない場合でも、
 				// rel=me 検証と最小限の OGP のためのメタデータだけは出す (#327)
-				// (出力するのは AP actor で既に連合へ公開されている情報のみ)
+				//
+				// 出力するのは AP actor として既に連合へ公開されている情報のみ。
+				// そのため以下の条件をすべて満たすときに限る:
+				// - ローカルユーザー (リモートは連合先が本体)
+				// - プロフィール本体 (sub 付きのサブページは対象外。本体を指す
+				//   メタデータでサブページ URL を汚染しないため)
+				// - 連合が有効 (連合無効だと AP actor 自体が配信されず「既に公開済み」
+				//   が成り立たないため、露出を増やさないよう renderBase に落とす)
 				const profile = await this.userProfilesRepository.findOneByOrFail({ userId: user.id });
 
 				reply.header('Cache-Control', 'public, max-age=15');
