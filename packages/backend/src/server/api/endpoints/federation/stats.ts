@@ -14,7 +14,9 @@ import { DI } from '@/di-symbols.js';
 export const meta = {
 	tags: ['federation'],
 
-	requireCredential: false,
+	// yamisskey: 連合情報の閲覧制限を instances / show-instance と統一 (#326)
+	requireCredential: true,
+	kind: 'read:federation',
 
 	allowGet: true,
 	cacheSec: 60 * 60,
