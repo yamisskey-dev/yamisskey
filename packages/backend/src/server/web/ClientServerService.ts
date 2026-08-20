@@ -47,7 +47,7 @@ import { ClientLoggerService } from './ClientLoggerService.js';
 import { HtmlTemplateService } from './HtmlTemplateService.js';
 
 import { BasePage } from './views/base.js';
-import { UserPage } from './views/user.js';
+import { UserMinimalPage, UserPage } from './views/user.js';
 import { NotePage } from './views/note.js';
 import { PagePage } from './views/page.js';
 import { ClipPage } from './views/clip.js';
@@ -520,7 +520,9 @@ export class ClientServerService {
 			vary(reply.raw, 'Accept');
 
 			if (
-				user != null && (
+				user != null &&
+				!user.requireSigninToViewContents &&
+				(
 					this.meta.ugcVisibilityForVisitor === 'all' ||
 						(this.meta.ugcVisibilityForVisitor === 'local' && user.host == null)
 				)
@@ -546,6 +548,19 @@ export class ClientServerService {
 					clientCtxJson: htmlSafeJsonStringify({
 						user: _user,
 					}),
+				}));
+			} else if (user != null && user.host == null) {
+				// yamisskey: 匿名にプロフィール本文を見せない場合でも、
+				// rel=me 検証と最小限の OGP のためのメタデータだけは出す (#327)
+				// (出力するのは AP actor で既に連合へ公開されている情報のみ)
+				const profile = await this.userProfilesRepository.findOneByOrFail({ userId: user.id });
+
+				reply.header('Cache-Control', 'public, max-age=15');
+
+				return await HtmlTemplateService.replyHtml(reply, UserMinimalPage({
+					user,
+					profile,
+					...(await this.htmlTemplateService.getCommonData()),
 				}));
 			} else {
 				// リモートユーザーなので
