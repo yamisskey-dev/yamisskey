@@ -178,10 +178,10 @@ test.describe('After user signed in', () => {
 		// フォロー設定
 		await page.getByTestId('user-setup-continue').click();
 
-		// プッシュ通知設定
+		// コミュニティロール設定 (yamisskey 独自ページ)
 		await page.getByTestId('user-setup-continue').click();
 
-		// 完了
+		// プッシュ通知設定
 		await page.getByTestId('user-setup-continue').click();
 	});
 });
