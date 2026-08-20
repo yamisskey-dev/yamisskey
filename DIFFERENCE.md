@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## Unreleased
+## 2026.7.0-yami-1.9.40
 
 ### 変更
 - `federation/stats` API をログイン必須（`read:federation`）に変更し、`federation/instances` / `federation/show-instance` と認可を統一（#326）。従来は無認証で疎通先サーバーの上位リストが取得できた。
