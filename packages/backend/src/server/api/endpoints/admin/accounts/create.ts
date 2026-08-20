@@ -7,13 +7,13 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import type { MiMeta, UsersRepository } from '@/models/_.js';
 import { SignupService } from '@/core/SignupService.js';
+import { RoleService } from '@/core/RoleService.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { localUsernameSchema, passwordSchema } from '@/models/User.js';
 import { DI } from '@/di-symbols.js';
 import type { Config } from '@/config.js';
 import { ApiError } from '@/server/api/error.js';
 import { Packed } from '@/misc/json-schema.js';
-import { RoleService } from '@/core/RoleService.js';
 
 export const meta = {
 	tags: ['admin'],
@@ -78,7 +78,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 		private userEntityService: UserEntityService,
 		private signupService: SignupService,
-		private roleService: RoleService, // 追加
+		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, _me, token) => {
 			const me = _me ? await this.usersRepository.findOneByOrFail({ id: _me.id }) : null;
@@ -86,17 +86,17 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			if (this.serverSettings.rootUserId == null && me == null && token == null) {
 				// 初回セットアップの場合
 				if (this.config.setupPassword != null) {
+					// 初期パスワードが設定されている場合
 					if (ps.setupPassword !== this.config.setupPassword) {
+						// 初期パスワードが違う場合
 						throw new ApiError(meta.errors.wrongInitialPassword);
 					}
 				} else if (ps.setupPassword != null && ps.setupPassword.trim() !== '') {
+					// 初期パスワードが設定されていないのに初期パスワードが入力された場合
 					throw new ApiError(meta.errors.wrongInitialPassword);
 				}
-			} else if (
-				(this.serverSettings.rootUserId != null && me != null && !(await this.roleService.isAdministrator(me)))
-				|| token !== null
-			) {
-				// 管理者でない場合 or 外部トークンを使用している場合
+			} else if (token !== null || !(await this.roleService.isAdministrator(me))) {
+				// 初回セットアップではなく、管理者でない場合 or 外部トークンを使用している場合
 				throw new ApiError(meta.errors.accessDenied);
 			}
 
