@@ -129,6 +129,10 @@ export interface Locale extends ILocale {
      */
     "renoteSettings": string;
     /**
+     * リノートのたたみ方に関する設定。「リノートをたたむ」が有効な場合に適用されます
+     */
+    "renoteSettingsDescription": string;
+    /**
      * フォント設定
      */
     "fontSettings": string;
