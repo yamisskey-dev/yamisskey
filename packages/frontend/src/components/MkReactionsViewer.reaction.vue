@@ -244,6 +244,9 @@ if (!mock) {
 	useTooltip(buttonEl, async (showing) => {
 		if (buttonEl.value == null) return;
 
+		// 誰がリアクションしたのかを非表示にする設定が有効な場合はツールチップを出さない
+		if (prefer.s.hideReactionUsers) return;
+
 		const reactions = await misskeyApiGet('notes/reactions', {
 			noteId: props.noteId,
 			type: props.reaction,

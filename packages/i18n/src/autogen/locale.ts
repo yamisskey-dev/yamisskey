@@ -129,6 +129,10 @@ export interface Locale extends ILocale {
      */
     "renoteSettings": string;
     /**
+     * リノートのたたみ方に関する設定。「リノートをたたむ」が有効な場合に適用されます
+     */
+    "renoteSettingsDescription": string;
+    /**
      * フォント設定
      */
     "fontSettings": string;
@@ -136,6 +140,10 @@ export interface Locale extends ILocale {
      * リアクション設定
      */
     "reactionSettings": string;
+    /**
+     * リアクションしたユーザーや数の見え方に関する設定
+     */
+    "reactionSettingsDescription": string;
     /**
      * その他の設定
      */
@@ -5804,7 +5812,7 @@ export interface Locale extends ILocale {
      */
     "mentalHealth": string;
     /**
-     * 数字に囚われない体験のための設定
+     * 評価や刺激から注意力を守り、心の余裕を保つための設定
      */
     "mentalHealthDescription": string;
     /**

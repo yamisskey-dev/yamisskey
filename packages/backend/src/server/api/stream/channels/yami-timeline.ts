@@ -74,8 +74,9 @@ export class YamiTimelineChannel extends Channel {
 		// Bot filtering
 		if (this.excludeBots && note.user.isBot) return;
 
-		// 自分がやみモードでない場合は自分の投稿だけ表示
-		if (!isMyNote && !this.user!.isInYamiMode) return;
+		// メンタルヘルス保護: やみモードでない場合は自分の投稿も含めて表示しない
+		// (notes/yami-timeline エンドポイントの挙動と統一)
+		if (!this.user!.isInYamiMode) return;
 
 		if (this.withFiles && (note.fileIds == null || note.fileIds.length === 0)) return;
 

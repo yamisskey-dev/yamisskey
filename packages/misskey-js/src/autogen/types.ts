@@ -4871,7 +4871,7 @@ export type paths = {
          * federation/stats
          * @description No description provided.
          *
-         *     **Credential required**: *No*
+         *     **Credential required**: *Yes* / **Permission**: *read:federation*
          */
         post: operations['federation___stats'];
         delete?: never;

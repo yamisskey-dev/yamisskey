@@ -184,23 +184,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 									<template #label><SearchLabel>{{ i18n.ts.collapseRenotes }}</SearchLabel></template>
 									<template #caption><SearchText>{{ i18n.ts.collapseRenotesDescription }}</SearchText></template>
 								</MkSwitch>
-
-								<div v-if="collapseRenotes" style="padding-left: 46px;">
-									<MkSelect
-										v-model="collapseRenotesTrigger" :items="[
-											{ label: i18n.ts._collapseRenotesTrigger.action, value: 'action' },
-											{ label: i18n.ts._collapseRenotesTrigger.see, value: 'see' },
-											{ label: i18n.ts._collapseRenotesTrigger.all, value: 'all' },
-										]"
-									>
-										<template #label>{{ i18n.ts.collapseRenotesTrigger }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-									</MkSelect>
-
-									<MkSwitch v-model="collapseSelfRenotes" style="padding-top: 12px;">
-										<template #label>{{ i18n.ts.collapseSelfRenotes }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-										<template #caption><SearchText>{{ i18n.ts.collapseSelfRenotesDescription }}</SearchText></template>
-									</MkSwitch>
-								</div>
 							</SearchMarker>
 
 							<SearchMarker :keywords="['pinned', 'list']">
@@ -311,42 +294,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 								<MkPreferenceContainer k="limitWidthOfReaction">
 									<MkSwitch v-model="limitWidthOfReaction">
 										<template #label><SearchLabel>{{ i18n.ts.limitWidthOfReaction }}</SearchLabel></template>
-									</MkSwitch>
-								</MkPreferenceContainer>
-							</SearchMarker>
-
-							<!-- リアクションユーザー非表示（独自機能） -->
-							<SearchMarker :keywords="['reaction', 'hide', 'user']">
-								<MkPreferenceContainer k="hideReactionUsers">
-									<MkSwitch v-model="hideReactionUsers">
-										<template #label><SearchLabel>{{ i18n.ts.hideReactionUsers }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-										<template #caption><SearchText>{{ i18n.ts.hideReactionUsersDescription }}</SearchText></template>
-									</MkSwitch>
-								</MkPreferenceContainer>
-							</SearchMarker>
-
-							<!-- リアクション数非表示（独自機能） -->
-							<SearchMarker :keywords="['reaction', 'hide', 'count']">
-								<MkPreferenceContainer k="hideReactionCount">
-									<MkSelect
-										v-model="hideReactionCount" :items="[
-											{ label: i18n.ts._hideReactionCount.none, value: 'none' },
-											{ label: i18n.ts._hideReactionCount.self, value: 'self' },
-											{ label: i18n.ts._hideReactionCount.others, value: 'others' },
-											{ label: i18n.ts._hideReactionCount.all, value: 'all' },
-										]"
-									>
-										<template #label><SearchLabel>{{ i18n.ts.hideReactionCount }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-									</MkSelect>
-								</MkPreferenceContainer>
-							</SearchMarker>
-
-							<!-- リアクション時のミュート確認（独自機能） -->
-							<SearchMarker :keywords="['reaction', 'mute', 'check']">
-								<MkPreferenceContainer k="reactionChecksMuting">
-									<MkSwitch v-model="reactionChecksMuting">
-										<template #label><SearchLabel>{{ i18n.ts._reactionChecksMuting.title }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-										<template #caption><SearchText>{{ i18n.ts._reactionChecksMuting.caption }}</SearchText></template>
 									</MkSwitch>
 								</MkPreferenceContainer>
 							</SearchMarker>
@@ -990,6 +937,72 @@ SPDX-License-Identifier: AGPL-3.0-only
 										<MkPreferenceContainer k="hideGlobalTimeLine">
 											<MkSwitch v-model="hideGlobalTimeLine">
 												<template #label>{{ i18n.ts.hideGlobalTimeLine }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+											</MkSwitch>
+										</MkPreferenceContainer>
+									</div>
+								</MkFolder>
+							</SearchMarker>
+
+							<!-- リノートのたたみ方（独自機能） -->
+							<SearchMarker :keywords="['renote', 'collapse', 'self']">
+								<MkFolder>
+									<template #label><SearchLabel>{{ i18n.ts.renoteSettings }}</SearchLabel></template>
+									<template #caption><SearchText>{{ i18n.ts.renoteSettingsDescription }}</SearchText></template>
+
+									<div class="_gaps_s">
+										<MkPreferenceContainer k="collapseRenotesTrigger">
+											<MkSelect
+												v-model="collapseRenotesTrigger" :items="[
+													{ label: i18n.ts._collapseRenotesTrigger.action, value: 'action' },
+													{ label: i18n.ts._collapseRenotesTrigger.see, value: 'see' },
+													{ label: i18n.ts._collapseRenotesTrigger.all, value: 'all' },
+												]"
+											>
+												<template #label>{{ i18n.ts.collapseRenotesTrigger }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+											</MkSelect>
+										</MkPreferenceContainer>
+
+										<MkPreferenceContainer k="collapseSelfRenotes">
+											<MkSwitch v-model="collapseSelfRenotes">
+												<template #label>{{ i18n.ts.collapseSelfRenotes }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+												<template #caption><SearchText>{{ i18n.ts.collapseSelfRenotesDescription }}</SearchText></template>
+											</MkSwitch>
+										</MkPreferenceContainer>
+									</div>
+								</MkFolder>
+							</SearchMarker>
+
+							<!-- リアクションの表示（独自機能） -->
+							<SearchMarker :keywords="['reaction', 'hide', 'user', 'count', 'mute']">
+								<MkFolder>
+									<template #label><SearchLabel>{{ i18n.ts.reactionSettings }}</SearchLabel></template>
+									<template #caption><SearchText>{{ i18n.ts.reactionSettingsDescription }}</SearchText></template>
+
+									<div class="_gaps_s">
+										<MkPreferenceContainer k="hideReactionUsers">
+											<MkSwitch v-model="hideReactionUsers">
+												<template #label><SearchLabel>{{ i18n.ts.hideReactionUsers }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+												<template #caption><SearchText>{{ i18n.ts.hideReactionUsersDescription }}</SearchText></template>
+											</MkSwitch>
+										</MkPreferenceContainer>
+
+										<MkPreferenceContainer k="hideReactionCount">
+											<MkSelect
+												v-model="hideReactionCount" :items="[
+													{ label: i18n.ts._hideReactionCount.none, value: 'none' },
+													{ label: i18n.ts._hideReactionCount.self, value: 'self' },
+													{ label: i18n.ts._hideReactionCount.others, value: 'others' },
+													{ label: i18n.ts._hideReactionCount.all, value: 'all' },
+												]"
+											>
+												<template #label><SearchLabel>{{ i18n.ts.hideReactionCount }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+											</MkSelect>
+										</MkPreferenceContainer>
+
+										<MkPreferenceContainer k="reactionChecksMuting">
+											<MkSwitch v-model="reactionChecksMuting">
+												<template #label><SearchLabel>{{ i18n.ts._reactionChecksMuting.title }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+												<template #caption><SearchText>{{ i18n.ts._reactionChecksMuting.caption }}</SearchText></template>
 											</MkSwitch>
 										</MkPreferenceContainer>
 									</div>
