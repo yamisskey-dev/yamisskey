@@ -34,8 +34,12 @@ jobs:
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: "claude-opus-4-8"
+          # Workload Identity Federation (静的 API キー不使用)
+          anthropic_federation_rule_id: "fdrl_01FkxzE14KLG8kANGWfeVNEp"
+          anthropic_organization_id: "8efe77da-6956-4af6-968f-24a2e7e4e120"
+          anthropic_service_account_id: "svac_01FMVZrzTYXJvhtpxJbqJdGP"
+          anthropic_workspace_id: "wrkspc_01RTpcRnPUQPaeme8eLvLyoH"
+          claude_args: "--model claude-opus-4-8"
           allowed_bots: "release-manager-actions"
           additional_permissions: |
             actions: read
