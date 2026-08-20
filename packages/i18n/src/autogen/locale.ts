@@ -141,6 +141,10 @@ export interface Locale extends ILocale {
      */
     "reactionSettings": string;
     /**
+     * リアクションしたユーザーや数の見え方に関する設定
+     */
+    "reactionSettingsDescription": string;
+    /**
      * その他の設定
      */
     "otherSettings": string;

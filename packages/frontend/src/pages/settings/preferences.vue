@@ -298,42 +298,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkPreferenceContainer>
 							</SearchMarker>
 
-							<!-- リアクションユーザー非表示（独自機能） -->
-							<SearchMarker :keywords="['reaction', 'hide', 'user']">
-								<MkPreferenceContainer k="hideReactionUsers">
-									<MkSwitch v-model="hideReactionUsers">
-										<template #label><SearchLabel>{{ i18n.ts.hideReactionUsers }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-										<template #caption><SearchText>{{ i18n.ts.hideReactionUsersDescription }}</SearchText></template>
-									</MkSwitch>
-								</MkPreferenceContainer>
-							</SearchMarker>
-
-							<!-- リアクション数非表示（独自機能） -->
-							<SearchMarker :keywords="['reaction', 'hide', 'count']">
-								<MkPreferenceContainer k="hideReactionCount">
-									<MkSelect
-										v-model="hideReactionCount" :items="[
-											{ label: i18n.ts._hideReactionCount.none, value: 'none' },
-											{ label: i18n.ts._hideReactionCount.self, value: 'self' },
-											{ label: i18n.ts._hideReactionCount.others, value: 'others' },
-											{ label: i18n.ts._hideReactionCount.all, value: 'all' },
-										]"
-									>
-										<template #label><SearchLabel>{{ i18n.ts.hideReactionCount }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-									</MkSelect>
-								</MkPreferenceContainer>
-							</SearchMarker>
-
-							<!-- リアクション時のミュート確認（独自機能） -->
-							<SearchMarker :keywords="['reaction', 'mute', 'check']">
-								<MkPreferenceContainer k="reactionChecksMuting">
-									<MkSwitch v-model="reactionChecksMuting">
-										<template #label><SearchLabel>{{ i18n.ts._reactionChecksMuting.title }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
-										<template #caption><SearchText>{{ i18n.ts._reactionChecksMuting.caption }}</SearchText></template>
-									</MkSwitch>
-								</MkPreferenceContainer>
-							</SearchMarker>
-
 							<SearchMarker :keywords="['attachment', 'image', 'photo', 'picture', 'media', 'thumbnail', 'list', 'size', 'height']">
 								<MkPreferenceContainer k="mediaListWithOneImageAppearance">
 									<MkRadios
@@ -1002,6 +966,43 @@ SPDX-License-Identifier: AGPL-3.0-only
 											<MkSwitch v-model="collapseSelfRenotes">
 												<template #label>{{ i18n.ts.collapseSelfRenotes }}<span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
 												<template #caption><SearchText>{{ i18n.ts.collapseSelfRenotesDescription }}</SearchText></template>
+											</MkSwitch>
+										</MkPreferenceContainer>
+									</div>
+								</MkFolder>
+							</SearchMarker>
+
+							<!-- リアクションの表示（独自機能） -->
+							<SearchMarker :keywords="['reaction', 'hide', 'user', 'count', 'mute']">
+								<MkFolder>
+									<template #label><SearchLabel>{{ i18n.ts.reactionSettings }}</SearchLabel></template>
+									<template #caption><SearchText>{{ i18n.ts.reactionSettingsDescription }}</SearchText></template>
+
+									<div class="_gaps_s">
+										<MkPreferenceContainer k="hideReactionUsers">
+											<MkSwitch v-model="hideReactionUsers">
+												<template #label><SearchLabel>{{ i18n.ts.hideReactionUsers }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+												<template #caption><SearchText>{{ i18n.ts.hideReactionUsersDescription }}</SearchText></template>
+											</MkSwitch>
+										</MkPreferenceContainer>
+
+										<MkPreferenceContainer k="hideReactionCount">
+											<MkSelect
+												v-model="hideReactionCount" :items="[
+													{ label: i18n.ts._hideReactionCount.none, value: 'none' },
+													{ label: i18n.ts._hideReactionCount.self, value: 'self' },
+													{ label: i18n.ts._hideReactionCount.others, value: 'others' },
+													{ label: i18n.ts._hideReactionCount.all, value: 'all' },
+												]"
+											>
+												<template #label><SearchLabel>{{ i18n.ts.hideReactionCount }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+											</MkSelect>
+										</MkPreferenceContainer>
+
+										<MkPreferenceContainer k="reactionChecksMuting">
+											<MkSwitch v-model="reactionChecksMuting">
+												<template #label><SearchLabel>{{ i18n.ts._reactionChecksMuting.title }}</SearchLabel><span class="_beta">{{ i18n.ts.originalFeature }}</span></template>
+												<template #caption><SearchText>{{ i18n.ts._reactionChecksMuting.caption }}</SearchText></template>
 											</MkSwitch>
 										</MkPreferenceContainer>
 									</div>
