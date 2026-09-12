@@ -7,7 +7,9 @@ process.env.NODE_ENV = 'test';
 
 import * as assert from 'assert';
 import { beforeAll, describe, test, vi } from 'vitest';
-import { api, post, react, signup, waitFire } from '../utils.js';
+import { MiMuting } from '@/models/Muting.js';
+import { genAidx } from '@/misc/id/aidx.js';
+import { api, initTestDb, post, react, signup, waitFire } from '../utils.js';
 import type * as misskey from 'misskey-js';
 
 const waitForPushToTlOptions = { timeout: 3000, interval: 25 };
@@ -301,5 +303,55 @@ describe('Mute', () => {
 			assert.strictEqual(res.body.some(notification => 'userId' in notification && notification.userId === bob.id), true);
 			assert.strictEqual(res.body.some(notification => 'userId' in notification && notification.userId === carol.id), false);
 		});
+	});
+});
+
+describe('Mute (notes/reactions)', () => {
+	let alice: misskey.entities.SignupResponse;
+	let bob: misskey.entities.SignupResponse;
+	let carol: misskey.entities.SignupResponse;
+	let dave: misskey.entities.SignupResponse;
+
+	beforeAll(async () => {
+		alice = await signup({ username: 'mute_r_alice' });
+		bob = await signup({ username: 'mute_r_bob' });
+		carol = await signup({ username: 'mute_r_carol' });
+		dave = await signup({ username: 'mute_r_dave' });
+	}, 1000 * 60 * 2);
+
+	test('ミュートしているユーザーのリアクションが notes/reactions に含まれない', async () => {
+		await api('mute/create', { userId: carol.id }, alice);
+
+		const note = await post(bob, { text: 'hi', visibility: 'public' });
+		await react(bob, note, '👍');
+		await react(carol, note, '👍');
+
+		const res = await api('notes/reactions', { noteId: note.id }, alice);
+
+		assert.strictEqual(res.status, 200);
+		assert.strictEqual(res.body.some(r => r.user.id === bob.id), true);
+		assert.strictEqual(res.body.some(r => r.user.id === carol.id), false);
+	});
+
+	test('ミュートキャッシュ未生成でもミュートしているユーザーのリアクションが notes/reactions に含まれない', async () => {
+		// mute/create 経由だとキャッシュが更新されるので、DB に直接挿入してキャッシュミス状態を再現する
+		const connection = await initTestDb(true);
+		await connection.getRepository(MiMuting).insert({
+			id: genAidx(Date.now()),
+			muterId: dave.id,
+			muteeId: carol.id,
+			expiresAt: null,
+		});
+		await connection.destroy();
+
+		const note = await post(bob, { text: 'hi', visibility: 'public' });
+		await react(bob, note, '👍');
+		await react(carol, note, '👍');
+
+		const res = await api('notes/reactions', { noteId: note.id }, dave);
+
+		assert.strictEqual(res.status, 200);
+		assert.strictEqual(res.body.some(r => r.user.id === bob.id), true);
+		assert.strictEqual(res.body.some(r => r.user.id === carol.id), false);
 	});
 });
