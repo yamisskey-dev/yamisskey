@@ -1,5 +1,25 @@
 # DIFFRENCE
 
+## Unreleased
+
+### Misskey 2026.9.0への追従
+
+本家Misskey 2026.9.0をdevelopブランチにマージしました（2026.8.0 は正式リリースが存在しないため 2026.7.0 から直接追従）。upstream の詳細は CHANGELOG.md を参照してください。
+
+#### Upstream の主な変更
+- Note: カスタム絵文字の一括インポートは管理者権限を持つユーザーのみ実行可能に。`notes/reactions` は GET で取得できなくなった
+- General: ノート翻訳時に CW も翻訳対象に含めるように、依存関係・翻訳の更新
+- Client: 画像ビューワーにピクセルアート向け拡大モード追加、音声プレイヤーを画像・動画ビューワーに統合、ぼかし解除状態の引き継ぎ、Blurhash・通知トースト・リアクション並び順などの修正、パフォーマンス向上
+- Server: `.well-known/change-password` 対応、`i/revoke-token` で自身のアクセストークンを失効可能に、スレッドミュート重複時のサーバーエラー修正、旧バージョン作成アカウントの連合修正、WebSocket チャンネルのクリーンアップ修正、セキュリティ修正
+- CI: SPDX ヘッダー検査を `scripts/check-spdx.mjs` に移行
+
+#### Yamisskey 側の追従対応
+- version を `2026.9.0-yami-1.9.40` に更新（本家追従のみのため yami suffix 据え置き）
+- `notes/reactions`: upstream のノート可視性チェック（`isVisibleForMe`）と GET 廃止に追従しつつ、ミュート・ブロック中ユーザーのリアクションを除外する独自フィルタを維持
+- `use-note.ts` / `MkReactionsViewer.reaction.vue`: upstream の導出値の非リアクティブ化と `misskeyApi` 化に追従しつつ、やみノートのリノート不可判定・`hideReactionUsers`・`hideReactionCount` を維持
+- federation テスト: upstream の `vi.waitFor` ベースへの書き換えに追従しつつ、yami のデフォルト公開範囲に合わせた `visibility: 'public'` 指定を維持
+- SPDX 検査: 既存 CI の OR 判定（copyright 行または AGPL license 行）が `scripts/check-spdx.mjs --ci` でも維持されるため、yami 独自の copyright 表記ファイルは引き続き通過することを確認
+
 ## 2026.7.0-yami-1.9.40
 
 ### 変更
