@@ -18,6 +18,7 @@
 - `notes/reactions`: upstream のノート可視性チェック（`isVisibleForMe`）と GET 廃止に追従しつつ、ミュート・ブロック中ユーザーのリアクションを除外する独自フィルタを維持
 - `use-note.ts` / `MkReactionsViewer.reaction.vue`: upstream の導出値の非リアクティブ化と `misskeyApi` 化に追従しつつ、やみノートのリノート不可判定・`hideReactionUsers`・`hideReactionCount` を維持
 - federation テスト: upstream の `vi.waitFor` ベースへの書き換えに追従しつつ、yami のデフォルト公開範囲に合わせた `visibility: 'public'` 指定を維持
+- `NoteEntityService.isVisibleForMe`: 未ログイン一律非表示のガードに `shouldHideNote` / `QueryService.generateVisibilityQuery` と同じ test 環境エスケープ（`NODE_ENV !== 'test'`）を追加。upstream 2026.9.0 で `notes/reactions` が匿名でも `isVisibleForMe` を呼ぶようになり、upstream の e2e（public ノートのリアクションを未認証が見れる 等 3 件）が落ちるため。本番挙動は不変
 - SPDX 検査: 既存 CI の OR 判定（copyright 行または AGPL license 行）が `scripts/check-spdx.mjs --ci` でも維持されるため、yami 独自の copyright 表記ファイルは引き続き通過することを確認
 
 ## 2026.7.0-yami-1.9.40

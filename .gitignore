@@ -81,5 +81,9 @@ vite.config.local-dev.ts.timestamp-*
 # VSCode addon
 .favorites.json
 
+# Claude
+.claude/
+AGENTS.md
+
 # Affinity
 *.af~lock~
