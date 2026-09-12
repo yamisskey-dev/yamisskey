@@ -254,8 +254,7 @@ if (!mock) {
 			limit: 10,
 		});
 
-		const users = reactions.map(x => x.user) || [];
-		const count = users.length;
+		const users = reactions.map(x => x.user);
 
 		const { dispose } = os.popup(XDetails, {
 			showing,
