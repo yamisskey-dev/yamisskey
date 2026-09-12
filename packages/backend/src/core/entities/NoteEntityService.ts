@@ -323,6 +323,9 @@ export class NoteEntityService implements OnModuleInit {
 			// この時点で meId は非null（isViewerInYamiMode が true なので）
 			if (meId == null) return false; // TypeScript の型ガード
 
+			// やみモードの投稿者本人は自分のノートを見られる
+			if (meId === note.userId) return true;
+
 			// ダイレクトメッセージは対象者のみ
 			if (note.visibility === 'specified') {
 				return note.visibleUserIds.includes(meId);

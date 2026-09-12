@@ -303,6 +303,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 						throw new ApiError(meta.errors.noSuchRenoteTarget);
 					} else if (err.id === 'bde24c37-121f-4e7d-980d-cec52f599f02') {
 						throw new ApiError(meta.errors.cannotReRenote);
+					} else if (err.id === '45ac1794-2c6d-4a85-b594-e9f326d7ed14') {
+						throw new ApiError(meta.errors.cannotRenoteYamiNote);
 					} else if (err.id === '2b4fe776-4414-4a2d-ae39-f3418b8fd4d3') {
 						throw new ApiError(meta.errors.youHaveBeenBlocked);
 					} else if (err.id === '90b9d6f0-893a-4fef-b0f1-e9a33989f71a') {
