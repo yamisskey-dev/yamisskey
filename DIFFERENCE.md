@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### バグ修正
+- `notes/reactions`: ミュート中・自分をブロック中のユーザーのリアクション除外フィルタが、キャッシュ未生成時（サーバー起動直後や TTL 切れ後）に無効化されていた問題を修正。`RedisKVCache.get()` はキャッシュミス時に DB を参照しないため、他エンドポイントと同じ `fetch()` に変更。
+- 連合ありやみノートのリノート禁止が `INTERNAL_ERROR`（500）で返っていたのを `CANNOT_RENOTE_FEDERATED_YAMI_NOTE`（400）に修正。フロントエンドでもリノートボタン非表示時（連合ありやみノート・他人のフォロワー限定ノート等）に `q` キーでリノートメニューが開いてしまう問題を修正。
+- やみモードの投稿者本人が、自分の specified / followers やみノートを `isVisibleForMe`（`notes/reactions` / `notes/translate`）で見られなかった問題を修正。
+- 上記 3 件に backend e2e テストを追加（`mute.ts` / `block.ts` / 新規 `yami-note.ts`）。
+
 ### Misskey 2026.9.0への追従
 
 本家Misskey 2026.9.0をdevelopブランチにマージしました（2026.8.0 は正式リリースが存在しないため 2026.7.0 から直接追従）。upstream の詳細は CHANGELOG.md を参照してください。

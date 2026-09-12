@@ -81,14 +81,14 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			if (me != null) {
 				const [userIdsWhoMeMuting, userIdsWhoBlockingMe] = await Promise.all([
-					this.cacheService.userMutingsCache.get(me.id),
-					this.cacheService.userBlockedCache.get(me.id),
+					this.cacheService.userMutingsCache.fetch(me.id),
+					this.cacheService.userBlockedCache.fetch(me.id),
 				]);
 
-				const userIds = Array.from(userIdsWhoMeMuting ?? []).concat(Array.from(userIdsWhoBlockingMe ?? []));
+				const userIds = [...userIdsWhoMeMuting, ...userIdsWhoBlockingMe];
 
 				if (userIds.length > 0) {
-					query.andWhere('reaction.userId NOT IN (:...userIds)', { userIds: Array.from(userIdsWhoMeMuting ?? []).concat(Array.from(userIdsWhoBlockingMe ?? [])) });
+					query.andWhere('reaction.userId NOT IN (:...userIds)', { userIds });
 				}
 			}
 
