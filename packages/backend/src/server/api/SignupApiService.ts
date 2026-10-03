@@ -5,7 +5,7 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import bcrypt from 'bcryptjs';
-import { IsNull } from 'typeorm';
+import { IsNull, LessThanOrEqual } from 'typeorm';
 import { DI } from '@/di-symbols.js';
 import type { RegistrationTicketsRepository, UsedUsernamesRepository, UserPendingsRepository, UserProfilesRepository, UsersRepository, MiRegistrationTicket, MiMeta } from '@/models/_.js';
 import type { Config } from '@/config.js';
@@ -20,6 +20,7 @@ import { bindThis } from '@/decorators.js';
 import { L_CHARS, secureRndstr } from '@/misc/secure-rndstr.js';
 import { RoleService } from '@/core/RoleService.js';
 import { SigninService } from './SigninService.js';
+import type { FindOptionsWhere } from 'typeorm';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
 @Injectable()
@@ -154,6 +155,8 @@ export class SignupApiService {
 				return;
 			}
 
+			// ここでの検証はあくまで早期リジェクトのための事前チェックで、
+			// 実際の使用可否は消費直前の claimRegistrationTicket() が担保する
 			ticket = await this.registrationTicketsRepository.findOneBy({
 				code: invitationCode,
 			});
@@ -211,85 +214,120 @@ export class SignupApiService {
 			const salt = await bcrypt.genSalt(8);
 			const hash = await bcrypt.hash(password, salt);
 
-			const pendingUser = await this.userPendingsRepository.insertOne({
-				id: this.idService.gen(),
-				code,
-				email: emailAddress,
-				username: username,
-				password: hash,
-				reason: reason,
-			});
+			if (ticket && !await this.claimRegistrationTicket(ticket)) {
+				reply.code(400);
+				return;
+			}
 
-			const link = `${this.config.url}/signup-complete/${code}`;
-
-			this.emailService.sendEmail(emailAddress, 'Signup',
-				`To complete signup, please click this link:<br><a href="${link}">${link}</a>`,
-				`To complete signup, please click this link: ${link}`);
-
-			if (ticket) {
-				await this.registrationTicketsRepository.update(ticket.id, {
-					usedAt: new Date(),
-					pendingUserId: pendingUser.id,
+			try {
+				const pendingUser = await this.userPendingsRepository.insertOne({
+					id: this.idService.gen(),
+					code,
+					email: emailAddress,
+					username: username,
+					password: hash,
+					reason: reason,
 				});
+
+				const link = `${this.config.url}/signup-complete/${code}`;
+
+				this.emailService.sendEmail(emailAddress, 'Signup',
+					`To complete signup, please click this link:<br><a href="${link}">${link}</a>`,
+					`To complete signup, please click this link: ${link}`);
+
+				if (ticket) {
+					await this.registrationTicketsRepository.update(ticket.id, {
+						pendingUserId: pendingUser.id,
+					});
+				}
+			} catch (err) {
+				// 確保したコードが無駄に消費されたままになるのを防ぐ
+				if (ticket) await this.releaseRegistrationTicket(ticket);
+				throw err;
 			}
 
 			reply.code(204);
 			return;
 		} else if (this.meta.approvalRequiredForSignup) {
-			const { account } = await this.signupService.signup({
-				username, password, host, reason,
-			});
-
-			if (emailAddress) {
-				// メールアドレスをプロファイルに保存（未認証状態）
-				await this.userProfilesRepository.update({ userId: account.id }, {
-					email: emailAddress,
-					// 認証コードを生成
-					emailVerifyCode: secureRndstr(16, { chars: L_CHARS }),
-				});
-
-				// プロファイルから認証コードを取得
-				const code = (await this.userProfilesRepository.findOneByOrFail({ userId: account.id })).emailVerifyCode;
-				const verifyLink = `${this.config.url}/verify-email/${code}`;
-
-				// 1. メールアドレス確認メールのみ送信
-				this.emailService.sendEmail(emailAddress, 'Email verification',
-					`To verify your email address, please click this link:<br><a href="${verifyLink}">${verifyLink}</a>`,
-					`To verify your email address, please click this link: ${verifyLink}`);
-
-				// 2. 承認待ち通知は別途送信
-				this.emailService.sendEmail(emailAddress, 'Approval pending',
-					'Your account is now pending approval.<br>You will get notified when you have been accepted.',
-					'Your account is now pending approval. You will get notified when you have been accepted.');
+			if (ticket && !await this.claimRegistrationTicket(ticket)) {
+				reply.code(400);
+				return;
 			}
 
-			if (ticket) {
-				await this.registrationTicketsRepository.update(ticket.id, {
-					usedAt: new Date(),
-					usedBy: account,
-					usedById: account.id,
+			try {
+				const { account } = await this.signupService.signup({
+					username, password, host, reason,
 				});
-			}
 
-			const moderators = await this.roleService.getModerators();
-
-			for (const moderator of moderators) {
-				const profile = await this.userProfilesRepository.findOneBy({ userId: moderator.id });
-
-				if (profile?.email) {
-					this.emailService.sendEmail(profile.email, 'New user awaiting approval',
-						`A new user called ${account.username} is awaiting approval with the following reason: "${reason}"`,
-						`A new user called ${account.username} is awaiting approval with the following reason: "${reason}"`);
+				// 招待コードはアカウント作成直後に紐付け、以降の失敗で release されないようにする
+				if (ticket) {
+					await this.registrationTicketsRepository.update(ticket.id, {
+						usedBy: account,
+						usedById: account.id,
+					});
 				}
+
+				if (emailAddress) {
+					// メールアドレスをプロファイルに保存（未認証状態）
+					await this.userProfilesRepository.update({ userId: account.id }, {
+						email: emailAddress,
+						// 認証コードを生成
+						emailVerifyCode: secureRndstr(16, { chars: L_CHARS }),
+					});
+
+					// プロファイルから認証コードを取得
+					const code = (await this.userProfilesRepository.findOneByOrFail({ userId: account.id })).emailVerifyCode;
+					const verifyLink = `${this.config.url}/verify-email/${code}`;
+
+					// 1. メールアドレス確認メールのみ送信
+					this.emailService.sendEmail(emailAddress, 'Email verification',
+						`To verify your email address, please click this link:<br><a href="${verifyLink}">${verifyLink}</a>`,
+						`To verify your email address, please click this link: ${verifyLink}`);
+
+					// 2. 承認待ち通知は別途送信
+					this.emailService.sendEmail(emailAddress, 'Approval pending',
+						'Your account is now pending approval.<br>You will get notified when you have been accepted.',
+						'Your account is now pending approval. You will get notified when you have been accepted.');
+				}
+
+				const moderators = await this.roleService.getModerators();
+
+				for (const moderator of moderators) {
+					const profile = await this.userProfilesRepository.findOneBy({ userId: moderator.id });
+
+					if (profile?.email) {
+						this.emailService.sendEmail(profile.email, 'New user awaiting approval',
+							`A new user called ${account.username} is awaiting approval with the following reason: "${reason}"`,
+							`A new user called ${account.username} is awaiting approval with the following reason: "${reason}"`);
+					}
+				}
+			} catch (err) {
+				// 確保したコードが無駄に消費されたままになるのを防ぐ
+				// (アカウントと紐付け済みの場合は release 側の条件により戻らない)
+				if (ticket) await this.releaseRegistrationTicket(ticket);
+				throw new FastifyReplyError(400, typeof err === 'string' ? err : (err as Error).toString());
 			}
 
 			reply.code(204);
 			return;
 		} else {
+			if (ticket && !await this.claimRegistrationTicket(ticket)) {
+				reply.code(400);
+				return;
+			}
+
 			try {
 				const { account, secret } = await this.signupService.signup({
 					username, password, host,
 				});
+
+				// 招待コードはアカウント作成直後に紐付け、以降の失敗で release されないようにする
+				if (ticket) {
+					await this.registrationTicketsRepository.update(ticket.id, {
+						usedBy: account,
+						usedById: account.id,
+					});
+				}
 
 				// ここで承認済みに設定する処理が必要
 				await this.usersRepository.update({ id: account.id }, { approved: true });
@@ -311,14 +349,6 @@ export class SignupApiService {
 						`To verify your email address, please click this link: ${link}`);
 				}
 
-				if (ticket) {
-					await this.registrationTicketsRepository.update(ticket.id, {
-						usedAt: new Date(),
-						usedBy: account,
-						usedById: account.id,
-					});
-				}
-
 				// ユーザー情報を取得して返す
 				const res = await this.userEntityService.pack(account, account, {
 					schema: 'MeDetailed',
@@ -330,9 +360,55 @@ export class SignupApiService {
 					token: secret,
 				};
 			} catch (err) {
+				// 確保したコードが無駄に消費されたままになるのを防ぐ
+				// (アカウントと紐付け済みの場合は release 側の条件により戻らない)
+				if (ticket) await this.releaseRegistrationTicket(ticket);
 				throw new FastifyReplyError(400, typeof err === 'string' ? err : (err as Error).toString());
 			}
 		}
+	}
+
+	/**
+	 * 招待コードを使用中として確保する
+	 *
+	 * @returns 確保できた場合は true、既に他のリクエストが消費していた場合は false
+	 */
+	@bindThis
+	private async claimRegistrationTicket(ticket: MiRegistrationTicket): Promise<boolean> {
+		const where: FindOptionsWhere<MiRegistrationTicket>[] = [
+			{ id: ticket.id, usedById: IsNull(), usedAt: IsNull() },
+		];
+
+		// メアド認証が有効の場合、認証されないままメール送信から30分経過したコードは再び使用できる
+		if (this.meta.emailRequiredForSignup) {
+			where.push({
+				id: ticket.id,
+				usedById: IsNull(),
+				usedAt: LessThanOrEqual(new Date(Date.now() - (1000 * 60 * 30))),
+			});
+		}
+
+		const result = await this.registrationTicketsRepository.update(where, {
+			usedAt: new Date(),
+		});
+
+		return (result.affected ?? 0) > 0;
+	}
+
+	/**
+	 * {@link claimRegistrationTicket} で確保した招待コードを未使用に戻す
+	 *
+	 * 既にアカウントと紐付いた (= 消費が確定した) コードは戻さない
+	 */
+	@bindThis
+	private async releaseRegistrationTicket(ticket: MiRegistrationTicket): Promise<void> {
+		await this.registrationTicketsRepository.update({
+			id: ticket.id,
+			usedById: IsNull(),
+		}, {
+			usedAt: null,
+			pendingUserId: null,
+		});
 	}
 
 	@bindThis
