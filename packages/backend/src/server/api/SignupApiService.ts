@@ -259,6 +259,14 @@ export class SignupApiService {
 					username, password, host, reason,
 				});
 
+				// 招待コードはアカウント作成直後に紐付け、以降の失敗で release されないようにする
+				if (ticket) {
+					await this.registrationTicketsRepository.update(ticket.id, {
+						usedBy: account,
+						usedById: account.id,
+					});
+				}
+
 				if (emailAddress) {
 					// メールアドレスをプロファイルに保存（未認証状態）
 					await this.userProfilesRepository.update({ userId: account.id }, {
@@ -282,13 +290,6 @@ export class SignupApiService {
 						'Your account is now pending approval. You will get notified when you have been accepted.');
 				}
 
-				if (ticket) {
-					await this.registrationTicketsRepository.update(ticket.id, {
-						usedBy: account,
-						usedById: account.id,
-					});
-				}
-
 				const moderators = await this.roleService.getModerators();
 
 				for (const moderator of moderators) {
@@ -304,7 +305,7 @@ export class SignupApiService {
 				// 確保したコードが無駄に消費されたままになるのを防ぐ
 				// (アカウントと紐付け済みの場合は release 側の条件により戻らない)
 				if (ticket) await this.releaseRegistrationTicket(ticket);
-				throw err;
+				throw new FastifyReplyError(400, typeof err === 'string' ? err : (err as Error).toString());
 			}
 
 			reply.code(204);
@@ -319,6 +320,14 @@ export class SignupApiService {
 				const { account, secret } = await this.signupService.signup({
 					username, password, host,
 				});
+
+				// 招待コードはアカウント作成直後に紐付け、以降の失敗で release されないようにする
+				if (ticket) {
+					await this.registrationTicketsRepository.update(ticket.id, {
+						usedBy: account,
+						usedById: account.id,
+					});
+				}
 
 				// ここで承認済みに設定する処理が必要
 				await this.usersRepository.update({ id: account.id }, { approved: true });
@@ -338,13 +347,6 @@ export class SignupApiService {
 					this.emailService.sendEmail(emailAddress, 'Email verification',
 						`To verify your email address, please click this link:<br><a href="${link}">${link}</a>`,
 						`To verify your email address, please click this link: ${link}`);
-				}
-
-				if (ticket) {
-					await this.registrationTicketsRepository.update(ticket.id, {
-						usedBy: account,
-						usedById: account.id,
-					});
 				}
 
 				// ユーザー情報を取得して返す

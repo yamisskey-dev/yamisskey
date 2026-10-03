@@ -14,6 +14,9 @@
 #### Yamisskey 側の追従対応
 - version を `2026.9.1-yami-1.9.41` に更新（本家追従のみのため yami suffix 据え置き）
 - `SignupApiService`: upstream の招待コード二重消費対策（`claimRegistrationTicket` / `releaseRegistrationTicket`）を、yami 独自の承認制サインアップ分岐（`approvalRequiredForSignup`）と任意メールアドレス処理を維持したまま 3 分岐すべてに適用
+  - 招待コードとアカウントの紐付けは `signup()` 直後に行い、yami 独自の後続処理（承認フラグ・任意メール保存・モデレーター通知）が失敗しても release でコードが未使用に戻らないようにした
+  - 承認制分岐でも通常分岐と同様に、サインアップ失敗（ユーザー名重複など）を 500 ではなく 400（`FastifyReplyError`）で返すようにした
+- `get-user-menu.ts`: 「リモートユーザー情報を更新」メニューの表示条件を upstream の `$i != null` ではなく `iAmModerator` にし、yami backend のモデレーター限定仕様と一致させた（一般ユーザーが押して権限エラーになるのを防止）
 - `federation/update-remote-user`: upstream はログイン必須化＋レート制限（`read:account`、1時間30回）に変更したが、yami の既存仕様（モデレーター限定・`write:admin:federation`）を維持しつつレート制限のみ追加
 - `.github/workflows/docker.yml`: upstream の `actions/checkout` バンプに追従しつつ yami の `ref: ${{ github.ref }}` 指定を維持。yami で削除済みの `on-release-created.yml` は削除のまま
 - `misskey-js` autogen を再生成（`update-remote-user` に 429 レスポンスが追加）
