@@ -1,6 +1,6 @@
 # DIFFRENCE
 
-## Unreleased
+## 2026.10.0-yami-1.9.41
 
 ### Misskey 2026.10.0への追従
 
