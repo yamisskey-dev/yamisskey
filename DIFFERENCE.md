@@ -1,5 +1,23 @@
 # DIFFRENCE
 
+## 2026.10.0-yami-1.9.41
+
+### Misskey 2026.10.0への追従
+
+本家Misskey 2026.10.0をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
+
+#### Upstream の主な変更
+- General: 翻訳の更新
+- Client: ユーザーの「概要」ページで引っ張って更新しても何も更新されない問題を修正
+- Server: HTTP Signatures の `(request-target)` にクエリ文字列が含まれない問題を修正、クリップから同じノートを繰り返し削除すると被クリップ数が負になる問題を修正、添付ファイル配信の挙動修正、セキュリティに関する修正（未ログイン閲覧者への UGC 公開範囲 `ugcVisibilityForVisitor` の適用漏れ、フォロー関係一覧の公開範囲、招待コードの再使用、Meilisearch フィルタのエスケープ など）
+
+#### Yamisskey 側の追従対応
+- version を `2026.10.0-yami-1.9.41` に更新（本家追従のみのため yami suffix 据え置き）
+- `QueryService.generateVisibilityQuery` / `NoteEntityService.shouldHideNote`: upstream の `ugcVisibilityForVisitor === 'none'` ガードを、yami 独自の未ログイン一律非表示（test 環境エスケープ付き）とやみノート判定の後ろに併置。本番挙動は yami 側のガードが先に効くため不変
+- `SearchService`: yami 側で並び替え済みの import に upstream の `MiMeta` 型を追加（`@Inject(DI.meta)` 追加に追従）
+- `pages/user/home.vue`: upstream のモデレーションノート同期修正と pull-to-refresh 実装（`refreshUser` / `timelineEl`）に追従しつつ、yami の ListenBrainz 再生中表示とコミュニティロール表示を維持。`index.vue` は yami の `:key="user.id"` と upstream の `:refreshUser` を併用
+- `misskey-js` autogen は再生成しても差分なし
+
 ## 2026.9.1-yami-1.9.41
 
 ### Misskey 2026.9.1への追従

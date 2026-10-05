@@ -87,7 +87,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</div>
 						</MkFoldableSection>
 						<div v-if="iAmModerator" class="moderationNote">
-							<MkTextarea v-if="editModerationNote || (moderationNote != null && moderationNote !== '')" v-model="moderationNote" manualSave>
+							<MkTextarea v-if="editModerationNote || (moderationNote != null && moderationNote !== '')" v-model="moderationNote" manualSave @savingStateChange="(changed) => { isModerationNoteDirty = changed; }">
 								<template #label>{{ i18n.ts.moderationNote }}</template>
 								<template #caption>{{ i18n.ts.moderationNoteDescription }}</template>
 							</MkTextarea>
@@ -175,7 +175,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</template>
 					<div v-if="!disableNotes">
 						<MkLazy>
-							<XTimeline :user="user"/>
+							<XTimeline ref="timelineEl" :user="user"/>
 						</MkLazy>
 					</div>
 				</div>
@@ -231,6 +231,7 @@ const emit = defineEmits<{
 	(ev: 'showMoreFiles'): void;
 }>();
 import { isBirthday } from '@/utility/is-birthday.js';
+import type XTimeline_TypeReferenceOnly from './index.timeline.vue';
 
 function calcAge(birthdate: string): number {
 	const date = new Date(birthdate);
@@ -254,9 +255,12 @@ const XListenBrainz = defineAsyncComponent(() => import('./index.listenbrainz.vu
 
 const props = withDefaults(defineProps<{
 	user: Misskey.entities.UserDetailed;
+	/** Refetches the user in place. Supplied by the parent page. */
+	refreshUser?: () => Promise<void>;
 	/** Test only; MkNotesTimeline currently causes problems in vitest */
 	disableNotes?: boolean;
 }>(), {
+	refreshUser: undefined,
 	disableNotes: false,
 });
 
@@ -267,10 +271,12 @@ const narrow = ref<null | boolean>(null);
 const rootEl = useTemplateRef('rootEl');
 const bannerEl = useTemplateRef('bannerEl');
 const memoTextareaEl = useTemplateRef('memoTextareaEl');
+const timelineEl = useTemplateRef<InstanceType<typeof XTimeline_TypeReferenceOnly>>('timelineEl');
 const memoDraft = ref(props.user.memo);
 const isEditingMemo = ref(false);
 const moderationNote = ref(props.user.moderationNote ?? '');
 const editModerationNote = ref(false);
+const isModerationNoteDirty = ref(false);
 
 const listenbrainzdata = ref(false);
 onMounted(async () => {
@@ -292,8 +298,11 @@ onMounted(async () => {
 	}
 });
 
-watch(moderationNote, async () => {
-	await misskeyApi('admin/update-user-note', { userId: props.user.id, text: moderationNote.value });
+watch(moderationNote, async (newValue) => {
+	// 再取得した値を同期しただけの場合は保存しない
+	if (newValue === (user.value.moderationNote ?? '')) return;
+	await misskeyApi('admin/update-user-note', { userId: user.value.id, text: newValue });
+	user.value = { ...user.value, moderationNote: newValue };
 });
 
 const style = computed(() => {
@@ -339,12 +348,20 @@ async function updateMemo() {
 	isEditingMemo.value = false;
 }
 
-watch(() => props.user.memo, (newMemo) => {
-	memoDraft.value = newMemo;
+watch(() => props.user, () => {
+	user.value = props.user;
+	// 編集中は上書きしない (入力中の内容を消してしまう)
+	if (!isModerationNoteDirty.value) moderationNote.value = props.user.moderationNote ?? '';
+	if (isEditingMemo.value) return;
+	memoDraft.value = props.user.memo;
 });
 
+// ここでは失敗は握りつぶす（Pull to Refreshがもどらなくなるので）
 async function reload() {
-	// TODO
+	await Promise.allSettled([
+		props.refreshUser?.(),
+		timelineEl.value?.reload(),
+	]);
 }
 
 let bannerParallaxResizeObserver: ResizeObserver | null = null;
