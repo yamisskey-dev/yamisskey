@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+### Misskey 2026.10.1への追従
+
+本家Misskey 2026.10.1をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。
+
+#### 運用上の注意（upstream 由来）
+- Node.js の最低動作バージョンが 22.23.4 / 24.22.1 / 26.12.1 に引き上げ（Docker Image は Node.js 26.12.1）。pnpm は 12.14.0
+- Sentry SDK v11 への更新。`sentryForBackend.options.sendDefaultPii` / `sentryForFrontend.options.sendDefaultPii` を設定している場合は `dataCollection` への書き換えが必要
+- migration 2 件（`UserProfilePasswordComment` / `FollowApprovalByAccountAge`）
+
+#### Upstream の主な変更
+- General: お知らせの自動アーカイブ日時、アカウント作成から一定期間経っていないアカウントからのフォローを自動的にフォロー申請にするオプション（既定は無効）、センシティブな画像をアイコン・バナーに指定できないように、セキュリティに関する修正
+- Client: デッキのクリップカラム、アイコン画像・バナー画像を外せるように
+- Server: ノート中の URL を正規化して禁止ワード判定、ローカル限定絵文字でリモートノートのリノートにリアクションできる問題の修正、リンクプレビューのサーバー紹介から HTML タグを除去、ルーム招待時にブロック状態を考慮
+
+#### Yamisskey 側の追従対応
+- version を `2026.10.1-yami-1.9.41` に更新（本家追従のみのため yami suffix 据え置き）
+- MFM 描画部の共通化（`frontend-shared/js/mfm-renderer.ts`）に追従: yami の LaTeX 描画（`TmsFormula`）を、共通レンダラの任意コンポーネント `Formula` として差し込む形に移植（frontend-embed は従来どおり `<code>` 表示）
+- `filters/user.ts` の `frontend-shared/js/user.ts` への移動に追従: ニックネームを考慮した `userName` は frontend 専用の `utility/edit-nickname.ts` に移し、`MkUserName` / `MkFlashPreview` / `MkPagePreview` から参照
+- 設定 > プライバシー: upstream の「フォロー承認」セクション構成を採用し、yami の「フォローリクエストを自動で拒否」を同セクションに配置。アカウント作成後期間によるフォロー申請は鍵なしでも発生するため、鍵アカウント限定の無効化表示は外した（サーバー側の挙動は従来から鍵の有無に依らない）
+- `UserEntityService` / `i/update` / json-schema: yami の `autoRejectFollowRequest` と upstream の `followApprovalLocalSeconds` / `followApprovalRemoteSeconds` を併存
+- `NoteCreateService` / `QueueService` / `UserBlockingService` / `ClientServerService`: import と yami 独自処理を維持したまま upstream の変更を取り込み
+- `misskey-js` autogen を再生成
+
+## 2026.10.0-yami-1.9.41
+
 ### Misskey 2026.10.0への追従
 
 本家Misskey 2026.10.0をdevelopブランチにマージしました。upstream の詳細は CHANGELOG.md を参照してください。

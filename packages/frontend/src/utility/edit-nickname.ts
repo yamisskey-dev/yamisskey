@@ -5,6 +5,7 @@
 
 import { entities } from 'misskey-js';
 import { ref, watch } from 'vue';
+import { userName as originalUserName } from '@@/js/user.js';
 import { prefer } from '@/preferences.js';
 import { i18n } from '@/i18n.js';
 import * as os from '@/os';
@@ -19,6 +20,11 @@ export const nicknameState = {
 export function getNicknameForUser(user: entities.User): string | null {
 	if (!nicknameState.enabled.value) return null;
 	return nicknameState.map.value[user.id] || null;
+}
+
+// ニックネームを考慮した表示名（frontend-shared の userName は frontend-embed と共有のためニックネームを参照できない）
+export function userName(user: entities.User): string {
+	return getNicknameForUser(user) ?? originalUserName(user);
 }
 
 export async function editNickname(user: entities.User) {
