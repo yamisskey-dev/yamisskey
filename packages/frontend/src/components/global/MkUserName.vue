@@ -15,8 +15,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts" setup>
 import { computed } from 'vue';
 import * as Misskey from 'misskey-js';
-import { userName } from '@/filters/user.js';
-import { nicknameState, getNicknameForUser } from '@/utility/edit-nickname.js';
+import { nicknameState, getNicknameForUser, userName } from '@/utility/edit-nickname.js';
 
 const props = withDefaults(defineProps<{
 	user: Misskey.entities.User;

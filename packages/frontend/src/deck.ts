@@ -43,6 +43,7 @@ export const columnTypes = [
 	'antenna',
 	'list',
 	'channel',
+	'clip',
 	'mentions',
 	'direct',
 	'roleTimeline',
@@ -62,6 +63,7 @@ export type Column = {
 	antennaId?: string;
 	listId?: string;
 	channelId?: string;
+	clipId?: string;
 	roleId?: string;
 	excludeTypes?: typeof notificationTypes[number][];
 	tl?: BasicTimelineType;
@@ -77,7 +79,7 @@ export type Column = {
 	showYamiFollowingNotes?: boolean;
 	excludeChannelNotesNonFollowing?: boolean;
 	soundSetting?: SoundStore;
-	// The cache for the name of the antenna, channel, list, or role
+	// The cache for the name of the antenna, channel, list, clip, or role
 	timelineNameCache?: string;
 };
 

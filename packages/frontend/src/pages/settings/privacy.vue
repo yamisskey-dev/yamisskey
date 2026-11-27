@@ -10,18 +10,48 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<SearchText>{{ i18n.ts._settings.privacyBanner }}</SearchText>
 		</MkFeatureBanner>
 
-		<SearchMarker :keywords="['follow', 'lock']">
-			<MkSwitch v-model="isLocked" @update:modelValue="save()">
-				<template #label><SearchLabel>{{ i18n.ts.makeFollowManuallyApprove }}</SearchLabel></template>
-				<template #caption><SearchText>{{ i18n.ts.lockedAccountInfo }}</SearchText></template>
-			</MkSwitch>
-		</SearchMarker>
+		<FormSection first>
+			<template #label><SearchLabel>{{ i18n.ts._followApproval.groupTitle }}</SearchLabel></template>
+			<div class="_gaps_m">
+				<SearchMarker :keywords="['follow', 'lock']">
+					<MkSwitch v-model="isLocked" @update:modelValue="save()">
+						<template #label><SearchLabel>{{ i18n.ts.makeFollowManuallyApprove }}</SearchLabel></template>
+						<template #caption><SearchText>{{ i18n.ts.lockedAccountInfo }}</SearchText></template>
+					</MkSwitch>
+				</SearchMarker>
 
-		<MkDisableSection :disabled="!isLocked">
-			<div class="_gaps_s">
+				<SearchMarker :keywords="['follow', 'request', 'approval', 'age']">
+					<FormSlot>
+						<template #label><SearchLabel>{{ i18n.ts._followApproval.title }}</SearchLabel></template>
+						<div class="_gaps_m">
+							<div><SearchText>{{ i18n.ts._followApproval.description }}</SearchText></div>
+							<MkInfo v-if="isLocked"><SearchText>{{ i18n.ts._followApproval.inactiveDescription }}</SearchText></MkInfo>
+							<MkDisableSection :disabled="isLocked">
+								<div class="_gaps_m">
+									<div v-for="setting in followApprovalSettings" :key="setting.key" class="_gaps_s">
+										<MkSelect v-model="setting.mode" :items="followApprovalModes" @update:modelValue="saveFollowApproval(setting)">
+											<template #label><SearchLabel>{{ setting.label }}</SearchLabel></template>
+											<template #caption><SearchText>{{ setting.caption }}</SearchText></template>
+										</MkSelect>
+										<MkInput v-if="setting.mode === 'custom'" v-model="setting.amount" type="number" :min="1 / FOLLOW_APPROVAL_UNIT_SECONDS[setting.unit]" :max="FOLLOW_APPROVAL_MAX_SECONDS / FOLLOW_APPROVAL_UNIT_SECONDS[setting.unit]" step="any" @update:modelValue="scheduleFollowApprovalSave(setting)">
+											<template #label>{{ i18n.ts._followApproval.period }}</template>
+											<template #suffix>{{ setting.unit === 'day' ? i18n.ts._time.day : i18n.ts._time.hour }}</template>
+											<template v-if="followApprovalPeriodToSeconds(setting.amount, setting.unit) == null" #caption>{{ i18n.ts._followApproval.invalidPeriod }}</template>
+										</MkInput>
+										<MkSelect v-if="setting.mode === 'custom'" v-model="setting.unit" :items="followApprovalUnits" @update:modelValue="saveFollowApproval(setting)">
+											<template #label>{{ i18n.ts._followApproval.unit }}</template>
+										</MkSelect>
+									</div>
+								</div>
+							</MkDisableSection>
+						</div>
+					</FormSlot>
+				</SearchMarker>
+
 				<SearchMarker :keywords="['follow', 'auto', 'accept']">
 					<MkSwitch v-model="autoAcceptFollowed" @update:modelValue="save()">
 						<template #label><SearchLabel>{{ i18n.ts.autoAcceptFollowed }}</SearchLabel></template>
+						<template #caption><SearchText>{{ i18n.ts._followApproval.autoAcceptDescription }}</SearchText></template>
 					</MkSwitch>
 				</SearchMarker>
 
@@ -32,7 +62,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</MkSwitch>
 				</SearchMarker>
 			</div>
-		</MkDisableSection>
+		</FormSection>
 
 		<SearchMarker :keywords="['reaction', 'public']">
 			<MkSwitch v-model="publicReactions" @update:modelValue="save()">
@@ -273,9 +303,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import type { entities } from 'misskey-js';
 import type { MkSelectItem } from '@/components/MkSelect.vue';
+import type { FollowApprovalPeriodUnit } from '@/utility/follow-approval.js';
 import MkSwitch from '@/components/MkSwitch.vue';
 import MkSelect from '@/components/MkSelect.vue';
 import FormSection from '@/components/form/section.vue';
@@ -289,9 +320,10 @@ import { formatDateTimeString } from '@/utility/format-time-string.js';
 import { useMkSelect } from '@/composables/use-mkselect.js';
 import MkInput from '@/components/MkInput.vue';
 import MkDisableSection from '@/components/MkDisableSection.vue';
+import { FOLLOW_APPROVAL_MAX_SECONDS, FOLLOW_APPROVAL_UNIT_SECONDS, followApprovalPeriodFromSeconds, followApprovalPeriodToSeconds } from '@/utility/follow-approval.js';
+import * as os from '@/os.js';
 import MkInfo from '@/components/MkInfo.vue';
 import MkFeatureBanner from '@/components/MkFeatureBanner.vue';
-import * as os from '@/os.js';
 
 // 型定義
 type ActiveStatusVisibility = entities.MeDetailed['activeStatusVisibility'];
@@ -302,6 +334,75 @@ const $i = ensureSignin();
 const isLocked = ref($i.isLocked);
 const autoAcceptFollowed = ref($i.autoAcceptFollowed);
 const autoRejectFollowRequest = ref($i.autoRejectFollowRequest ?? false);
+
+type FollowApprovalSetting = {
+	key: 'followApprovalLocalSeconds' | 'followApprovalRemoteSeconds';
+	mode: 'default' | 'disabled' | 'custom';
+	amount: number | null;
+	unit: FollowApprovalPeriodUnit;
+	label: string;
+	caption: string;
+};
+
+const followApprovalSettings = ref<FollowApprovalSetting[]>([
+	{
+		key: 'followApprovalLocalSeconds',
+		mode: $i.followApprovalLocalSeconds == null ? 'default' : $i.followApprovalLocalSeconds === 0 ? 'disabled' : 'custom',
+		...followApprovalPeriodFromSeconds($i.followApprovalLocalSeconds || 7 * 86400),
+		label: i18n.ts._followApproval.local,
+		caption: i18n.ts._followApproval.localDescription,
+	},
+	{
+		key: 'followApprovalRemoteSeconds',
+		mode: $i.followApprovalRemoteSeconds == null ? 'default' : $i.followApprovalRemoteSeconds === 0 ? 'disabled' : 'custom',
+		...followApprovalPeriodFromSeconds($i.followApprovalRemoteSeconds || 7 * 86400),
+		label: i18n.ts._followApproval.remote,
+		caption: i18n.ts._followApproval.remoteDescription,
+	},
+]);
+
+const followApprovalModes = [
+	{ label: i18n.ts._followApproval.useDefault, value: 'default' },
+	{ label: i18n.ts.disabled, value: 'disabled' },
+	{ label: i18n.ts._followApproval.custom, value: 'custom' },
+];
+
+const followApprovalUnits = [
+	{ label: i18n.ts._time.hour, value: 'hour' },
+	{ label: i18n.ts._time.day, value: 'day' },
+];
+
+const followApprovalSaveTimers = new Map<FollowApprovalSetting['key'], number>();
+
+function scheduleFollowApprovalSave(setting: FollowApprovalSetting) {
+	window.clearTimeout(followApprovalSaveTimers.get(setting.key));
+	followApprovalSaveTimers.set(setting.key, window.setTimeout(() => saveFollowApproval(setting), 1000));
+}
+
+onBeforeUnmount(() => {
+	for (const setting of followApprovalSettings.value) {
+		if (followApprovalSaveTimers.has(setting.key)) saveFollowApproval(setting);
+	}
+});
+
+function saveFollowApproval(setting: FollowApprovalSetting) {
+	window.clearTimeout(followApprovalSaveTimers.get(setting.key));
+	followApprovalSaveTimers.delete(setting.key);
+	const seconds = followApprovalPeriodToSeconds(setting.amount, setting.unit);
+	if (setting.mode === 'custom' && seconds == null) {
+		return;
+	}
+	misskeyApi('i/update', {
+		[setting.key]: setting.mode === 'default' ? null : setting.mode === 'disabled' ? 0 : seconds,
+	}).catch(err => {
+		os.alert({
+			type: 'error',
+			title: i18n.ts.error,
+			text: err.code === 'RATE_LIMIT_EXCEEDED' ? i18n.ts.cannotPerformTemporaryDescription : err.message,
+		});
+	});
+}
+
 const noCrawle = ref($i.noCrawle);
 const preventAiLearning = ref($i.preventAiLearning);
 const isExplorable = ref($i.isExplorable);
