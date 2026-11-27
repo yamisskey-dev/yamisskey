@@ -4,18 +4,14 @@
  */
 
 import * as Misskey from 'misskey-js';
-import { url } from '@@/js/config.js';
-import { nicknameState } from '@/utility/edit-nickname.js';
+import { url } from './config.js';
 
 export const acct = (user: Misskey.Acct) => {
 	return Misskey.acct.toString(user);
 };
 
 export const userName = (user: Misskey.entities.User) => {
-	if (!nicknameState.enabled.value) {
-		return user.name || user.username;
-	}
-	return nicknameState.map.value[user.id] || user.name || user.username;
+	return user.name || user.username;
 };
 
 export const userPage = (user: Misskey.Acct, path?: string, absolute = false) => {
